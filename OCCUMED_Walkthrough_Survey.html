@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบเดินสำรวจสถานประกอบการ | IKIGAI OS · OCCUMED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@font-face{
+  font-family:'LINE Seed Sans TH';
+  src:url('https://cdn.jsdelivr.net/gh/PhakphumDev/line-seed-font@main/web/LINESeedSansTH_W_Rg.woff2') format('woff2');
+  font-weight:400;font-display:swap;
+}
+@font-face{
+  font-family:'LINE Seed Sans TH';
+  src:url('https://cdn.jsdelivr.net/gh/PhakphumDev/line-seed-font@main/web/LINESeedSansTH_W_Bd.woff2') format('woff2');
+  font-weight:700;font-display:swap;
+}
+@font-face{
+  font-family:'LINE Seed Sans TH';
+  src:url('https://cdn.jsdelivr.net/gh/PhakphumDev/line-seed-font@main/web/LINESeedSansTH_W_XBd.woff2') format('woff2');
+  font-weight:800;font-display:swap;
+}
+:root{
+  --navy:#0B2545; --navy2:#13315C; --navy-soft:#1D3B63;
+  --gold:#C8A046; --gold-lt:#E4C877; --gold-dk:#A67C24;
+  --ink:#1a2233; --muted:#5b6678; --line:#dfe4ec; --line2:#eef1f6;
+  --bg:#f4f6fa; --card:#ffffff;
+  --ok:#137a4b; --ok-bg:#e6f4ec;
+  --over:#c0392b; --over-bg:#fbeae7;
+  --low:#2e7d54; --low-bg:#e7f3ec;
+  --med:#c9820a; --med-bg:#fdf1dd;
+  --high:#c0392b; --high-bg:#fbe6e2;
+  --acc:#8896ab;
+  --shadow:0 1px 2px rgba(11,37,69,.06),0 8px 24px rgba(11,37,69,.06);
+  --radius:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;line-height:1.3;color:var(--navy)}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:14px}
+.en{font-family:'Noto Sans Thai',sans-serif}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;background:var(--navy);
+  color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 2px 10px rgba(11,37,69,.25);
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .mark{
+  width:34px;height:34px;border-radius:9px;flex:0 0 auto;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dk));
+  display:grid;place-items:center;color:var(--navy);font-weight:800;font-size:15px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
+}
+.brand .t{min-width:0}
+.brand .t b{font-size:15px;color:#fff;display:block;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .t span{font-size:11px;color:var(--gold-lt);letter-spacing:1.5px;text-transform:uppercase}
+.topbar .sp{flex:1}
+.tbtn{
+  color:#dbe4f0;font-size:12.5px;padding:7px 11px;border-radius:9px;
+  border:1px solid rgba(255,255,255,.16);display:inline-flex;align-items:center;gap:6px;
+  white-space:nowrap;transition:.15s;
+}
+.tbtn:hover{background:rgba(255,255,255,.09);color:#fff}
+.tbtn.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700}
+.tbtn.gold:hover{background:var(--gold-lt)}
+.savedot{font-size:11px;color:#9fb3cc;display:flex;align-items:center;gap:5px}
+.savedot i{width:7px;height:7px;border-radius:50%;background:#3ecb7a;display:inline-block}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  position:sticky;top:54px;z-index:40;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;gap:2px;padding:0 8px;overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:13px 15px 11px;font-size:13.5px;color:var(--muted);white-space:nowrap;
+  border-bottom:3px solid transparent;font-weight:600;display:flex;align-items:center;gap:7px;
+}
+.tab .num{
+  width:20px;height:20px;border-radius:50%;background:var(--line2);color:var(--muted);
+  font-size:11px;display:grid;place-items:center;font-weight:700;
+}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold)}
+.tab.active .num{background:var(--navy);color:#fff}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:940px;margin:0 auto;padding:18px 16px 120px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.card>.hd{
+  padding:14px 18px;border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:10px;
+  background:linear-gradient(180deg,#fbfcfe,#fff);
+}
+.card>.hd h3{font-size:15.5px;display:flex;align-items:center;gap:8px}
+.card>.hd .eyebrow{font-size:11px;letter-spacing:1.5px;color:var(--gold-dk);text-transform:uppercase;font-weight:700}
+.card>.bd{padding:16px 18px}
+.card>.hd .sp{flex:1}
+
+.pagehead{margin-bottom:18px}
+.pagehead .kick{font-size:11.5px;letter-spacing:2px;color:var(--gold-dk);font-weight:700;text-transform:uppercase}
+.pagehead h2{font-size:22px;margin-top:3px}
+.pagehead p{color:var(--muted);margin:6px 0 0;font-size:13.5px;max-width:64ch}
+
+/* ---------- Forms ---------- */
+.grid{display:grid;gap:13px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.field label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
+.field label .req{color:var(--gold-dk)}
+.field input,.field select,.field textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
+  transition:.15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,160,70,.15)}
+.field textarea{resize:vertical;min-height:70px;line-height:1.5}
+.hint{font-size:11.5px;color:var(--acc);margin-top:4px}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:700;transition:.15s;border:1px solid transparent}
+.btn.pri{background:var(--navy);color:#fff}
+.btn.pri:hover{background:var(--navy2)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.btn.gold:hover{background:var(--gold-lt)}
+.btn.ghost{background:#fff;color:var(--navy);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold-dk)}
+.btn.sm{padding:7px 11px;font-size:12.5px}
+.btn.danger{color:var(--over);background:var(--over-bg)}
+.btn.danger:hover{background:#f6d9d3}
+.btn.block{width:100%}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- Department cards ---------- */
+.dept{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.dept>.dhd{display:flex;align-items:center;gap:11px;padding:13px 15px;background:linear-gradient(180deg,#fbfcfe,#fff);cursor:pointer;border-bottom:1px solid var(--line2)}
+.dept>.dhd .idx{width:26px;height:26px;border-radius:8px;background:var(--navy);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center;flex:0 0 auto}
+.dept>.dhd .dt{flex:1;min-width:0}
+.dept>.dhd .dt b{font-size:14.5px;color:var(--navy);display:block}
+.dept>.dhd .dt small{color:var(--muted);font-size:12px}
+.dept>.dhd .chev{color:var(--acc);transition:.2s;font-size:13px}
+.dept.open>.dhd .chev{transform:rotate(90deg)}
+.dept>.dbd{padding:14px 15px;display:none}
+.dept.open>.dbd{display:block}
+.pill{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;background:var(--line2);color:var(--muted)}
+.pill.hi{background:var(--high-bg);color:var(--high)}
+.pill.md{background:var(--med-bg);color:var(--med)}
+
+/* ---------- Hazard table ---------- */
+.htbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+.htbl th{background:var(--navy);color:#fff;font-weight:600;padding:8px 8px;text-align:left;font-size:11.5px;white-space:nowrap}
+.htbl td{border-bottom:1px solid var(--line2);padding:5px 6px;vertical-align:middle}
+.htbl tr:last-child td{border-bottom:none}
+.htbl input,.htbl select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;width:100%;min-width:70px;background:#fff}
+.htbl .catcell{font-weight:700;color:var(--navy2);font-size:11.5px}
+.htbl .del{color:var(--over);padding:6px 8px;border-radius:7px;font-size:15px;line-height:1}
+.htbl .del:hover{background:var(--over-bg)}
+.tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.evaltag{font-weight:700;font-size:11.5px;padding:4px 8px;border-radius:7px;white-space:nowrap;display:inline-block}
+.evaltag.ok{background:var(--ok-bg);color:var(--ok)}
+.evaltag.over{background:var(--over-bg);color:var(--over)}
+.evaltag.na{background:var(--line2);color:var(--muted)}
+
+.riskbadge{font-weight:800;font-size:11.5px;padding:4px 10px;border-radius:7px;white-space:nowrap}
+.risk-low{background:var(--low-bg);color:var(--low)}
+.risk-med{background:var(--med-bg);color:var(--med)}
+.risk-high{background:var(--high-bg);color:var(--high)}
+.risk-acc{background:#eef1f6;color:#516079}
+
+.subhd{font-size:11px;letter-spacing:1.5px;color:var(--gold-dk);text-transform:uppercase;font-weight:700;margin:16px 0 8px}
+.addrow{margin-top:10px}
+
+/* ---------- Health check grid ---------- */
+.hcwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.hcgrid{border-collapse:collapse;font-size:12px;width:100%}
+.hcgrid th,.hcgrid td{border:1px solid var(--line2);padding:6px 7px;text-align:center;white-space:nowrap}
+.hcgrid thead th{background:var(--navy);color:#fff;font-weight:600;font-size:11px;position:sticky;top:0}
+.hcgrid td.dept-name{text-align:left;font-weight:700;color:var(--navy2);background:#fafbfd;position:sticky;left:0;z-index:1}
+.hcgrid th.dept-name{position:sticky;left:0;z-index:3;background:var(--navy)}
+.hcgrid input[type=checkbox]{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
+
+/* ---------- callouts ---------- */
+.note{border-left:3px solid var(--gold);background:#fdf8ec;padding:11px 14px;border-radius:0 10px 10px 0;font-size:13px;color:#5a4d2a;margin:12px 0}
+.note b{color:var(--gold-dk)}
+.warn{border-left:3px solid var(--over);background:var(--over-bg);padding:11px 14px;border-radius:0 10px 10px 0;font-size:13px;color:#7a2b21;margin:12px 0}
+.empty{text-align:center;padding:34px 20px;color:var(--acc)}
+.empty svg{opacity:.4;margin-bottom:8px}
+
+/* ---------- Nav footer ---------- */
+.navfoot{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;z-index:45;box-shadow:0 -2px 12px rgba(11,37,69,.06)}
+.navfoot .inner{max-width:940px;margin:0 auto;display:flex;gap:10px;width:100%}
+.navfoot .sp{flex:1}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:11px 18px;border-radius:11px;font-size:13.5px;font-weight:600;box-shadow:0 8px 30px rgba(11,37,69,.35);opacity:0;pointer-events:none;transition:.25s;z-index:100;display:flex;align-items:center;gap:8px}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast .ic{color:var(--gold-lt)}
+
+/* ---------- Modal / report ---------- */
+.modal{position:fixed;inset:0;background:rgba(11,37,69,.55);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;backdrop-filter:blur(3px)}
+.modal.show{display:flex}
+.modal .sheet{background:#fff;border-radius:16px;max-width:900px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;margin:auto}
+.modal .mhd{position:sticky;top:0;background:var(--navy);color:#fff;padding:13px 18px;display:flex;align-items:center;gap:10px;z-index:2}
+.modal .mhd h3{color:#fff;font-size:15px;flex:1}
+.modal .mbd{padding:0;max-height:calc(100vh - 160px);overflow:auto;background:#e9edf3}
+.modal .close{color:#cdd8e8;font-size:22px;line-height:1;padding:2px 6px}
+.modal .close:hover{color:#fff}
+
+/* ---------- Report doc ---------- */
+#reportDoc{background:#fff;margin:18px auto;max-width:760px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.rp{padding:38px 44px;font-size:13.5px;color:#222}
+.rp h1{text-align:center;font-size:19px;color:#111;margin-bottom:4px}
+.rp h2{font-size:16px;color:#111;border-bottom:2px solid var(--gold);padding-bottom:5px;margin:26px 0 12px;display:flex;align-items:center;gap:8px}
+.rp h3{font-size:14px;color:var(--navy);margin:16px 0 7px}
+.rp p{margin:7px 0}
+.rp .cover{text-align:center;padding:40px 0}
+.rp .cover .logo{width:64px;height:64px;border-radius:14px;margin:0 auto 18px;background:linear-gradient(135deg,var(--navy),var(--navy2));display:grid;place-items:center;color:var(--gold);font-weight:800;font-size:26px}
+.rp table{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0}
+.rp table th,.rp table td{border:1px solid #ccc;padding:5px 7px;text-align:left;vertical-align:top}
+.rp table th{background:#f0f3f8;font-weight:700;color:var(--navy)}
+.rp .kv{display:grid;grid-template-columns:190px 1fr;gap:2px 10px;font-size:13px}
+.rp .kv dt{color:#555;font-weight:600}
+.rp .kv dd{margin:0}
+.rp .r-ok{color:var(--ok)}.rp .r-over{color:var(--over);font-weight:700}
+.rp .rb{font-weight:700;padding:2px 7px;border-radius:5px;font-size:10.5px}
+.rp .rb.h{background:var(--high-bg);color:var(--high)}
+.rp .rb.m{background:var(--med-bg);color:var(--med)}
+.rp .rb.l{background:var(--low-bg);color:var(--low)}
+.rp .rb.a{background:#eef1f6;color:#516079}
+.rp .toc{list-style:none;padding:0}
+.rp .toc li{display:flex;justify-content:space-between;border-bottom:1px dotted #bbb;padding:6px 0}
+.rp .muted{color:#777;font-size:12px}
+.rp .heat td.hi{background:var(--high-bg);color:var(--high);font-weight:700}
+.rp .heat td.mid{background:var(--med-bg);color:var(--med)}
+.rp .sig{margin-top:40px;text-align:right}
+.rp hr{border:none;border-top:1px solid #ddd;margin:26px 0}
+
+@media print{
+  body *{visibility:hidden}
+  #reportModal,#reportModal *{visibility:visible}
+  #reportModal{position:absolute;inset:0;background:#fff;padding:0;display:block}
+  .modal .mhd,.modal .close{display:none!important}
+  .modal .mbd{max-height:none;overflow:visible;background:#fff}
+  #reportDoc{box-shadow:none;margin:0;max-width:100%}
+  .rp{padding:0}
+  .rp h2{page-break-after:avoid}
+  .rp table{page-break-inside:auto}
+  .rp .cover{page-break-after:always}
+}
+@media(max-width:520px){
+  .rp{padding:24px 18px}
+  .brand .t b{max-width:130px}
+  .topbar .hide-sm{display:none}
+  #presence{max-width:84px}
+  #collabChip .clbl{display:none}
+  #collabChip{padding:6px}
+  .tbtn .lbl{display:none}
+  .tbtn{padding:7px 9px}
+  .navfoot .btn.ghost.sm{display:none}
+}
+/* ---- Collaboration ---- */
+#collabChip{display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;transition:.15s}
+#collabChip:hover{background:rgba(255,255,255,.13)}
+#collabChip .cdot{width:8px;height:8px;border-radius:50%;background:#8896ab;box-shadow:0 0 0 3px rgba(136,150,171,.25)}
+#collabChip.on .cdot{background:#3ecb7a;box-shadow:0 0 0 3px rgba(62,203,122,.28);animation:cpulse 2s infinite}
+@keyframes cpulse{0%,100%{opacity:1}50%{opacity:.45}}
+#collabChip .clbl{max-width:120px;overflow:hidden;text-overflow:ellipsis}
+#presence{display:flex;align-items:center;overflow:hidden}
+#presence .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;border:2px solid var(--navy);margin-left:-7px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+#presence .av:first-child{margin-left:0}
+#presence .more{font-size:11px;color:#c9d3e2;margin-left:4px;font-weight:600}
+.peerbadge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#fff;background:var(--navy2);padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.peerbadge .pd{width:6px;height:6px;border-radius:50%}
+.cseg{display:flex;gap:6px;margin-bottom:14px;background:var(--line2);padding:4px;border-radius:11px}
+.cseg button{flex:1;border:none;background:transparent;padding:9px;border-radius:8px;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.cseg button.active{background:#fff;color:var(--navy);box-shadow:var(--shadow)}
+.csec{display:none}.csec.active{display:block}
+.member{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px}
+.member .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;flex:none}
+.member .mi{flex:1;min-width:0}
+.member .mi b{font-size:13.5px}.member .mi small{display:block;color:var(--muted);font-size:11.5px}
+.member .mtab{font-size:11px;color:var(--gold-dk);font-weight:700;white-space:nowrap}
+.sqlbox{background:#0c1a2e;color:#cfe0f5;border-radius:11px;padding:12px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;max-height:230px;overflow:auto;white-space:pre;border:1px solid #1d3355}
+.cnote{font-size:12px;color:var(--muted);line-height:1.6;margin:8px 0}
+.cstep{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink);margin:7px 0}
+.cstep .n{flex:none;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">อว</div>
+    <div class="t">
+      <b>ระบบเดินสำรวจสถานประกอบการ</b>
+      <span>OCCUMED · Walk-through Survey</span>
+    </div>
+  </div>
+  <div class="sp"></div>
+  <div id="presence"></div>
+  <div id="collabChip" onclick="openCollab()" title="การทำงานร่วมกัน"><span class="cdot"></span><span class="clbl">ทำงานคนเดียว</span></div>
+  <span class="savedot hide-sm" id="saveDot"><i></i>บันทึกอัตโนมัติ</span>
+  <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">⬇<span class="lbl"> ส่งออก</span></button>
+  <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">⬆<span class="lbl"> นำเข้า</span></button>
+  <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
+  <input type="file" id="impFile" accept="application/json" style="display:none" onchange="doImport(event)">
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="0"><span class="num">1</span>ข้อมูลทั่วไป</div>
+  <div class="tab" data-tab="1"><span class="num">2</span>แผนก &amp; สิ่งคุกคาม</div>
+  <div class="tab" data-tab="2"><span class="num">3</span>ประเมินความเสี่ยง</div>
+  <div class="tab" data-tab="3"><span class="num">4</span>ตรวจสุขภาพ</div>
+  <div class="tab" data-tab="4"><span class="num">5</span>สรุป &amp; รายงาน</div>
+</div>
+
+<div class="wrap">
+  <!-- PANEL 0 : GENERAL -->
+  <section class="panel active" id="p0"></section>
+  <!-- PANEL 1 : DEPARTMENTS -->
+  <section class="panel" id="p1"></section>
+  <!-- PANEL 2 : RISK -->
+  <section class="panel" id="p2"></section>
+  <!-- PANEL 3 : HEALTH -->
+  <section class="panel" id="p3"></section>
+  <!-- PANEL 4 : SUMMARY -->
+  <section class="panel" id="p4"></section>
+</div>
+
+<div class="navfoot">
+  <div class="inner">
+    <button class="btn ghost" id="btnPrev" onclick="go(-1)">‹ ก่อนหน้า</button>
+    <div class="sp"></div>
+    <button class="btn ghost sm" onclick="loadTemplate(true)">↻ โหลดข้อมูลโรงงานตัวอย่าง</button>
+    <button class="btn pri" id="btnNext" onclick="go(1)">ถัดไป ›</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- REPORT MODAL -->
+<div class="modal" id="reportModal">
+  <div class="sheet">
+    <div class="mhd">
+      <h3>รายงานผลการเดินสำรวจสถานประกอบการ</h3>
+      <button class="btn gold sm" onclick="copyReport()">⧉ คัดลอกโค้ด (Deploy)</button>
+      <button class="btn ghost sm" onclick="downloadReport()">⬇ บันทึก .html</button>
+      <button class="btn ghost sm" onclick="window.print()">🖨 พิมพ์ / PDF</button>
+      <button class="close" onclick="closeReport()">✕</button>
+    </div>
+    <div class="mbd"><div id="reportDoc"></div></div>
+  </div>
+</div>
+
+<!-- COLLAB MODAL -->
+<div class="modal" id="collabModal">
+  <div class="sheet" style="max-width:560px">
+    <div class="mhd">
+      <h3>การทำงานร่วมกันแบบเรียลไทม์</h3>
+      <button class="close" onclick="closeCollab()">✕</button>
+    </div>
+    <div class="mbd" style="padding:16px 18px">
+      <div class="cseg">
+        <button data-cs="0" class="active" onclick="csTab(0)">ห้องสำรวจ</button>
+        <button data-cs="1" onclick="csTab(1)">เข้าร่วม / สร้าง</button>
+        <button data-cs="2" onclick="csTab(2)">ตั้งค่า Supabase</button>
+      </div>
+
+      <div class="csec active" id="cs0">
+        <div id="cs0body"></div>
+      </div>
+
+      <div class="csec" id="cs1">
+        <div class="cnote">ทีมสำรวจเข้า <b>ห้องเดียวกัน</b> ด้วยรหัสสำรวจ + รหัสผ่านทีม แล้วแก้ข้อมูลพร้อมกัน เห็นการเปลี่ยนแปลงสดทันที</div>
+        <div class="field"><label>รหัสสำรวจ (Survey ID) — ตั้งเป็นรหัสงาน เช่น TM-2569-001</label><input id="jId" placeholder="TM-2569-001" oninput="this.value=this.value.toUpperCase()"></div>
+        <div class="field" style="margin-top:10px"><label>รหัสผ่านทีม (Passcode)</label><input id="jPass" type="text" placeholder="ตั้งรหัสให้ทีม เช่น occ2569"></div>
+        <div class="grid g2" style="margin-top:10px">
+          <div class="field"><label>ชื่อผู้สำรวจ (แสดงต่อทีม)</label><input id="jName" placeholder="เช่น หมอเกฟ"></div>
+          <div class="field"><label>บทบาท</label>
+            <select id="jRole"><option>แพทย์อาชีวเวชศาสตร์</option><option>เจ้าหน้าที่ความปลอดภัย (จป.)</option><option>พยาบาลอาชีวอนามัย</option><option>HR</option><option>ผู้สังเกตการณ์</option></select>
+          </div>
+        </div>
+        <div class="btnrow" style="margin-top:14px;gap:8px">
+          <button class="btn pri" style="flex:1" onclick="doJoin(false)">→ เข้าร่วมห้อง</button>
+          <button class="btn gold" style="flex:1" onclick="doJoin(true)">＋ สร้างห้องใหม่</button>
+        </div>
+        <div class="cnote" style="margin-top:8px">สร้างห้องใหม่จะอัปโหลดข้อมูลปัจจุบันขึ้นเป็นข้อมูลเริ่มต้นของห้อง · เข้าร่วมห้องจะดึงข้อมูลล่าสุดจากทีมมาแทนที่เครื่องนี้</div>
+      </div>
+
+      <div class="csec" id="cs2">
+        <div class="cnote">ใส่ค่าโปรเจกต์ Supabase ของคุณ (Project URL + <b>anon</b> public key) — เก็บไว้ในเครื่องนี้เท่านั้น</div>
+        <div class="field"><label>Supabase Project URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
+        <div class="field" style="margin-top:10px"><label>Anon public key</label><input id="sbKey" placeholder="eyJhbGciOi..."></div>
+        <div class="btnrow" style="margin-top:12px"><button class="btn pri sm" onclick="saveCfg()">บันทึกการตั้งค่า</button><div class="sp" style="flex:1"></div><span id="sbState" class="cnote" style="margin:0"></span></div>
+        <div class="subhd" style="margin:16px 0 8px">ติดตั้งฐานข้อมูล (รันครั้งเดียวใน Supabase → SQL Editor)</div>
+        <div class="cstep"><span class="n">1</span><div>เปิด Supabase → เมนู <b>SQL Editor</b> → <b>New query</b></div></div>
+        <div class="cstep"><span class="n">2</span><div>กด <b>คัดลอก SQL</b> ด้านล่าง แล้ววางแล้วกด <b>Run</b> — ระบบจะสร้างตาราง + ฟังก์ชันแบบเข้ารหัส (anon key ดึงข้อมูลตรง ๆ ไม่ได้ ต้องมีรหัสผ่านห้อง — สอดคล้อง PDPA)</div></div>
+        <div class="btnrow" style="margin:6px 0 8px"><button class="btn gold sm" onclick="copySQL()">⧉ คัดลอก SQL ติดตั้ง (Deploy)</button></div>
+        <div class="sqlbox" id="sqlBox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   IKIGAI OS · OCCUMED — Walk-through Survey
+   Single-file · Navy×Gold · LINE Seed Sans TH · พ.ศ.
+   ============================================================ */
+const LS_KEY='occumed_survey_v1';
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+/* ---- Reference lists ---- */
+const CATS=['กายภาพ','เคมี','ชีวภาพ','การยศาสตร์'];
+const CONC_BANDS=['< 10% OEL-TWA','10-50% OEL-TWA','50-75% OEL-TWA','75-100% OEL-TWA','100% OEL-TWA','> 100% OEL-TWA','ไม่ได้วัด (ให้ 100%)'];
+const RISK_LABELS=['ยอมรับได้','ต่ำ','ปานกลาง','สูง'];
+const EXAMS=['ผิวหนัง','ทางเดินหายใจ','การมองเห็น','ไหลเวียนโลหิต','กระดูกและกล้ามเนื้อ','การได้ยิน','VA','EKG','CXR','CBC','Cr','Spirometry','Audiometry'];
+
+/* ---- Auto risk from concentration band + frequency ---- */
+function autoRisk(band,freq){
+  freq=Number(freq)||4;
+  if(!band) return '';
+  if(band.startsWith('< 10')) return 'ต่ำ';
+  if(band.startsWith('10-50')) return 'ปานกลาง';
+  if(band.startsWith('50-75')||band.startsWith('75-100')) return 'ปานกลาง';
+  if(band.startsWith('100%')) return 'สูง';
+  if(band.startsWith('> 100')) return freq>=5?'สูง':'ปานกลาง';
+  if(band.startsWith('ไม่ได้วัด')) return 'สูง';
+  return '';
+}
+function riskClass(r){return {'สูง':'risk-high','ปานกลาง':'risk-med','ต่ำ':'risk-low','ยอมรับได้':'risk-acc'}[r]||''}
+function riskRB(r){return {'สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a'}[r]||'l'}
+
+/* ---- Compare measured vs standard ---- */
+function maxNum(str){
+  if(str===null||str===undefined) return null;
+  const m=String(str).match(/-?\d+(\.\d+)?/g);
+  if(!m) return null;
+  return Math.max(...m.map(Number));
+}
+function evalStd(measured,standard){
+  const t=String(measured==null?'':measured).trim();
+  const notMeasured=!t || /^[-–]$/.test(t) || /not\s*measure|ไม่ได้วัด|^n\/?a$|^na$/i.test(t) || !/\d/.test(t);
+  if(notMeasured||!standard||!/\d/.test(String(standard))) return {t:'-',c:'na'};
+  const mv=maxNum(measured), sv=maxNum(standard);
+  if(mv===null||sv===null) return {t:'-',c:'na'};
+  return mv>sv ? {t:'เกินเกณฑ์ที่กฎหมายกำหนด',c:'over'} : {t:'อยู่ในเกณฑ์ที่กฎหมายกำหนด',c:'ok'};
+}
+
+/* ---- Buddhist Era date formatting ---- */
+const THMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function beDate(iso){
+  if(!iso) return '';
+  const d=new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+function beYear(iso){const d=new Date((iso||new Date().toISOString().slice(0,10))+'T00:00:00');return (isNaN(d)?new Date():d).getFullYear()+543}
+
+/* ---- helper builders ---- */
+function haz(cat,name,std,unit){return {id:uid(),cat,name,measured:'',std:std||'',unit:unit||'',hr:4,band:'',freq:4,riskOverride:''}}
+
+/* ============================================================
+   PRE-LOADED TEMPLATE — โรงงาน machining ชิ้นส่วนไฮดรอลิก
+   (สรุปจากไฟล์กระบวนการผลิต 8 ผลิตภัณฑ์)
+   ============================================================ */
+function templateData(){
+  const D=(name,en,proc,machines,hazards)=>({id:uid(),name,en,proc,machines,hazards,open:false});
+  return {
+    general:{
+      company:'', address:'', type:'ผลิต/แปรรูปชิ้นส่วนอุปกรณ์เครื่องจักรก่อสร้าง (ไฮดรอลิก) ด้วยกระบวนการ Machining, Forging, Heat Treatment, Welding และพ่นสี',
+      area:'', contact:'', founded:'', prodStart:'', mgmt:'',
+      history:'ผลิตและจำหน่ายชิ้นส่วนอุปกรณ์เครื่องจักรก่อสร้าง เช่น Hydraulic Breaker, Shear parts, Coupler parts, Vibrator parts, Hydraulic Pump, Swing Motor, Travel Motor และ Multiple Control Valve',
+      workers:'', workersFull:'', workersSub:'',
+      days:'จันทร์ – เสาร์ (6 วัน/สัปดาห์)',
+      shifts:'2 กะ สลับกะทุก 1 สัปดาห์ ทำงาน 8 ชั่วโมง/กะ',
+      shiftDetail:'กะเช้า 08.00–17.00 น. / กะดึก 20.00–05.00 น. · พัก 1 ชั่วโมง · OT ไม่เกิน 4 ชั่วโมง',
+      surveyDate:new Date().toISOString().slice(0,10), surveyTime:'09.00 น.',
+      threats:'ด้านกายภาพ (เสียง ความร้อน ความสั่นสะเทือน แสง) และด้านเคมี (ฝุ่นโลหะ ฝุ่นซิลิกา ฟูมเชื่อม ไอระเหยสารทำละลาย/สี ละอองน้ำมัน)',
+      controllers:'อ.นพ. / พญ. ผู้ควบคุมการเดินสำรวจ',
+      observers:'เจ้าหน้าที่ผู้สังเกตการณ์'
+    },
+    depts:[
+      D('การตรวจรับวัตถุดิบและการตัด','Cutting / Raw material',
+        'ตรวจรับเหล็ก (round steel 40CrNiMo, 20CrMo, 38CrMoAl / steel plate) ตรวจสอบวัสดุ ความแข็ง แล้วตัด/เลื่อยเบื้องต้น',
+        'Material detector, เลื่อยวงเดือน, เครื่องเลื่อยสายพาน CNC',
+        [haz('กายภาพ','เสียง (Noise)','85','dB(A)'),haz('กายภาพ','ความร้อน (Heat/WBGT)','32','°C'),haz('กายภาพ','แสงสว่าง (Lighting)','ตามเอกสาร รสส','lux'),
+         haz('เคมี','ฝุ่นรวม (Total dust)','15','mg/m³'),haz('เคมี','ฝุ่นขนาดเล็ก (Respirable)','5','mg/m³'),haz('เคมี','ละอองน้ำมันตัด (Oil mist)','5','mg/m³')]),
+      D('การตีขึ้นรูป','Forging',
+        'ตีขึ้นรูปเหล็ก (Swing Motor, Travel Motor) เพื่อปรับปรุงโครงสร้างวัสดุ',
+        'เตาเผา, Forging press / hammer, เครนไฟฟ้า',
+        [haz('กายภาพ','เสียง (Noise)','85','dB(A)'),haz('กายภาพ','ความร้อน (Heat/WBGT)','30','°C'),haz('กายภาพ','ความสั่นสะเทือน (Vibration)','','m/s²'),haz('กายภาพ','รังสีความร้อน/แสง (IR)','ตามเอกสาร รสส','lux'),
+         haz('เคมี','ฟูมโลหะ (Metal fume)','10','mg/m³'),haz('เคมี','คาร์บอนมอนอกไซด์ (CO)','50','ppm')]),
+      D('การตัดเฉือนขึ้นรูป (Machining)','Machining',
+        'แปรรูปด้วย High-performance CNC lathe และ Machining center ให้ได้ตามแบบ',
+        'CNC lathe, High Rigidity Heavy Cutting Machining Center',
+        [haz('กายภาพ','เสียง (Noise)','85','dB(A)'),haz('กายภาพ','แสงสว่าง (Lighting)','ตามเอกสาร รสส','lux'),
+         haz('เคมี','ละอองน้ำมัน/สารหล่อเย็น (MWF mist)','5','mg/m³'),haz('เคมี','ฝุ่นรวม (Total dust)','15','mg/m³'),haz('เคมี','ฝุ่นขนาดเล็ก (Respirable)','5','mg/m³')]),
+      D('การอบชุบความร้อน','Heat Treatment',
+        'อบชุบแข็งคาร์บอน / คาร์บูไรซิ่ง ปรับปรุงคุณสมบัติเชิงกลของชิ้นส่วน',
+        'Carbon quenching furnace, Carburizing furnace',
+        [haz('กายภาพ','ความร้อน (Heat/WBGT)','30','°C'),haz('กายภาพ','เสียง (Noise)','85','dB(A)'),
+         haz('เคมี','ฟูม/ละอองน้ำมันชุบ (Quench oil)','5','mg/m³'),haz('เคมี','คาร์บอนมอนอกไซด์ (CO)','50','ppm'),haz('เคมี','แอมโมเนีย (Ammonia)','25','ppm')]),
+      D('การเชื่อม','Welding',
+        'เชื่อมประกอบชิ้นส่วน (Shear parts, Coupler parts) ตาม Welding Operation Instruction',
+        'เครื่องเชื่อม, เครนไฟฟ้า',
+        [haz('กายภาพ','แสง UV/IR (Welding arc)','ตามเอกสาร รสส','lux'),haz('กายภาพ','ความร้อน (Heat)','32','°C'),haz('กายภาพ','เสียง (Noise)','85','dB(A)'),
+         haz('เคมี','ฟูมเชื่อม (Welding fume as Fe)','5','mg/m³'),haz('เคมี','แมงกานีส (Manganese)','1','mg/m³'),haz('เคมี','โครเมียม (Chromium)','1','mg/m³'),haz('เคมี','นิกเกิล (Nickel)','1','mg/m³'),haz('เคมี','โอโซน (Ozone)','0.1','ppm')]),
+      D('การพ่นทราย','Sand Blasting',
+        'พ่นทรายเพื่อทำความสะอาด/ปรับผิว (Shear, Coupler, Vibrator parts)',
+        'ตู้/ห้องพ่นทราย, Blasting machine',
+        [haz('กายภาพ','เสียง (Noise)','85','dB(A)'),
+         haz('เคมี','ฝุ่นซิลิกา (Respirable crystalline silica)','0.05','mg/m³'),haz('เคมี','ฝุ่นรวม (Total dust)','15','mg/m³'),haz('เคมี','ฝุ่นขนาดเล็ก (Respirable)','5','mg/m³')]),
+      D('การเจียระไน','Grinding / Finishing',
+        'เจียระไนผิวสำเร็จ (CNC grinding) ปรับความหยาบผิวให้ได้ตามแบบ',
+        'CNC Grinding Machine, เครื่องเจียมือ',
+        [haz('กายภาพ','เสียง (Noise)','85','dB(A)'),haz('กายภาพ','ความสั่นสะเทือน มือ-แขน (HAV)','','m/s²'),haz('กายภาพ','แสงสว่าง (Lighting)','ตามเอกสาร รสส','lux'),
+         haz('เคมี','ฝุ่นรวม (Total dust)','15','mg/m³'),haz('เคมี','ฝุ่นขนาดเล็ก (Respirable)','5','mg/m³'),haz('เคมี','ฝุ่นซิลิกา (Silica)','0.05','mg/m³')]),
+      D('การทำความสะอาด','Cleaning / Degreasing',
+        'ทำความสะอาดเศษเหล็กและคราบน้ำมันด้วยเครื่องทำความสะอาด',
+        'Cleaning machine',
+        [haz('เคมี','ไอระเหยสารทำละลาย (Solvent vapor)','','ppm'),haz('เคมี','ละอองน้ำมัน (Oil mist)','5','mg/m³'),haz('เคมี','n-Hexane','500','ppm')]),
+      D('การประกอบ','Assembling',
+        'ประกอบชิ้นส่วนตามแบบ ควบคุมแรงบิดสลักเกลียว และทดสอบสมรรถนะ',
+        'เครนรางเดี่ยวไฟฟ้า, เครื่องอัดอากาศ',
+        [haz('กายภาพ','เสียง (Noise)','85','dB(A)'),haz('การยศาสตร์','การยกเคลื่อนย้าย/ท่าทางซ้ำ','','-')]),
+      D('การพ่นสี','Spray Paint',
+        'พ่นสีชิ้นงานตามความต้องการลูกค้า และเติมน้ำมันไฮดรอลิก',
+        'ห้องพ่นสี, ปืนพ่นสี',
+        [haz('เคมี','สารทำละลายอินทรีย์รวม (VOC)','','ppm'),haz('เคมี','โทลูอีน (Toluene)','50','ppm'),haz('เคมี','ไซลีน (Xylene)','100','ppm'),haz('เคมี','ไอโซไซยาเนต (Isocyanate)','0.005','mg/m³'),haz('เคมี','ละอองสี (Paint mist)','','mg/m³')]),
+      D('การบรรจุและจัดส่ง','Packaging & Delivery',
+        'บรรจุและจัดส่งชิ้นส่วนสำเร็จรูปให้ตรงความต้องการลูกค้า',
+        'เครนไฟฟ้า, รถยก',
+        [haz('การยศาสตร์','การยกเคลื่อนย้าย (Manual handling)','','-'),haz('กายภาพ','เสียง (รถยก/เครน)','85','dB(A)')])
+    ],
+    health:{}, // filled after depts
+    conclusion:{ heat:'', noise:'', chem:'', extra:'' }
+  };
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let S=null, curTab=0;
+function newState(){ const t=templateData(); syncHealth(t); return t; }
+function load(){
+  try{const raw=localStorage.getItem(LS_KEY); if(raw){S=JSON.parse(raw); syncHealth(S); return;}}catch(e){}
+  S=blankState();
+}
+function blankState(){
+  return {
+    general:{company:'',address:'',type:'',area:'',contact:'',founded:'',prodStart:'',mgmt:'',history:'',
+      workers:'',workersFull:'',workersSub:'',days:'',shifts:'',shiftDetail:'',
+      surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
+    depts:[], health:{}, conclusion:{heat:'',noise:'',chem:'',extra:''}
+  };
+}
+function syncHealth(st){
+  st.health=st.health||{};
+  (st.depts||[]).forEach(d=>{ if(!st.health[d.id]) st.health[d.id]={}; });
+}
+let saveTimer=null;
+function save(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+  const dot=document.getElementById('saveDot');
+  if(dot){dot.querySelector('i').style.background='#3ecb7a';}
+}
+function touch(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400); if(!CB.applying) pushFull(); }
+
+function loadTemplate(confirmFirst){
+  if(confirmFirst && !confirm('โหลดข้อมูลโรงงานตัวอย่าง (12 กระบวนการ) ทับข้อมูลปัจจุบัน?\nข้อมูลที่กรอกไว้จะถูกแทนที่')) return;
+  S=newState(); save(); renderAll(); bxFull(); toast('โหลดข้อมูลโรงงานตัวอย่างแล้ว');
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastT=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.innerHTML='<span class="ic">✓</span>'+msg;
+  el.classList.add('show'); clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'),2200);
+}
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function setTab(i){
+  curTab=i;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',+t.dataset.tab===i));
+  document.querySelectorAll('.panel').forEach((p,idx)=>p.classList.toggle('active',idx===i));
+  document.getElementById('btnPrev').style.visibility=i===0?'hidden':'visible';
+  const nx=document.getElementById('btnNext');
+  nx.innerHTML=i===4?'สร้างรายงาน ▤':'ถัดไป ›';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(i===2) renderRisk();
+  if(i===3) renderHealth();
+  if(i===4) renderSummary();
+  trackPresence();
+}
+function go(dir){
+  if(dir>0 && curTab===4){ openReport(); return; }
+  const n=Math.max(0,Math.min(4,curTab+dir)); setTab(n);
+}
+document.getElementById('tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(t) setTab(+t.dataset.tab);
+});
+
+/* ============================================================
+   PANEL 0 — GENERAL INFO
+   ============================================================ */
+function fld(label,path,val,ph,type){
+  type=type||'text';
+  return `<div class="field"><label>${label}</label><input data-sync="g:${path}" type="${type}" value="${esc(val)}" placeholder="${esc(ph||'')}" oninput="setG('${path}',this.value)"></div>`;
+}
+function area(label,path,val,ph){
+  return `<div class="field"><label>${label}</label><textarea data-sync="g:${path}" placeholder="${esc(ph||'')}" oninput="setG('${path}',this.value)">${esc(val)}</textarea></div>`;
+}
+function setG(path,v){ S.general[path]=v; touch(); bx({k:'g',path,v}); }
+
+function renderGeneral(){
+  const g=S.general;
+  document.getElementById('p0').innerHTML=`
+  <div class="pagehead">
+    <div class="kick">ส่วนที่ 1 · General Information</div>
+    <h2>ข้อมูลทั่วไปของสถานประกอบการ</h2>
+    <p>บันทึกข้อมูลพื้นฐานของโรงงาน คณะผู้เดินสำรวจ และช่วงเวลาทำงาน เพื่อใช้ประกอบส่วนหัวและบทสรุปของรายงาน</p>
+  </div>
+
+  <div class="card">
+    <div class="hd"><span class="eyebrow">โรงงาน</span><div class="sp"></div><h3>ข้อมูลบริษัท</h3></div>
+    <div class="bd">
+      <div class="grid">
+        ${fld('ชื่อสถานประกอบการ <span class="req">*</span>','company',g.company,'บริษัท ... จำกัด')}
+        ${area('ที่อยู่','address',g.address,'เลขที่ ... นิคมอุตสาหกรรม ... ตำบล ... อำเภอ ... จังหวัด ...')}
+        ${area('ประเภท/ชนิด/ลักษณะของสถานประกอบการ','type',g.type,'')}
+        <div class="grid g3">
+          ${fld('ขนาดพื้นที่ (ตร.ม.)','area',g.area,'เช่น 50,400')}
+          ${fld('บุคคลติดต่อ / โทร.','contact',g.contact,'')}
+          ${fld('ปีที่ก่อตั้ง (พ.ศ.)','founded',g.founded,'เช่น 2536')}
+        </div>
+        <div class="grid g2">
+          ${fld('ปีที่เริ่มผลิต (พ.ศ.)','prodStart',g.prodStart,'')}
+          ${fld('ลักษณะการบริหารงาน','mgmt',g.mgmt,'เช่น บริหารโดยชาวต่างชาติ')}
+        </div>
+        ${area('ประวัติ / ผลิตภัณฑ์ของสถานประกอบการ','history',g.history,'')}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><span class="eyebrow">กำลังคน & เวลาทำงาน</span></div>
+    <div class="bd">
+      <div class="grid g3">
+        ${fld('พนักงานทั้งหมด (คน)','workers',g.workers,'','number')}
+        ${fld('พนักงานประจำ (คน)','workersFull',g.workersFull,'','number')}
+        ${fld('Subcontract (คน)','workersSub',g.workersSub,'','number')}
+      </div>
+      <div class="grid g2" style="margin-top:13px">
+        ${fld('วันทำงาน','days',g.days,'')}
+        ${fld('ระบบกะ','shifts',g.shifts,'')}
+      </div>
+      ${area('รายละเอียดเวลาทำงาน / OT','shiftDetail',g.shiftDetail,'')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><span class="eyebrow">การเดินสำรวจ</span></div>
+    <div class="bd">
+      <div class="grid g2">
+        <div class="field"><label>วันที่เดินสำรวจ</label><input type="date" value="${esc(g.surveyDate)}" oninput="setG('surveyDate',this.value)"></div>
+        ${fld('เวลา','surveyTime',g.surveyTime,'09.00 น.')}
+      </div>
+      ${g.surveyDate?`<div class="hint">แสดงในรายงานเป็น: <b>${beDate(g.surveyDate)}</b> (พ.ศ.)</div>`:''}
+      ${area('สิ่งคุกคามสุขภาพ (ภาพรวม)','threats',g.threats,'ด้านกายภาพและด้านเคมี ...')}
+      <div class="grid g2">
+        ${area('ผู้ควบคุมการเดินสำรวจ','controllers',g.controllers,'ชื่อ-สกุล / สังกัด (บรรทัดละคน)')}
+        ${area('เจ้าหน้าที่ผู้สังเกตการณ์','observers',g.observers,'ชื่อ-สกุล / สังกัด (บรรทัดละคน)')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   PANEL 1 — DEPARTMENTS & HAZARDS
+   ============================================================ */
+function findDept(id){return S.depts.find(d=>d.id===id)}
+function findHaz(d,hid){return d.hazards.find(h=>h.id===hid)}
+
+function renderDepts(){
+  const el=document.getElementById('p1');
+  let html=`
+  <div class="pagehead">
+    <div class="kick">ส่วนที่ 2 · Hazard Identification</div>
+    <h2>แผนก / กระบวนการ &amp; สิ่งคุกคามสุขภาพ</h2>
+    <p>แต่ละแผนกระบุกระบวนการ เครื่องจักร และสิ่งคุกคาม (กายภาพ/เคมี/ชีวภาพ/การยศาสตร์) พร้อมค่าที่วัดได้และค่ามาตรฐาน ระบบจะเทียบผลให้อัตโนมัติ</p>
+  </div>
+  <div class="btnrow" style="margin-bottom:14px">
+    <button class="btn gold sm" onclick="addDept()">＋ เพิ่มแผนก</button>
+    <button class="btn ghost sm" onclick="expandAll(true)">ขยายทั้งหมด</button>
+    <button class="btn ghost sm" onclick="expandAll(false)">ย่อทั้งหมด</button>
+  </div>`;
+
+  if(!S.depts.length){
+    html+=`<div class="card"><div class="empty">ยังไม่มีแผนก — กด “เพิ่มแผนก” หรือ “โหลดข้อมูลโรงงานตัวอย่าง” ด้านล่าง</div></div>`;
+  }
+
+  S.depts.forEach((d,i)=>{
+    const overCount=d.hazards.filter(h=>evalStd(h.measured,h.std).c==='over').length;
+    html+=`
+    <div class="dept ${d.open?'open':''}" data-d="${d.id}">
+      <div class="dhd" onclick="toggleDept('${d.id}')">
+        <div class="idx">${i+1}</div>
+        <div class="dt"><b>${esc(d.name)||'(ไม่มีชื่อแผนก)'}</b><small>${esc(d.en)} · ${d.hazards.length} สิ่งคุกคาม</small></div>
+        ${overCount?`<span class="pill hi">เกินเกณฑ์ ${overCount}</span>`:''}
+        <span class="chev">▶</span>
+      </div>
+      <div class="dbd">
+        <div class="grid g2">
+          <div class="field"><label>ชื่อแผนก (ไทย)</label><input data-sync="d:${d.id}:name" value="${esc(d.name)}" oninput="setD('${d.id}','name',this.value)"></div>
+          <div class="field"><label>ชื่อกระบวนการ (EN)</label><input data-sync="d:${d.id}:en" value="${esc(d.en)}" oninput="setD('${d.id}','en',this.value)"></div>
+        </div>
+        <div class="field" style="margin-top:11px"><label>รายละเอียดกระบวนการ</label><textarea data-sync="d:${d.id}:proc" oninput="setD('${d.id}','proc',this.value)">${esc(d.proc)}</textarea></div>
+        <div class="field" style="margin-top:11px"><label>เครื่องจักร / อุปกรณ์</label><input data-sync="d:${d.id}:machines" value="${esc(d.machines)}" oninput="setD('${d.id}','machines',this.value)"></div>
+
+        <div class="subhd">สิ่งคุกคาม &amp; ผลการตรวจวัด</div>
+        <div class="tbl-scroll">
+          <table class="htbl">
+            <thead><tr><th style="width:78px">ประเภท</th><th>สิ่งคุกคาม</th><th style="width:96px">ค่าที่วัดได้</th><th style="width:70px">หน่วย</th><th style="width:96px">ค่ามาตรฐาน</th><th style="width:150px">ผลการประเมิน</th><th style="width:34px"></th></tr></thead>
+            <tbody>${d.hazards.map(h=>hazRow(d.id,h)).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--acc);padding:14px">ยังไม่มีสิ่งคุกคาม</td></tr>`}</tbody>
+          </table>
+        </div>
+        <div class="btnrow addrow">
+          <button class="btn ghost sm" onclick="addHaz('${d.id}')">＋ เพิ่มสิ่งคุกคาม</button>
+          <div class="sp" style="flex:1"></div>
+          <button class="btn danger sm" onclick="delDept('${d.id}')">🗑 ลบแผนกนี้</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+function hazRow(did,h){
+  const ev=evalStd(h.measured,h.std);
+  return `<tr data-h="${h.id}">
+    <td><select class="catcell" data-sync="h:${did}:${h.id}:cat" onchange="setH('${did}','${h.id}','cat',this.value)">${CATS.map(c=>`<option ${c===h.cat?'selected':''}>${c}</option>`).join('')}</select></td>
+    <td><input data-sync="h:${did}:${h.id}:name" value="${esc(h.name)}" oninput="setH('${did}','${h.id}','name',this.value)"></td>
+    <td><input data-sync="h:${did}:${h.id}:measured" value="${esc(h.measured)}" placeholder="—" oninput="setH('${did}','${h.id}','measured',this.value);refreshEval('${did}','${h.id}')"></td>
+    <td><input data-sync="h:${did}:${h.id}:unit" value="${esc(h.unit)}" oninput="setH('${did}','${h.id}','unit',this.value)"></td>
+    <td><input data-sync="h:${did}:${h.id}:std" value="${esc(h.std)}" oninput="setH('${did}','${h.id}','std',this.value);refreshEval('${did}','${h.id}')"></td>
+    <td class="evalcell"><span class="evaltag ${ev.c}">${ev.t}</span></td>
+    <td><button class="del" onclick="delHaz('${did}','${h.id}')">×</button></td>
+  </tr>`;
+}
+function refreshEval(did,hid){
+  const d=findDept(did),h=findHaz(d,hid); const ev=evalStd(h.measured,h.std);
+  const row=document.querySelector(`.dept[data-d="${did}"] tr[data-h="${hid}"] .evalcell`);
+  if(row) row.innerHTML=`<span class="evaltag ${ev.c}">${ev.t}</span>`;
+}
+function setD(id,k,v){findDept(id)[k]=v;touch(); bx({k:'d',did:id,key:k,v}); if(k==='name'){const b=document.querySelector(`.dept[data-d="${id}"] .dt b`); if(b)b.textContent=v||'(ไม่มีชื่อแผนก)';}}
+function setH(did,hid,k,v){findHaz(findDept(did),hid)[k]=v;touch(); bx({k:'h',did,hid,field:k,v})}
+function toggleDept(id){const d=findDept(id);d.open=!d.open;document.querySelector(`.dept[data-d="${id}"]`).classList.toggle('open',d.open);touch()}
+function expandAll(o){S.depts.forEach(d=>d.open=o);renderDepts();touch()}
+function addDept(){S.depts.push({id:uid(),name:'แผนกใหม่',en:'',proc:'',machines:'',hazards:[],open:true});syncHealth(S);renderDepts();touch();bxFull()}
+function delDept(id){if(!confirm('ลบแผนกนี้และข้อมูลทั้งหมด?'))return;S.depts=S.depts.filter(d=>d.id!==id);delete S.health[id];renderDepts();touch();bxFull()}
+function addHaz(did){findDept(did).hazards.push(haz('กายภาพ','','',''));renderDepts();touch();bxFull()}
+function delHaz(did,hid){const d=findDept(did);d.hazards=d.hazards.filter(h=>h.id!==hid);renderDepts();touch();bxFull()}
+
+/* ============================================================
+   PANEL 2 — RISK ASSESSMENT
+   ============================================================ */
+function effRisk(h){ return h.riskOverride || autoRisk(h.band,h.freq); }
+function renderRisk(){
+  const el=document.getElementById('p2');
+  let html=`
+  <div class="pagehead">
+    <div class="kick">ส่วนที่ 3 · Risk Assessment</div>
+    <h2>ผลการประเมินความเสี่ยงตามแผนก</h2>
+    <p>กำหนดระดับความรุนแรง (Hazard rating 1–5), ความเข้มข้นเทียบ OEL-TWA และความถี่การสัมผัส (1–5) ระบบจะประเมินระดับความเสี่ยงให้ ปรับแก้ได้ในช่อง “ผล”</p>
+  </div>
+  <div class="note">เกณฑ์อัตโนมัติ: <b>&lt;10%</b> → ต่ำ · <b>10–100%</b> → ปานกลาง · <b>=100%</b> → สูง · <b>&gt;100%</b> → สูง (ถ้าความถี่ = 5) มิฉะนั้นปานกลาง · ไม่ได้วัดซิลิกา → ให้ 100% (สูง)</div>`;
+
+  if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; return; }
+
+  S.depts.forEach((d,i)=>{
+    if(!d.hazards.length) return;
+    html+=`<div class="card"><div class="hd"><div class="idx" style="width:24px;height:24px;border-radius:7px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px">${i+1}</div><h3>${esc(d.name)}</h3><div class="sp"></div><span class="eyebrow">${esc(d.en)}</span></div>
+    <div class="bd" style="padding:0">
+      <div class="tbl-scroll" style="border:none;border-radius:0">
+      <table class="htbl">
+        <thead><tr><th style="width:66px">ประเภท</th><th>Hazard</th><th style="width:96px">Hazard rating</th><th style="width:150px">Concentration</th><th style="width:100px">Frequency</th><th style="width:120px">ผลการประเมิน</th></tr></thead>
+        <tbody>`;
+    d.hazards.forEach(h=>{
+      const r=effRisk(h);
+      html+=`<tr data-h="${h.id}">
+        <td class="catcell">${esc(h.cat)}</td>
+        <td>${esc(h.name)||'—'}</td>
+        <td><select onchange="setRk('${d.id}','${h.id}','hr',this.value)">${[5,4,3,2,1].map(n=>`<option ${+h.hr===n?'selected':''}>${n}</option>`).join('')}</select></td>
+        <td><select onchange="setRk('${d.id}','${h.id}','band',this.value);refreshRisk('${d.id}','${h.id}')"><option value="">— เลือก —</option>${CONC_BANDS.map(b=>`<option ${b===h.band?'selected':''}>${b}</option>`).join('')}</select></td>
+        <td><select onchange="setRk('${d.id}','${h.id}','freq',this.value);refreshRisk('${d.id}','${h.id}')">${[5,4,3,2,1].map(n=>`<option ${+h.freq===n?'selected':''}>${n}</option>`).join('')}</select></td>
+        <td class="riskcell">${riskCellHtml(h)}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div></div></div>`;
+  });
+  el.innerHTML=html;
+}
+function riskCellHtml(h){
+  const auto=autoRisk(h.band,h.freq);
+  const r=effRisk(h);
+  return `<select onchange="setRk('','${h.id}','riskOverride',this.value===('auto:'+auto)?'':this.value.replace('set:',''));refreshRiskBadge('${h.id}')" style="margin-bottom:4px">
+      <option value="auto:${auto}" ${!h.riskOverride?'selected':''}>อัตโนมัติ${auto?' ('+auto+')':''}</option>
+      ${RISK_LABELS.map(l=>`<option value="set:${l}" ${h.riskOverride===l?'selected':''}>${l}</option>`).join('')}
+    </select><div class="rbadge">${r?`<span class="riskbadge ${riskClass(r)}">${r}</span>`:''}</div>`;
+}
+function setRk(did,hid,k,v){
+  let h;
+  if(did){h=findHaz(findDept(did),hid);}
+  else{ for(const d of S.depts){const f=d.hazards.find(x=>x.id===hid); if(f){h=f;did=d.id;break;}} }
+  h[k]=(k==='hr'||k==='freq')?Number(v):v; touch(); bx({k:'h',did,hid,field:k,v:h[k]});
+}
+function refreshRisk(did,hid){
+  const h=findHaz(findDept(did),hid);
+  const cell=document.querySelector(`#p2 tr[data-h="${hid}"] .riskcell`);
+  if(cell) cell.innerHTML=riskCellHtml(h);
+}
+function refreshRiskBadge(hid){
+  let h; for(const d of S.depts){const f=d.hazards.find(x=>x.id===hid); if(f){h=f;break;}}
+  const r=effRisk(h);
+  const b=document.querySelector(`#p2 tr[data-h="${hid}"] .rbadge`);
+  if(b) b.innerHTML=r?`<span class="riskbadge ${riskClass(r)}">${r}</span>`:'';
+}
+
+/* ============================================================
+   PANEL 3 — HEALTH SURVEILLANCE
+   ============================================================ */
+function renderHealth(){
+  syncHealth(S);
+  const el=document.getElementById('p3');
+  let html=`
+  <div class="pagehead">
+    <div class="kick">ส่วนที่ 4 · Health Surveillance</div>
+    <h2>การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
+    <p>เลือกรายการตรวจสุขภาพที่เหมาะสมกับปัจจัยเสี่ยงของแต่ละแผนก ตารางนี้จะแสดงเป็น “ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง” ในรายงาน</p>
+  </div>`;
+  if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; return; }
+
+  html+=`<div class="card"><div class="bd" style="padding:12px">
+    <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">✨ แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
+    <div class="hcwrap"><table class="hcgrid">
+    <thead><tr><th class="dept-name">แผนก</th>${EXAMS.map(e=>`<th>${e}</th>`).join('')}</tr></thead><tbody>`;
+  S.depts.forEach(d=>{
+    html+=`<tr><td class="dept-name">${esc(d.name)}</td>`;
+    EXAMS.forEach(ex=>{
+      const on=S.health[d.id] && S.health[d.id][ex];
+      html+=`<td><input type="checkbox" data-sync="hc:${d.id}:${ex}" ${on?'checked':''} onchange="setHC('${d.id}','${ex}',this.checked)"></td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table></div>
+  <div class="hint" style="margin-top:8px">เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · Spirometry, Audiometry, CXR ฯลฯ</div>
+  </div></div>`;
+  el.innerHTML=html;
+}
+function setHC(did,ex,on){ S.health[did]=S.health[did]||{}; if(on)S.health[did][ex]=true; else delete S.health[did][ex]; touch(); bx({k:'hc',did,ex,v:!!on}); }
+function autoHealth(){
+  S.depts.forEach(d=>{
+    const hz=d.hazards.map(h=>(h.name+' '+h.cat).toLowerCase());
+    const set=k=>{S.health[d.id]=S.health[d.id]||{};S.health[d.id][k]=true;};
+    const has=re=>hz.some(x=>re.test(x));
+    set('ทางเดินหายใจ'); set('CXR');
+    if(has(/เสียง|noise/)){set('การได้ยิน');set('Audiometry');}
+    if(has(/ฝุ่น|dust|silica|ซิลิกา|fume|ฟูม|เชื่อม|weld/)){set('Spirometry');set('ทางเดินหายใจ');}
+    if(has(/ความร้อน|heat/)){set('EKG');set('ไหลเวียนโลหิต');}
+    if(has(/โครเมียม|นิกเกิล|แมงกานีส|chrom|nickel|mangan|ตะกั่ว|lead/)){set('CBC');set('Cr');}
+    if(has(/สารทำละลาย|solvent|toluene|xylene|hexane|สี|paint|voc|isocyan/)){set('CBC');set('ผิวหนัง');set('ไหลเวียนโลหิต');}
+    if(has(/แสง|uv|เชื่อม|weld|มองเห็น/)){set('การมองเห็น');set('VA');}
+    if(has(/สั่นสะเทือน|vibration|hav|ยก|manual|การยศาสตร์/)){set('กระดูกและกล้ามเนื้อ');}
+  });
+  renderHealth(); touch(); bxFull(); toast('แนะนำรายการตรวจตามสิ่งคุกคามแล้ว');
+}
+
+/* ============================================================
+   PANEL 4 — SUMMARY
+   ============================================================ */
+function highRiskFindings(){
+  const out={heat:[],noise:[],silica:[],chemOver:[]};
+  S.depts.forEach(d=>{
+    d.hazards.forEach(h=>{
+      const r=effRisk(h), nm=(h.name||'').toLowerCase();
+      if((r==='สูง')){
+        if(/ความร้อน|heat/.test(nm)) out.heat.push(d.name);
+        else if(/เสียง|noise/.test(nm)) out.noise.push(d.name);
+        else if(/ซิลิกา|silica/.test(nm)) out.silica.push(d.name);
+      }
+      if(evalStd(h.measured,h.std).c==='over') out.chemOver.push({d:d.name,h:h.name});
+    });
+  });
+  return out;
+}
+function renderSummary(){
+  const el=document.getElementById('p4');
+  const f=highRiskFindings();
+  const uniq=a=>[...new Set(a)];
+  const c=S.conclusion;
+  el.innerHTML=`
+  <div class="pagehead">
+    <div class="kick">ส่วนที่ 5 · Conclusion</div>
+    <h2>สรุปผล &amp; ข้อเสนอแนะ</h2>
+    <p>ระบบสรุปแผนกที่มีความเสี่ยงสูงให้อัตโนมัติ เพิ่มเติมข้อเสนอแนะได้ตามต้องการ แล้วกด “สร้างรายงาน”</p>
+  </div>
+
+  <div class="card"><div class="hd"><span class="eyebrow">พบความเสี่ยงสูง</span></div><div class="bd">
+    <div class="grid g3">
+      <div><h4 style="font-size:13px;color:var(--high)">🌡 ความร้อน</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.heat).join(', ')||'— ไม่พบระดับสูง'}</p></div>
+      <div><h4 style="font-size:13px;color:var(--high)">🔊 เสียงดัง</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.noise).join(', ')||'— ไม่พบระดับสูง'}</p></div>
+      <div><h4 style="font-size:13px;color:var(--high)">⚗ ฝุ่นซิลิกา</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.silica).join(', ')||'— ไม่พบระดับสูง'}</p></div>
+    </div>
+    ${f.chemOver.length?`<div class="warn" style="margin-top:14px"><b>เกินค่ามาตรฐาน:</b> ${uniq(f.chemOver.map(x=>x.h+' ('+x.d+')')).join(', ')}</div>`:''}
+  </div></div>
+
+  <div class="card"><div class="hd"><span class="eyebrow">ข้อเสนอแนะ</span><div class="sp"></div><button class="btn ghost sm" onclick="autoConclusion()">✨ ร่างอัตโนมัติ</button></div><div class="bd">
+    <div class="field"><label>1. ความร้อน (Heat)</label><textarea data-sync="c:heat" oninput="setC('heat',this.value)" placeholder="เช่น ควบคุมตามหลัก Hierarchy of control, ตรวจ Fit for work ...">${esc(c.heat)}</textarea></div>
+    <div class="field" style="margin-top:11px"><label>2. เสียงดัง (Noise)</label><textarea data-sync="c:noise" oninput="setC('noise',this.value)" placeholder="เช่น จัดทำโครงการอนุรักษ์การได้ยิน, ใช้ปลั๊กอุดหู NRR ≥ 19 ...">${esc(c.noise)}</textarea></div>
+    <div class="field" style="margin-top:11px"><label>3. สารเคมีอันตราย (Chemical)</label><textarea data-sync="c:chem" oninput="setC('chem',this.value)" placeholder="เช่น ตรวจวัดปริมาณ silica dust ในอากาศ ...">${esc(c.chem)}</textarea></div>
+    <div class="field" style="margin-top:11px"><label>ข้อเสนอแนะเพิ่มเติม</label><textarea data-sync="c:extra" oninput="setC('extra',this.value)">${esc(c.extra)}</textarea></div>
+  </div></div>
+
+  <div class="card"><div class="bd" style="text-align:center;padding:22px">
+    <button class="btn gold" style="padding:13px 28px;font-size:15px" onclick="openReport()">▤ สร้างรายงานฉบับสมบูรณ์</button>
+    <div class="hint" style="margin-top:8px">รายงานจะจัดรูปแบบตามไฟล์ตัวอย่าง · พิมพ์ PDF / คัดลอกโค้ด / บันทึกไฟล์ได้</div>
+  </div></div>`;
+}
+function setC(k,v){S.conclusion[k]=v;touch(); bx({k:'c',key:k,v})}
+function autoConclusion(){
+  const f=highRiskFindings(), uniq=a=>[...new Set(a)];
+  const c=S.conclusion;
+  if(f.heat.length) c.heat=`ผลการประเมินพบแผนก ${uniq(f.heat).join(', ')} มีความเสี่ยงต่อสุขภาพจากความร้อนในระดับสูง แนะนำให้ควบคุมความเสี่ยงตามหลัก Hierarchy of control ร่วมกับมาตรการ administrative และการใช้อุปกรณ์ป้องกันส่วนบุคคล (PPEs) และให้มีการตรวจประเมินความพร้อมก่อนเข้าทำงาน (Fit for work) สำหรับผู้ที่เสี่ยงต่อการเจ็บป่วยจากความร้อน (Heat emergencies)`;
+  if(f.noise.length) c.noise=`ผลการประเมินความเสี่ยงด้านเสียงดังพบว่าแผนก ${uniq(f.noise).join(', ')} อยู่ในระดับสูง แนะนำให้จัดทำมาตรการอนุรักษ์การได้ยินตามกฎหมาย อย่างน้อยประกอบด้วย (1) นโยบายการอนุรักษ์การได้ยิน (2) การเฝ้าระวังเสียงดัง (Noise monitoring) (3) การเฝ้าระวังการได้ยิน (Audiometry ปีละ 1 ครั้ง) (4) หน้าที่ความรับผิดชอบของผู้เกี่ยวข้อง และให้ใช้อุปกรณ์ป้องกันเสียง เช่น foam ear plug NRR อย่างน้อย 19`;
+  if(f.silica.length) c.chem=`ผลการประเมินความเสี่ยงต่อสุขภาพส่วนใหญ่อยู่ในเกณฑ์ต่ำ ยกเว้นฝุ่นซิลิกา (silica dust) ที่อยู่ในเกณฑ์สูง ในแผนก ${uniq(f.silica).join(', ')} เนื่องจากยังไม่ได้ตรวจวัดปริมาณในอากาศ แนะนำให้ตรวจวัดปริมาณ silica dust ในอากาศ เพื่อให้เป็นไปตามกฎกระทรวงกำหนดมาตรฐานในการบริหาร จัดการ และดำเนินการด้านความปลอดภัย อาชีวอนามัย และสภาพแวดล้อมในการทำงาน เกี่ยวกับสารเคมีอันตราย พ.ศ. 2556`;
+  else c.chem=c.chem||`ผลการประเมินความเสี่ยงต่อสุขภาพจากสารเคมีส่วนใหญ่อยู่ในเกณฑ์ต่ำ แนะนำให้ตรวจวัดสิ่งคุกคามที่ยังไม่ได้วัด และเฝ้าระวังตามปัจจัยเสี่ยงของแต่ละแผนก`;
+  renderSummary(); touch(); bxFull(); toast('ร่างข้อเสนอแนะแล้ว');
+}
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+function renderAll(){ renderGeneral(); renderDepts(); renderRisk(); renderHealth(); renderSummary(); }
+
+/* ============================================================
+   REPORT GENERATION  (ตามรูปแบบไฟล์ตัวอย่าง)
+   ============================================================ */
+function lines(str){return String(str||'').split(/\n/).filter(x=>x.trim())}
+function buildReport(){
+  const g=S.general;
+  const rbCls=r=>({'สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a'}[r]||'l');
+
+  // --- Cover ---
+  let h=`<div class="rp">
+  <div class="cover">
+    <div class="logo">อว</div>
+    <h1 style="font-size:20px">รายงานผลการเดินสำรวจสถานประกอบการ</h1>
+    <h1 style="font-size:22px;margin-top:6px">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</h1>
+    <p class="muted" style="margin-top:26px">จัดทำโดย คณะผู้เดินสำรวจอาชีวเวชศาสตร์</p>
+    <p class="muted">ฝึกสำรวจวันที่ ${beDate(g.surveyDate)||'—'}</p>
+    <p class="muted" style="margin-top:22px;font-size:11px">เอกสารนี้จัดทำโดยระบบ IKIGAI OS · OCCUMED — Walk-through Survey</p>
+  </div>`;
+
+  // --- บทสรุป ---
+  h+=`<h2>◆ บทสรุปการเดินสำรวจสถานประกอบการ</h2>
+  <dl class="kv">
+    <dt>ชื่อสถานประกอบการ</dt><dd>${esc(g.company)||'—'}</dd>
+    <dt>ที่อยู่</dt><dd>${esc(g.address)||'—'}</dd>
+    <dt>ประเภท/ชนิดของโรงงาน</dt><dd>${esc(g.type)||'—'}</dd>
+    <dt>ขนาดของโรงงาน</dt><dd>${esc(g.area)||'—'} ตร.ม.</dd>
+    <dt>สิ่งคุกคามสุขภาพ</dt><dd>${esc(g.threats)||'—'}</dd>
+    <dt>วันที่เดินสำรวจ</dt><dd>${beDate(g.surveyDate)||'—'} เวลา ${esc(g.surveyTime)||'—'}</dd>
+  </dl>
+  <h3>ผู้ควบคุมการเดินสำรวจ</h3>${lines(g.controllers).map(l=>`<p style="margin:2px 0 2px 14px">• ${esc(l)}</p>`).join('')||'<p class="muted">—</p>'}
+  <h3>เจ้าหน้าที่ผู้สังเกตการณ์</h3>${lines(g.observers).map(l=>`<p style="margin:2px 0 2px 14px">• ${esc(l)}</p>`).join('')||'<p class="muted">—</p>'}`;
+
+  // --- คำนำ ---
+  h+=`<h2>◆ คำนำ</h2>
+  <p>การเดินสำรวจโรงงานเป็นทักษะสำคัญของแพทย์อาชีวเวชศาสตร์ เพื่อสนับสนุนการบริการสุขภาพให้บรรลุวัตถุประสงค์ และนำบริการด้านสุขภาพอนามัยสู่คนทำงานอย่างมีประสิทธิภาพ ช่วยให้เห็นสภาพการทำงานที่แท้จริงและความเสี่ยงที่คนทำงานต้องเผชิญ นำไปสู่การวางแผนการป้องกัน ส่งเสริม บำบัด และฟื้นฟูที่เหมาะสมกับแต่ละแผนก</p>
+  <p>รายงานฉบับนี้ประกอบด้วยข้อมูลทั่วไป กระบวนการผลิต สิ่งคุกคามที่คนทำงานสัมผัส ผลการประเมินความเสี่ยง และคำแนะนำมาตรการป้องกันและเฝ้าระวังสุขภาพจากการทำงาน ณ ${esc(g.company)||'สถานประกอบการ'}</p>`;
+
+  // --- สารบัญ ---
+  h+=`<h2>◆ สารบัญ</h2><ul class="toc">
+    <li><span>บทสรุปการเดินสำรวจสถานประกอบการ</span><span>1</span></li>
+    <li><span>ข้อมูลทั่วไปของสถานประกอบการ</span><span>2</span></li>
+    <li><span>สิ่งคุกคามสุขภาพจากกระบวนการผลิต</span><span>3</span></li>
+    <li><span>ผลการประเมินความเสี่ยงตามแผนก</span><span>4</span></li>
+    <li><span>ตารางรวมสิ่งคุกคาม</span><span>5</span></li>
+    <li><span>การตรวจสุขภาพและการสร้างเสริมสุขภาพ</span><span>6</span></li>
+    <li><span>บทสรุปและข้อเสนอแนะ</span><span>7</span></li>
+  </ul>`;
+
+  // --- ข้อมูลทั่วไป ---
+  h+=`<h2>◆ ข้อมูลทั่วไปของสถานประกอบการ</h2>
+  <dl class="kv">
+    <dt>ชื่อสถานประกอบการ</dt><dd>${esc(g.company)||'—'}</dd>
+    <dt>ประเภท ชนิด ลักษณะ</dt><dd>${esc(g.type)||'—'}</dd>
+    <dt>ที่อยู่</dt><dd>${esc(g.address)||'—'}</dd>
+    <dt>บุคคลติดต่อ / โทร.</dt><dd>${esc(g.contact)||'—'}</dd>
+    <dt>ปีที่ก่อตั้ง</dt><dd>พ.ศ. ${esc(g.founded)||'—'}</dd>
+    <dt>ปีที่เริ่มผลิต</dt><dd>พ.ศ. ${esc(g.prodStart)||'—'}</dd>
+    <dt>การบริหารงาน</dt><dd>${esc(g.mgmt)||'—'}</dd>
+    <dt>ขนาดพื้นที่</dt><dd>${esc(g.area)||'—'} ตร.ม.</dd>
+    <dt>บุคลากร</dt><dd>${esc(g.workers)||'—'} คน (ประจำ ${esc(g.workersFull)||'—'} · Subcontract ${esc(g.workersSub)||'—'})</dd>
+    <dt>วันทำงาน</dt><dd>${esc(g.days)||'—'}</dd>
+    <dt>ระบบกะ</dt><dd>${esc(g.shifts)||'—'}</dd>
+    <dt>เวลาทำงาน</dt><dd>${esc(g.shiftDetail)||'—'}</dd>
+  </dl>
+  ${g.history?`<h3>ประวัติ / ผลิตภัณฑ์</h3><p>${esc(g.history)}</p>`:''}`;
+
+  // --- สิ่งคุกคามจากกระบวนการผลิต (measurement tables) ---
+  h+=`<h2>◆ สิ่งคุกคามสุขภาพจากกระบวนการผลิต</h2><p class="muted">การตรวจหาสิ่งคุกคามตามแผนก</p>`;
+  S.depts.forEach((d,i)=>{
+    if(!d.hazards.length) return;
+    h+=`<h3>${i+1}. ${esc(d.name)} <span class="muted" style="font-weight:400">(${esc(d.en)})</span></h3>`;
+    if(d.proc) h+=`<p class="muted" style="margin:2px 0">${esc(d.proc)}</p>`;
+    h+=`<table><thead><tr><th>ประเภท</th><th>สิ่งคุกคาม</th><th>ค่าที่วัดได้</th><th>ค่ามาตรฐาน</th><th>ผลการประเมิน</th></tr></thead><tbody>`;
+    // group by category preserving order
+    let lastCat='';
+    d.hazards.forEach(hz=>{
+      const ev=evalStd(hz.measured,hz.std);
+      const mv=(hz.measured?esc(hz.measured)+(hz.unit&&hz.unit!=='-'?' '+esc(hz.unit):''):'<span class="muted">ไม่ได้วัด</span>');
+      const sv=(hz.std?esc(hz.std)+(hz.unit&&hz.unit!=='-'?' '+esc(hz.unit):''):'—');
+      h+=`<tr><td>${hz.cat!==lastCat?esc(hz.cat):''}</td><td>${esc(hz.name)}</td><td>${mv}</td><td>${sv}</td><td class="${ev.c==='over'?'r-over':ev.c==='ok'?'r-ok':'muted'}">${ev.t}</td></tr>`;
+      lastCat=hz.cat;
+    });
+    h+=`</tbody></table>`;
+  });
+
+  // --- ผลการประเมินความเสี่ยงตามแผนก ---
+  h+=`<h2>◆ ผลการประเมินความเสี่ยงตามแผนก</h2>`;
+  S.depts.forEach((d,i)=>{
+    if(!d.hazards.length) return;
+    h+=`<h3>${i+1}. ${esc(d.name)} (${esc(d.en)})</h3>
+    <table><thead><tr><th>ประเภท</th><th>Hazard</th><th>Rating</th><th>Concentration</th><th>Frequency</th><th>Risk evaluation</th></tr></thead><tbody>`;
+    let lastCat='';
+    d.hazards.forEach(hz=>{
+      const r=effRisk(hz);
+      h+=`<tr><td>${hz.cat!==lastCat?esc(hz.cat):''}</td><td>${esc(hz.name)}</td><td style="text-align:center">${esc(hz.hr)}</td><td>${esc(hz.band)||'—'}</td><td style="text-align:center">${esc(hz.freq)}</td><td>${r?`<span class="rb ${rbCls(r)}">${r}</span>`:'—'}</td></tr>`;
+      lastCat=hz.cat;
+    });
+    h+=`</tbody></table>`;
+  });
+  h+=`<p class="muted" style="font-size:11px">* กรณีไม่มีผลตรวจวัดปริมาณ silica dust ในบรรยากาศที่ลูกจ้างทำงาน กำหนดค่าความเข้มข้นเป็น 100% OEL-TWA</p>`;
+
+  // --- ตารางรวมสิ่งคุกคาม ---
+  h+=buildCombinedTable();
+
+  // --- การตรวจสุขภาพ ---
+  h+=`<h2>◆ การตรวจสุขภาพและการสร้างเสริมสุขภาพ</h2><p class="muted">ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง</p>`;
+  h+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${EXAMS.map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
+  S.depts.forEach(d=>{
+    h+=`<tr><td style="white-space:nowrap">${esc(d.name)}</td>${EXAMS.map(e=>`<td style="text-align:center">${(S.health[d.id]&&S.health[d.id][e])?'✕':''}</td>`).join('')}</tr>`;
+  });
+  h+=`</tbody></table>`;
+
+  // --- สรุป ---
+  const c=S.conclusion;
+  h+=`<h2>◆ บทสรุปและข้อเสนอแนะ</h2>`;
+  if(c.heat) h+=`<h3>1. ความร้อน</h3><p>${esc(c.heat)}</p>`;
+  if(c.noise) h+=`<h3>2. เสียงดัง</h3><p>${esc(c.noise)}</p>`;
+  if(c.chem) h+=`<h3>3. สารเคมีอันตราย</h3><p>${esc(c.chem)}</p>`;
+  if(c.extra) h+=`<h3>ข้อเสนอแนะเพิ่มเติม</h3><p>${esc(c.extra)}</p>`;
+  if(!c.heat&&!c.noise&&!c.chem&&!c.extra) h+=`<p class="muted">— ยังไม่ได้กรอกข้อเสนอแนะ (กลับไปหน้า “สรุป” เพื่อร่างอัตโนมัติ) —</p>`;
+
+  h+=`<hr><div class="sig"><p>คณะผู้จัดทำ</p><p class="muted">${THMON[new Date().getMonth()]} ${beYear()}</p></div>`;
+  h+=`</div>`;
+  return h;
+}
+
+function buildCombinedTable(){
+  // union hazard names -> rows ; depts -> cols ; cell measured/std
+  const names=[]; const seen={};
+  S.depts.forEach(d=>d.hazards.forEach(hz=>{const k=hz.name.trim(); if(k&&!seen[k]){seen[k]=hz.cat;names.push(k);}}));
+  if(!names.length) return '';
+  // order by category
+  const order={'กายภาพ':0,'เคมี':1,'ชีวภาพ':2,'การยศาสตร์':3};
+  names.sort((a,b)=>(order[seen[a]]??9)-(order[seen[b]]??9));
+  let h=`<h2>◆ ตารางรวมสิ่งคุกคาม (Hazard Monitoring)</h2>
+  <div style="overflow-x:auto"><table class="heat" style="font-size:10px"><thead><tr><th>ประเภท</th><th>สิ่งคุกคาม</th>${S.depts.map(d=>`<th>${esc(d.en||d.name)}</th>`).join('')}</tr></thead><tbody>`;
+  let lastCat='';
+  names.forEach(nm=>{
+    const cat=seen[nm];
+    h+=`<tr><td>${cat!==lastCat?esc(cat):''}</td><td style="white-space:nowrap">${esc(nm)}</td>`;
+    S.depts.forEach(d=>{
+      const hz=d.hazards.find(x=>x.name.trim()===nm);
+      if(!hz){h+=`<td style="text-align:center;color:#bbb">–</td>`;return;}
+      const ev=evalStd(hz.measured,hz.std);
+      const val=(hz.measured?esc(hz.measured):'–')+(hz.std?'/'+esc(hz.std):'');
+      const cls=ev.c==='over'?'hi':(ev.c==='ok'?'':'');
+      h+=`<td class="${cls}" style="text-align:center">${val==='–'?'–':val}</td>`;
+    });
+    h+=`</tr>`; lastCat=cat;
+  });
+  h+=`</tbody></table></div><p class="muted" style="font-size:10px">รูปแบบข้อมูล: ค่าที่วัดได้ / ค่ามาตรฐาน · ช่องสีแดง = เกินเกณฑ์</p>`;
+  return h;
+}
+
+function reportCSS(){
+  return `body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;color:#222;margin:0;background:#e9edf3}
+  #reportDoc{background:#fff;max-width:760px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+  .rp{padding:38px 44px;font-size:13.5px}
+  .rp h1{text-align:center;font-size:19px;color:#111}
+  .rp h2{font-size:16px;color:#0B2545;border-bottom:2px solid #C8A046;padding-bottom:5px;margin:26px 0 12px}
+  .rp h3{font-size:14px;color:#0B2545;margin:16px 0 7px}.rp p{margin:7px 0}
+  .rp .cover{text-align:center;padding:40px 0}
+  .rp .cover .logo{width:64px;height:64px;border-radius:14px;margin:0 auto 18px;background:linear-gradient(135deg,#0B2545,#13315C);display:grid;place-items:center;color:#C8A046;font-weight:800;font-size:26px}
+  .rp table{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0}
+  .rp th,.rp td{border:1px solid #ccc;padding:5px 7px;text-align:left;vertical-align:top}
+  .rp th{background:#f0f3f8;font-weight:700;color:#0B2545}
+  .rp .kv{display:grid;grid-template-columns:190px 1fr;gap:2px 10px;font-size:13px}
+  .rp .kv dt{color:#555;font-weight:600}.rp .kv dd{margin:0}
+  .rp .r-ok{color:#137a4b}.rp .r-over{color:#c0392b;font-weight:700}.rp .muted{color:#777;font-size:12px}
+  .rp .rb{font-weight:700;padding:2px 7px;border-radius:5px;font-size:10.5px}
+  .rp .rb.h{background:#fbe6e2;color:#c0392b}.rp .rb.m{background:#fdf1dd;color:#c9820a}.rp .rb.l{background:#e7f3ec;color:#2e7d54}.rp .rb.a{background:#eef1f6;color:#516079}
+  .rp .toc{list-style:none;padding:0}.rp .toc li{display:flex;justify-content:space-between;border-bottom:1px dotted #bbb;padding:6px 0}
+  .rp .heat td.hi{background:#fbe6e2;color:#c0392b;font-weight:700}
+  .rp .sig{margin-top:40px;text-align:right}.rp hr{border:none;border-top:1px solid #ddd;margin:26px 0}
+  @media print{body{background:#fff}#reportDoc{box-shadow:none}.rp{padding:0}}`;
+}
+function standaloneReport(){
+  return `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>รายงานผลการเดินสำรวจ · ${esc(S.general.company||'สถานประกอบการ')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>${reportCSS()}</style></head><body><div id="reportDoc">${buildReport()}</div></body></html>`;
+}
+
+function openReport(){
+  document.getElementById('reportDoc').innerHTML=buildReport();
+  document.getElementById('reportModal').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closeReport(){document.getElementById('reportModal').classList.remove('show');document.body.style.overflow=''}
+function copyReport(){
+  const txt=standaloneReport();
+  navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกโค้ด HTML รายงานแล้ว — วางเพื่อ deploy ได้เลย'))
+    .catch(()=>{ // fallback
+      const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');toast('คัดลอกแล้ว');}catch(e){toast('คัดลอกไม่สำเร็จ ลองบันทึกไฟล์แทน');}
+      ta.remove();
+    });
+}
+function downloadReport(){
+  const blob=new Blob([standaloneReport()],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`รายงานเดินสำรวจ_${(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)}_${beYear()}.html`;
+  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์รายงานแล้ว');
+}
+
+/* ============================================================
+   EXPORT / IMPORT
+   ============================================================ */
+function doExport(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`survey_${(S.general.company||'data').replace(/[\/\\?%*:|"<>]/g,'').slice(0,30)}.json`;
+  a.click(); URL.revokeObjectURL(a.href); toast('ส่งออกข้อมูลแล้ว');
+}
+function doImport(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{const d=JSON.parse(r.result); S=d; syncHealth(S); save(); renderAll(); setTab(0); toast('นำเข้าข้อมูลสำเร็จ'); }catch(err){alert('ไฟล์ไม่ถูกต้อง: '+err.message);} };
+  r.readAsText(f); e.target.value='';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeReport(); });
+document.getElementById('reportModal').addEventListener('click',e=>{ if(e.target.id==='reportModal') closeReport(); });
+
+/* ============================================================
+   COLLABORATION — Supabase realtime (broadcast + presence)
+   Persistence via passcode-gated SECURITY DEFINER RPC.
+   ============================================================ */
+const CB={ sb:null, ch:null, active:false, applying:false, id:'', pass:'', ver:0, me:{id:'',name:'',role:''} };
+const TABNAMES=['ข้อมูลทั่วไป','แผนก','ความเสี่ยง','ตรวจสุขภาพ','สรุป'];
+
+const SB_SQL=`-- OCCUMED Walk-through Survey · Supabase setup (run once in SQL Editor)
+create extension if not exists pgcrypto;
+
+create table if not exists public.survey_state (
+  id text primary key,
+  title text,
+  passhash text not null,
+  state jsonb not null default '{}'::jsonb,
+  ver bigint not null default 1,
+  updated_by text,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+-- RLS on, NO policies: anon cannot read/write the table directly.
+alter table public.survey_state enable row level security;
+
+create or replace function public.survey_create(p_id text,p_pass text,p_title text,p_by text,p_state jsonb)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare r public.survey_state;
+begin
+  if exists(select 1 from public.survey_state where id=p_id) then
+    return jsonb_build_object('ok',false,'reason','exists');
+  end if;
+  insert into public.survey_state(id,title,passhash,state,ver,updated_by)
+    values(p_id,p_title,crypt(p_pass,gen_salt('bf')),coalesce(p_state,'{}'::jsonb),1,p_by)
+    returning * into r;
+  return jsonb_build_object('ok',true,'ver',r.ver);
+end $$;
+
+create or replace function public.survey_join(p_id text,p_pass text)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare r public.survey_state;
+begin
+  select * into r from public.survey_state where id=p_id;
+  if not found then return jsonb_build_object('ok',false,'reason','notfound'); end if;
+  if r.passhash <> crypt(p_pass,r.passhash) then
+    return jsonb_build_object('ok',false,'reason','badpass');
+  end if;
+  return jsonb_build_object('ok',true,'ver',r.ver,'state',r.state,'title',r.title);
+end $$;
+
+create or replace function public.survey_save(p_id text,p_pass text,p_state jsonb,p_by text,p_ver bigint)
+returns jsonb language plpgsql security definer set search_path=public as $$
+declare r public.survey_state;
+begin
+  select * into r from public.survey_state where id=p_id;
+  if not found then return jsonb_build_object('ok',false,'reason','notfound'); end if;
+  if r.passhash <> crypt(p_pass,r.passhash) then
+    return jsonb_build_object('ok',false,'reason','badpass');
+  end if;
+  update public.survey_state
+     set state=p_state, ver=greatest(r.ver,coalesce(p_ver,r.ver))+1, updated_by=p_by, updated_at=now()
+   where id=p_id returning * into r;
+  return jsonb_build_object('ok',true,'ver',r.ver);
+end $$;
+
+revoke all on public.survey_state from anon, authenticated;
+grant execute on function public.survey_create(text,text,text,text,jsonb) to anon, authenticated;
+grant execute on function public.survey_join(text,text) to anon, authenticated;
+grant execute on function public.survey_save(text,text,jsonb,text,bigint) to anon, authenticated;`;
+
+/* ---- config / identity ---- */
+const SB_DEFAULT={ url:'https://flsavcmuyslfvrlpppwh.supabase.co', key:'sb_publishable_2lNJN2zgvdsffUKPbDaz8g_VDWTSECL' };
+function cfgGet(){
+  try{ const c=JSON.parse(localStorage.getItem('occumed_sb_cfg')||'null'); if(c&&c.url&&c.key) return c; }catch(e){}
+  if(SB_DEFAULT.url && SB_DEFAULT.key) return SB_DEFAULT;
+  return null;
+}
+function sbClient(){ const c=cfgGet(); if(!c||!window.supabase) return null; try{return window.supabase.createClient(c.url,c.key);}catch(e){return null;} }
+function meId(){ let x=localStorage.getItem('occumed_me_id'); if(!x){x=uid()+uid();localStorage.setItem('occumed_me_id',x);} return x; }
+function lastRoom(){ try{return JSON.parse(localStorage.getItem('occumed_last_room')||'null');}catch(e){return null;} }
+function saveLastRoom(r){ localStorage.setItem('occumed_last_room',JSON.stringify(r)); }
+function saveCfg(){
+  const url=(document.getElementById('sbUrl').value||'').trim(), key=(document.getElementById('sbKey').value||'').trim();
+  if(!url||!key){ toast('กรอก URL และ anon key ให้ครบ'); return; }
+  localStorage.setItem('occumed_sb_cfg',JSON.stringify({url,key}));
+  document.getElementById('sbState').textContent='บันทึกแล้ว ✓';
+  toast('บันทึกการตั้งค่า Supabase แล้ว');
+}
+function copyText(t,msg){
+  const ok=()=>toast(msg||'คัดลอกแล้ว');
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(ok).catch(()=>fallbackCopy(t,ok)); }
+  else fallbackCopy(t,ok);
+}
+function fallbackCopy(t,ok){ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');ok();}catch(e){toast('คัดลอกไม่สำเร็จ');} ta.remove(); }
+function copySQL(){ copyText(SB_SQL,'คัดลอก SQL ติดตั้งแล้ว — วางใน Supabase SQL Editor'); }
+
+/* ---- broadcast + persistence ---- */
+function bx(patch){ if(!CB.active||CB.applying||!CB.ch) return; try{ CB.ch.send({type:'broadcast',event:'patch',payload:patch}); }catch(e){} }
+function bxFull(){ if(CB.active) bx({k:'full',state:S}); }
+let pushT=null;
+function pushFull(){
+  if(!CB.active||!CB.sb) return;
+  clearTimeout(pushT);
+  pushT=setTimeout(async()=>{
+    try{
+      CB.ver++;
+      const {data,error}=await CB.sb.rpc('survey_save',{p_id:CB.id,p_pass:CB.pass,p_state:S,p_by:CB.me.name,p_ver:CB.ver});
+      if(!error&&data&&data.ver) CB.ver=data.ver;
+    }catch(e){}
+  },900);
+}
+
+/* ---- apply remote change ---- */
+function setWidget(sel,val,type){
+  const el=document.querySelector('[data-sync="'+sel+'"]');
+  if(!el) return;
+  if(document.activeElement===el) return; /* don't disrupt local typing */
+  if(type==='check') el.checked=!!val; else el.value=(val==null?'':val);
+}
+function applyRemote(p){
+  if(!p) return;
+  CB.applying=true;
+  try{
+    if(p.k==='full'){ if(p.state){ S=p.state; syncHealth(S); renderAll(); save(); } }
+    else if(p.k==='g'){ S.general[p.path]=p.v; setWidget('g:'+p.path,p.v); save(); }
+    else if(p.k==='d'){ const d=findDept(p.did); if(d){ d[p.key]=p.v; setWidget('d:'+p.did+':'+p.key,p.v);
+        if(p.key==='name'){ const b=document.querySelector('.dept[data-d="'+p.did+'"] .dt b'); if(b) b.textContent=p.v||'(ไม่มีชื่อแผนก)'; } save(); } }
+    else if(p.k==='h'){ const d=findDept(p.did), h=d&&findHaz(d,p.hid);
+        if(h){ h[p.field]=(p.field==='hr'||p.field==='freq')?Number(p.v):p.v;
+          if(['cat','name','measured','unit','std'].indexOf(p.field)>=0) setWidget('h:'+p.did+':'+p.hid+':'+p.field,p.v);
+          if(p.field==='measured'||p.field==='std') refreshEval(p.did,p.hid);
+          if(['hr','band','freq','riskOverride'].indexOf(p.field)>=0 && document.querySelector('#p2 tr[data-h="'+p.hid+'"]')) refreshRisk(p.did,p.hid);
+          save(); } }
+    else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
+    else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
+  }catch(e){}
+  CB.applying=false;
+}
+
+/* ---- channel / presence ---- */
+function chColor(s){ s=String(s||'?'); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return 'hsl('+(h%360)+' 52% 42%)'; }
+function initials(n){ n=(n||'?').trim(); return ((n.split(/\s+/)[0]||'?')[0]||'?').toUpperCase(); }
+function peerList(){ const st=(CB.ch&&CB.ch.presenceState)?CB.ch.presenceState():{}; const out=[]; Object.keys(st).forEach(k=>{ if(st[k]&&st[k][0]) out.push(st[k][0]); }); return out; }
+function subscribeChannel(){
+  if(CB.ch){ try{CB.sb.removeChannel(CB.ch);}catch(e){} CB.ch=null; }
+  CB.ch=CB.sb.channel('occumed:'+CB.id,{config:{presence:{key:CB.me.id},broadcast:{self:false}}});
+  CB.ch.on('broadcast',{event:'patch'},m=>applyRemote(m.payload));
+  CB.ch.on('presence',{event:'sync'},()=>{ updateCollabUI(); if(document.getElementById('collabModal').classList.contains('show')) renderCollabStatus(); });
+  CB.ch.subscribe(async status=>{ if(status==='SUBSCRIBED') await trackPresence(); });
+}
+async function trackPresence(){ if(CB.active&&CB.ch){ try{ await CB.ch.track({id:CB.me.id,name:CB.me.name,role:CB.me.role,tab:curTab,ts:Date.now()}); }catch(e){} } }
+
+/* ---- UI ---- */
+function renderPresence(){
+  const el=document.getElementById('presence'); if(!el) return;
+  if(!CB.active){ el.innerHTML=''; return; }
+  const peers=peerList().filter(p=>p.id!==CB.me.id);
+  el.innerHTML=peers.slice(0,4).map(p=>'<div class="av" title="'+esc(p.name)+' · '+esc(p.role)+' ('+(TABNAMES[p.tab]||'')+')" style="background:'+chColor(p.name||p.id)+'">'+initials(p.name)+'</div>').join('')+(peers.length>4?'<span class="more">+'+(peers.length-4)+'</span>':'');
+}
+function updateCollabUI(){
+  const chip=document.getElementById('collabChip'); if(!chip) return;
+  const lbl=chip.querySelector('.clbl');
+  if(CB.active){ chip.classList.add('on'); const n=peerList().length; lbl.textContent=CB.id+(n>1?(' · '+n+' คน'):' · เดี่ยว'); }
+  else{ chip.classList.remove('on'); lbl.textContent='ทำงานคนเดียว'; }
+  renderPresence();
+}
+function openCollab(){
+  const c=cfgGet();
+  if(c){ document.getElementById('sbUrl').value=c.url; document.getElementById('sbKey').value=c.key; document.getElementById('sbState').textContent='ตั้งค่าไว้แล้ว ✓'; }
+  document.getElementById('sqlBox').textContent=SB_SQL;
+  const lr=lastRoom();
+  if(lr){ if(!document.getElementById('jId').value) document.getElementById('jId').value=lr.id||''; if(!document.getElementById('jPass').value) document.getElementById('jPass').value=lr.pass||''; if(!document.getElementById('jName').value) document.getElementById('jName').value=lr.name||''; if(lr.role) document.getElementById('jRole').value=lr.role; }
+  renderCollabStatus();
+  csTab(CB.active?0:(c?1:2));
+  document.getElementById('collabModal').classList.add('show');
+}
+function closeCollab(){ document.getElementById('collabModal').classList.remove('show'); }
+function csTab(i){ document.querySelectorAll('.cseg button').forEach(b=>b.classList.toggle('active',+b.dataset.cs===i)); document.querySelectorAll('#collabModal .csec').forEach((s,idx)=>s.classList.toggle('active',idx===i)); }
+function renderCollabStatus(){
+  const el=document.getElementById('cs0body'); if(!el) return;
+  if(!CB.active){ el.innerHTML='<div class="cnote">ยังไม่ได้เข้าห้อง — ไปที่แท็บ “เข้าร่วม / สร้าง” เพื่อเริ่มทำงานร่วมกับทีม (ต้องตั้งค่า Supabase ก่อนครั้งแรก)</div>'; return; }
+  const peers=peerList();
+  el.innerHTML='<div class="member" style="border-color:var(--gold)"><div class="av" style="background:var(--navy)">'+initials(CB.me.name)+'</div><div class="mi"><b>'+esc(CB.me.name)+' (คุณ)</b><small>'+esc(CB.me.role)+'</small></div><span class="peerbadge" style="background:var(--gold);color:var(--navy)">ห้อง '+esc(CB.id)+'</span></div>'
+    + (peers.filter(p=>p.id!==CB.me.id).map(p=>'<div class="member"><div class="av" style="background:'+chColor(p.name||p.id)+'">'+initials(p.name)+'</div><div class="mi"><b>'+esc(p.name)+'</b><small>'+esc(p.role)+'</small></div><span class="mtab">📍 '+(TABNAMES[p.tab]||'-')+'</span></div>').join('') || '<div class="cnote">ยังไม่มีสมาชิกคนอื่นออนไลน์ในขณะนี้</div>')
+    + '<div class="btnrow" style="margin-top:12px"><button class="btn danger sm" onclick="leaveRoom()">ออกจากห้อง</button><div class="sp" style="flex:1"></div><span class="cnote" style="margin:0">ข้อมูลซิงก์อัตโนมัติ</span></div>';
+}
+async function doJoin(create){
+  const c=cfgGet(); if(!c){ toast('ตั้งค่า Supabase ก่อนครั้งแรก'); csTab(2); return; }
+  const id=(document.getElementById('jId').value||'').trim().toUpperCase();
+  const pass=(document.getElementById('jPass').value||'').trim();
+  const name=(document.getElementById('jName').value||'').trim();
+  const role=document.getElementById('jRole').value;
+  if(!id||!pass||!name){ toast('กรอกรหัสสำรวจ รหัสผ่านทีม และชื่อผู้สำรวจ'); return; }
+  CB.sb=sbClient(); if(!CB.sb){ toast('เชื่อมต่อ Supabase ไม่สำเร็จ ตรวจ URL/key'); return; }
+  CB.id=id; CB.pass=pass; CB.me.id=meId(); CB.me.name=name; CB.me.role=role;
+  toast(create?'กำลังสร้างห้อง…':'กำลังเข้าห้อง…');
+  try{
+    if(create){
+      const {data,error}=await CB.sb.rpc('survey_create',{p_id:id,p_pass:pass,p_title:S.general.company||id,p_by:name,p_state:S});
+      if(error){ toast('ผิดพลาด: '+(error.message||'')); return; }
+      if(data&&data.ok===false){ toast(data.reason==='exists'?'มีห้องนี้อยู่แล้ว — กด “เข้าร่วมห้อง” แทน':'สร้างห้องไม่สำเร็จ'); return; }
+      CB.ver=(data&&data.ver)||1;
+    }else{
+      const {data,error}=await CB.sb.rpc('survey_join',{p_id:id,p_pass:pass});
+      if(error){ toast('ผิดพลาด: '+(error.message||'')); return; }
+      if(!data||data.ok===false){ toast(data&&data.reason==='badpass'?'รหัสผ่านไม่ถูกต้อง':'ไม่พบห้องนี้ — กด “สร้างห้องใหม่”'); return; }
+      if(data.state&&Object.keys(data.state).length){ S=data.state; syncHealth(S); save(); renderAll(); setTab(0); }
+      CB.ver=data.ver||1;
+    }
+    CB.active=true;
+    saveLastRoom({id,pass,name,role});
+    subscribeChannel();
+    updateCollabUI(); renderCollabStatus(); csTab(0);
+    if(create) pushFull();
+    toast('เข้าห้อง '+id+' แล้ว — ทำงานร่วมกันได้เลย');
+  }catch(e){ toast('เกิดข้อผิดพลาด: '+(e.message||e)); }
+}
+function leaveRoom(){
+  if(CB.ch){ try{CB.sb.removeChannel(CB.ch);}catch(e){} CB.ch=null; }
+  CB.active=false; localStorage.removeItem('occumed_last_room');
+  updateCollabUI(); renderCollabStatus(); toast('ออกจากห้องแล้ว — กลับสู่โหมดทำงานคนเดียว');
+}
+document.getElementById('collabModal').addEventListener('click',e=>{ if(e.target.id==='collabModal') closeCollab(); });
+
+(function init(){
+  load();
+  if(!S.depts.length && !S.general.company){ S=newState(); }
+  CB.me.id=meId();
+  renderAll(); setTab(0); save();
+  updateCollabUI();
+  /* auto-rejoin last room */
+  (async()=>{
+    const lr=lastRoom(), c=cfgGet();
+    if(lr&&c&&window.supabase){
+      CB.sb=sbClient(); if(!CB.sb) return;
+      CB.id=lr.id; CB.pass=lr.pass; CB.me.name=lr.name; CB.me.role=lr.role||'';
+      try{
+        const {data,error}=await CB.sb.rpc('survey_join',{p_id:lr.id,p_pass:lr.pass});
+        if(!error&&data&&data.ok!==false){
+          if(data.state&&Object.keys(data.state).length){ S=data.state; syncHealth(S); save(); renderAll(); setTab(curTab); }
+          CB.ver=data.ver||1; CB.active=true; subscribeChannel(); updateCollabUI(); toast('กลับเข้าห้อง '+lr.id+' แล้ว');
+        }
+      }catch(e){}
+    }
+  })();
+})();
+
+</script>
+</body>
+</html>
