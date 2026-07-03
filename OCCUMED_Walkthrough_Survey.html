@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบเดินสำรวจสถานประกอบการ | IKIGAI OS · OCCUMED</title>
+<title>ระบบเดินสำรวจสถานประกอบการ | IKIGAI OS · OCCMED</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -64,8 +64,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
 }
 .brand .t{min-width:0}
-.brand .t b{font-size:15px;color:#fff;display:block;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand .t span{font-size:11px;color:var(--gold-lt);letter-spacing:1.5px;text-transform:uppercase}
+.brand .t b{font-size:15px;color:#fff;display:block;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.brand .t span{font-size:11px;color:var(--gold-lt);letter-spacing:1.5px;text-transform:uppercase;display:block;line-height:1.1}
 .topbar .sp{flex:1}
 .tbtn{
   color:#dbe4f0;font-size:12.5px;padding:7px 11px;border-radius:9px;
@@ -298,16 +298,23 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .cnote{font-size:12px;color:var(--muted);line-height:1.6;margin:8px 0}
 .cstep{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink);margin:7px 0}
 .cstep .n{flex:none;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.roomrow{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
+.roomrow:hover{border-color:var(--gold);background:var(--line2)}
+.roomrow .mi{flex:1;min-width:0}
+.roomrow .mi b{font-size:13.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roomrow .mi small{display:block;color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roomrow .roomgo{font-size:12px;font-weight:700;color:var(--gold-dk);white-space:nowrap}
+.roomrow .roomx{flex:none;border:none;background:transparent;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:6px}
+.roomrow .roomx:hover{color:#c0392b;background:#fbe6e2}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="brand">
-    <div class="mark">อว</div>
     <div class="t">
       <b>ระบบเดินสำรวจสถานประกอบการ</b>
-      <span>OCCUMED · Walk-through Survey</span>
+      <span>OCCMED · Walk-through Survey</span>
     </div>
   </div>
   <div class="sp"></div>
@@ -345,7 +352,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <div class="inner">
     <button class="btn ghost" id="btnPrev" onclick="go(-1)">‹ ก่อนหน้า</button>
     <div class="sp"></div>
-    <button class="btn ghost sm" onclick="loadTemplate(true)">↻ โหลดข้อมูลโรงงานตัวอย่าง</button>
+    <button class="btn ghost sm" onclick="newBlankReport()" title="เริ่มรายงานใหม่ (ฟอร์มเปล่า)">＋ รายงานใหม่</button>
+    <button class="btn ghost" onclick="loadTemplate(true)" title="โหลดข้อมูลโรงงานตัวอย่าง" style="font-size:22px;font-weight:800;line-height:1;padding:8px 15px">↻</button>
     <button class="btn pri" id="btnNext" onclick="go(1)">ถัดไป ›</button>
   </div>
 </div>
@@ -432,7 +440,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 <script>
 /* ============================================================
-   IKIGAI OS · OCCUMED — Walk-through Survey
+   IKIGAI OS · OCCMED — Walk-through Survey
    Single-file · Navy×Gold · LINE Seed Sans TH · พ.ศ.
    ============================================================ */
 const LS_KEY='occumed_survey_v1';
@@ -598,6 +606,15 @@ function touch(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400); if(!C
 function loadTemplate(confirmFirst){
   if(confirmFirst && !confirm('โหลดข้อมูลโรงงานตัวอย่าง (12 กระบวนการ) ทับข้อมูลปัจจุบัน?\nข้อมูลที่กรอกไว้จะถูกแทนที่')) return;
   S=newState(); save(); renderAll(); bxFull(); toast('โหลดข้อมูลโรงงานตัวอย่างแล้ว');
+}
+function newBlankReport(){
+  if(CB.active){
+    if(!confirm('ขณะนี้อยู่ในห้อง '+CB.id+'\nการเริ่มรายงานใหม่จะออกจากห้องนี้ก่อน (ข้อมูลของห้องยังอยู่ใน Supabase — กลับเข้าห้องเดิมได้ทุกเมื่อ)\n\nดำเนินการต่อ?')) return;
+    leaveRoom();
+  } else if((S.general&&S.general.company)||(S.depts&&S.depts.length)){
+    if(!confirm('ล้างฟอร์มปัจจุบันเพื่อเริ่มรายงานเปล่าใหม่?\n⚠️ ถ้ายังไม่ได้เข้าห้อง/บันทึกเข้าห้อง ข้อมูลนี้จะหาย')) return;
+  }
+  S=blankState(); save(); renderAll(); setTab(0); bxFull(); toast('เริ่มรายงานใหม่ (ฟอร์มเปล่า) แล้ว');
 }
 
 /* ============================================================
@@ -991,12 +1008,11 @@ function buildReport(){
   // --- Cover ---
   let h=`<div class="rp">
   <div class="cover">
-    <div class="logo">อว</div>
     <h1 style="font-size:20px">รายงานผลการเดินสำรวจสถานประกอบการ</h1>
     <h1 style="font-size:22px;margin-top:6px">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</h1>
     <p class="muted" style="margin-top:26px">จัดทำโดย คณะผู้เดินสำรวจอาชีวเวชศาสตร์</p>
     <p class="muted">ฝึกสำรวจวันที่ ${beDate(g.surveyDate)||'—'}</p>
-    <p class="muted" style="margin-top:22px;font-size:11px">เอกสารนี้จัดทำโดยระบบ IKIGAI OS · OCCUMED — Walk-through Survey</p>
+    <p class="muted" style="margin-top:22px;font-size:11px">เอกสารนี้จัดทำโดยระบบ IKIGAI OS · OCCMED — Walk-through Survey</p>
   </div>`;
 
   // --- บทสรุป ---
@@ -1224,8 +1240,7 @@ function buildSlides(){
 
   // 1) ปก
   slides.push({cls:'cover',html:`
-    <div class="badge">อว</div>
-    <div class="s-kick">OCCUMED · Walk-through Survey</div>
+    <div class="s-kick">OCCMED · Walk-through Survey</div>
     <h1 class="s-h1">รายงานการเดินสำรวจ<br>สถานประกอบการ</h1>
     <div class="s-company">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</div>
     <div class="s-sub">วันที่เดินสำรวจ ${beDate(g.surveyDate)||'—'}${g.surveyTime?(' เวลา '+esc(g.surveyTime)):''}</div>
@@ -1301,10 +1316,9 @@ function buildSlides(){
 
   // ปิดท้าย
   slides.push({cls:'cover end',html:`
-    <div class="badge">อว</div>
     <h1 class="s-h1">ขอบคุณครับ</h1>
     <div class="s-sub">คณะผู้เดินสำรวจอาชีวเวชศาสตร์</div>
-    <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · IKIGAI OS · OCCUMED</div>`});
+    <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · IKIGAI OS · OCCMED</div>`});
 
   const dots=slides.map((s,k)=>`<button class="dot${k===0?' a':''}" onclick="__to(${k})" aria-label="สไลด์ ${k+1}"></button>`).join('');
   return `<div class="deck">`
@@ -1419,7 +1433,7 @@ document.getElementById('reportModal').addEventListener('click',e=>{ if(e.target
 const CB={ sb:null, ch:null, active:false, applying:false, id:'', pass:'', ver:0, me:{id:'',name:'',role:''} };
 const TABNAMES=['ข้อมูลทั่วไป','แผนก','ความเสี่ยง','ตรวจสุขภาพ','สรุป'];
 
-const SB_SQL=`-- OCCUMED Walk-through Survey · Supabase setup (run once in SQL Editor)
+const SB_SQL=`-- OCCMED Walk-through Survey · Supabase setup (run once in SQL Editor)
 -- pgcrypto อยู่ใน schema "extensions" บน Supabase — ฟังก์ชันด้านล่างจึงตั้ง search_path=public, extensions
 create extension if not exists pgcrypto with schema extensions;
 
@@ -1493,6 +1507,34 @@ function sbClient(){ const c=cfgGet(); if(!c||!window.supabase) return null; try
 function meId(){ let x=localStorage.getItem('occumed_me_id'); if(!x){x=uid()+uid();localStorage.setItem('occumed_me_id',x);} return x; }
 function lastRoom(){ try{return JSON.parse(localStorage.getItem('occumed_last_room')||'null');}catch(e){return null;} }
 function saveLastRoom(r){ localStorage.setItem('occumed_last_room',JSON.stringify(r)); }
+function recentRooms(){ try{return JSON.parse(localStorage.getItem('occumed_rooms')||'[]');}catch(e){return [];} }
+function rememberRoom(r){
+  if(!r||!r.id) return;
+  const list=recentRooms().filter(x=>x.id!==r.id);
+  list.unshift({id:r.id,pass:r.pass,name:r.name,role:r.role,title:r.title||r.id});
+  localStorage.setItem('occumed_rooms',JSON.stringify(list.slice(0,8)));
+}
+function forgetRoom(id,ev){ if(ev) ev.stopPropagation(); localStorage.setItem('occumed_rooms',JSON.stringify(recentRooms().filter(x=>x.id!==id))); renderCollabStatus(); }
+function switchRoom(id){
+  const r=recentRooms().find(x=>x.id===id); if(!r) return;
+  document.getElementById('jId').value=r.id;
+  document.getElementById('jPass').value=r.pass||'';
+  if(r.name) document.getElementById('jName').value=r.name;
+  if(r.role) document.getElementById('jRole').value=r.role;
+  doJoin(false);
+}
+function roomsListHTML(){
+  const list=recentRooms().filter(r=>!(CB.active&&r.id===CB.id));
+  if(!list.length) return '';
+  return '<div class="subhd" style="margin:16px 0 8px">'+(CB.active?'สลับไปรายงานอื่น':'รายงาน / ห้องล่าสุด')+'</div>'
+    + list.map(r=>{
+        const id=String(r.id).replace(/'/g,"\\'");
+        return '<div class="roomrow" onclick="switchRoom(\''+id+'\')" title="เข้าห้องนี้">'
+          +'<div class="mi"><b>'+esc(r.title||r.id)+'</b><small>รหัส '+esc(r.id)+(r.name?(' · '+esc(r.name)):'')+'</small></div>'
+          +'<span class="roomgo">เข้า →</span>'
+          +'<button class="roomx" title="ลบออกจากรายการ" onclick="forgetRoom(\''+id+'\',event)">✕</button></div>';
+      }).join('');
+}
 function saveCfg(){
   const url=(document.getElementById('sbUrl').value||'').trim(), key=(document.getElementById('sbKey').value||'').trim();
   if(!url||!key){ toast('กรอก URL และ anon key ให้ครบ'); return; }
@@ -1592,11 +1634,12 @@ function closeCollab(){ document.getElementById('collabModal').classList.remove(
 function csTab(i){ document.querySelectorAll('.cseg button').forEach(b=>b.classList.toggle('active',+b.dataset.cs===i)); document.querySelectorAll('#collabModal .csec').forEach((s,idx)=>s.classList.toggle('active',idx===i)); }
 function renderCollabStatus(){
   const el=document.getElementById('cs0body'); if(!el) return;
-  if(!CB.active){ el.innerHTML='<div class="cnote">ยังไม่ได้เข้าห้อง — ไปที่แท็บ “เข้าร่วม / สร้าง” เพื่อเริ่มทำงานร่วมกับทีม (ต้องตั้งค่า Supabase ก่อนครั้งแรก)</div>'; return; }
+  if(!CB.active){ el.innerHTML='<div class="cnote">ยังไม่ได้เข้าห้อง — ไปที่แท็บ “เข้าร่วม / สร้าง” เพื่อเริ่มทำงานร่วมกับทีม (ต้องตั้งค่า Supabase ก่อนครั้งแรก)</div>'+roomsListHTML(); return; }
   const peers=peerList();
   el.innerHTML='<div class="member" style="border-color:var(--gold)"><div class="av" style="background:var(--navy)">'+initials(CB.me.name)+'</div><div class="mi"><b>'+esc(CB.me.name)+' (คุณ)</b><small>'+esc(CB.me.role)+'</small></div><span class="peerbadge" style="background:var(--gold);color:var(--navy)">ห้อง '+esc(CB.id)+'</span></div>'
     + (peers.filter(p=>p.id!==CB.me.id).map(p=>'<div class="member"><div class="av" style="background:'+chColor(p.name||p.id)+'">'+initials(p.name)+'</div><div class="mi"><b>'+esc(p.name)+'</b><small>'+esc(p.role)+'</small></div><span class="mtab">📍 '+(TABNAMES[p.tab]||'-')+'</span></div>').join('') || '<div class="cnote">ยังไม่มีสมาชิกคนอื่นออนไลน์ในขณะนี้</div>')
-    + '<div class="btnrow" style="margin-top:12px"><button class="btn danger sm" onclick="leaveRoom()">ออกจากห้อง</button><div class="sp" style="flex:1"></div><span class="cnote" style="margin:0">ข้อมูลซิงก์อัตโนมัติ</span></div>';
+    + '<div class="btnrow" style="margin-top:12px"><button class="btn danger sm" onclick="leaveRoom()">ออกจากห้อง</button><div class="sp" style="flex:1"></div><span class="cnote" style="margin:0">ข้อมูลซิงก์อัตโนมัติ</span></div>'
+    + roomsListHTML();
 }
 async function doJoin(create){
   const c=cfgGet(); if(!c){ toast('ตั้งค่า Supabase ก่อนครั้งแรก'); csTab(2); return; }
@@ -1605,6 +1648,10 @@ async function doJoin(create){
   const name=(document.getElementById('jName').value||'').trim();
   const role=document.getElementById('jRole').value;
   if(!id||!pass||!name){ toast('กรอกรหัสสำรวจ รหัสผ่านทีม และชื่อผู้สำรวจ'); return; }
+  if(create){
+    const cur=(S.general&&S.general.company)?S.general.company:'(ยังไม่ระบุชื่อสถานประกอบการ)';
+    if(!confirm('สร้างห้อง '+id+' โดยใช้ข้อมูลในฟอร์ม “ปัจจุบัน” เป็นจุดเริ่มต้นของห้อง\nสถานประกอบการ: '+cur+'\n\n• ถ้านี่คือข้อมูลที่ต้องการ → กดตกลง\n• ถ้าต้องการเริ่มห้องจากฟอร์มเปล่า → กดยกเลิก แล้วกด “＋ รายงานใหม่” ก่อน')) return;
+  }
   CB.sb=sbClient(); if(!CB.sb){ toast('เชื่อมต่อ Supabase ไม่สำเร็จ ตรวจ URL/key'); return; }
   CB.id=id; CB.pass=pass; CB.me.id=meId(); CB.me.name=name; CB.me.role=role;
   toast(create?'กำลังสร้างห้อง…':'กำลังเข้าห้อง…');
@@ -1623,6 +1670,7 @@ async function doJoin(create){
     }
     CB.active=true;
     saveLastRoom({id,pass,name,role});
+    rememberRoom({id,pass,name,role,title:S.general.company||id});
     subscribeChannel();
     updateCollabUI(); renderCollabStatus(); csTab(0);
     if(create) pushFull();
