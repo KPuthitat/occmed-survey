@@ -1420,7 +1420,8 @@ const CB={ sb:null, ch:null, active:false, applying:false, id:'', pass:'', ver:0
 const TABNAMES=['ข้อมูลทั่วไป','แผนก','ความเสี่ยง','ตรวจสุขภาพ','สรุป'];
 
 const SB_SQL=`-- OCCUMED Walk-through Survey · Supabase setup (run once in SQL Editor)
-create extension if not exists pgcrypto;
+-- pgcrypto อยู่ใน schema "extensions" บน Supabase — ฟังก์ชันด้านล่างจึงตั้ง search_path=public, extensions
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.survey_state (
   id text primary key,
@@ -1437,7 +1438,7 @@ create table if not exists public.survey_state (
 alter table public.survey_state enable row level security;
 
 create or replace function public.survey_create(p_id text,p_pass text,p_title text,p_by text,p_state jsonb)
-returns jsonb language plpgsql security definer set search_path=public as $$
+returns jsonb language plpgsql security definer set search_path=public, extensions as $$
 declare r public.survey_state;
 begin
   if exists(select 1 from public.survey_state where id=p_id) then
@@ -1450,7 +1451,7 @@ begin
 end $$;
 
 create or replace function public.survey_join(p_id text,p_pass text)
-returns jsonb language plpgsql security definer set search_path=public as $$
+returns jsonb language plpgsql security definer set search_path=public, extensions as $$
 declare r public.survey_state;
 begin
   select * into r from public.survey_state where id=p_id;
@@ -1462,7 +1463,7 @@ begin
 end $$;
 
 create or replace function public.survey_save(p_id text,p_pass text,p_state jsonb,p_by text,p_ver bigint)
-returns jsonb language plpgsql security definer set search_path=public as $$
+returns jsonb language plpgsql security definer set search_path=public, extensions as $$
 declare r public.survey_state;
 begin
   select * into r from public.survey_state where id=p_id;
