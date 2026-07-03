@@ -366,6 +366,20 @@ input,select,textarea{font-family:inherit;font-size:14px}
   </div>
 </div>
 
+<!-- SLIDE MODAL -->
+<div class="modal" id="slideModal">
+  <div class="sheet" style="max-width:1160px">
+    <div class="mhd">
+      <h3>สไลด์นำเสนอผลการเดินสำรวจ</h3>
+      <button class="btn gold sm" onclick="copySlides()">⧉ คัดลอกโค้ด (Deploy)</button>
+      <button class="btn ghost sm" onclick="downloadSlides()">⬇ บันทึก .html</button>
+      <button class="btn ghost sm" onclick="printSlides()">🖨 พิมพ์ / PDF</button>
+      <button class="close" onclick="closeSlides()">✕</button>
+    </div>
+    <div class="mbd" style="padding:0;background:#0a1a30"><iframe id="slideFrame" title="สไลด์นำเสนอ" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
+  </div>
+</div>
+
 <!-- COLLAB MODAL -->
 <div class="modal" id="collabModal">
   <div class="sheet" style="max-width:560px">
@@ -943,8 +957,11 @@ function renderSummary(){
   </div></div>
 
   <div class="card"><div class="bd" style="text-align:center;padding:22px">
-    <button class="btn gold" style="padding:13px 28px;font-size:15px" onclick="openReport()">▤ สร้างรายงานฉบับสมบูรณ์</button>
-    <div class="hint" style="margin-top:8px">รายงานจะจัดรูปแบบตามไฟล์ตัวอย่าง · พิมพ์ PDF / คัดลอกโค้ด / บันทึกไฟล์ได้</div>
+    <div class="btnrow" style="justify-content:center;gap:10px;flex-wrap:wrap">
+      <button class="btn gold" style="padding:13px 28px;font-size:15px" onclick="openReport()">▤ สร้างรายงานฉบับสมบูรณ์</button>
+      <button class="btn pri" style="padding:13px 28px;font-size:15px" onclick="openSlides()">🖥 สร้างสไลด์นำเสนอ</button>
+    </div>
+    <div class="hint" style="margin-top:8px">รายงาน/สไลด์จัดรูปแบบตามธีม CI · พิมพ์ PDF / คัดลอกโค้ด / บันทึกไฟล์ได้</div>
   </div></div>`;
 }
 function setC(k,v){S.conclusion[k]=v;touch(); bx({k:'c',key:k,v})}
@@ -1168,6 +1185,209 @@ function downloadReport(){
   a.download=`รายงานเดินสำรวจ_${(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)}_${beYear()}.html`;
   a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์รายงานแล้ว');
 }
+
+/* ============================================================
+   SLIDE PRESENTATION  (สไลด์นำเสนอจากข้อมูลที่กรอก)
+   ============================================================ */
+const SLIDE_RUNTIME=`(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var dots=[].slice.call(document.querySelectorAll('.dot'));
+  var cur=document.getElementById('cur');
+  var i=0;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    for(var k=0;k<slides.length;k++){slides[k].classList.toggle('on',k===i);}
+    for(var j=0;j<dots.length;j++){dots[j].classList.toggle('a',j===i);}
+    if(cur){cur.textContent=(i+1);}
+  }
+  window.__go=function(d){show(i+d);};
+  window.__to=function(n){show(n);};
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){show(i+1);e.preventDefault();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(i-1);e.preventDefault();}
+    else if(e.key==='Home'){show(0);}
+    else if(e.key==='End'){show(slides.length-1);}
+  });
+  var x0=null;
+  document.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(x0===null){return;} var dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>50){show(dx<0?i+1:i-1);} x0=null;
+  },{passive:true});
+  show(0);
+})();`;
+
+function buildSlides(){
+  const g=S.general, c=S.conclusion, f=highRiskFindings();
+  const uniq=a=>[...new Set(a)];
+  const slides=[];
+
+  // 1) ปก
+  slides.push({cls:'cover',html:`
+    <div class="badge">อว</div>
+    <div class="s-kick">OCCUMED · Walk-through Survey</div>
+    <h1 class="s-h1">รายงานการเดินสำรวจ<br>สถานประกอบการ</h1>
+    <div class="s-company">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</div>
+    <div class="s-sub">วันที่เดินสำรวจ ${beDate(g.surveyDate)||'—'}${g.surveyTime?(' เวลา '+esc(g.surveyTime)):''}</div>
+    <div class="s-foot">กลุ่มงานอาชีวเวชศาสตร์ · IKIGAI OS</div>`});
+
+  // 2) ข้อมูลทั่วไป
+  slides.push({html:`
+    <div class="s-kick">01 · ข้อมูลทั่วไป</div>
+    <h2 class="s-h2">ข้อมูลสถานประกอบการ</h2>
+    <div class="s-kv">
+      <div><span>ประเภท / ชนิด</span><b>${esc(g.type)||'—'}</b></div>
+      <div><span>ที่อยู่</span><b>${esc(g.address)||'—'}</b></div>
+      <div><span>จำนวนบุคลากร</span><b>${esc(g.workers)||'—'} คน</b></div>
+      <div><span>ขนาดพื้นที่</span><b>${esc(g.area)||'—'} ตร.ม.</b></div>
+      <div><span>วันทำงาน</span><b>${esc(g.days)||'—'}</b></div>
+      <div><span>ระบบกะ</span><b>${esc(g.shifts)||'—'}</b></div>
+    </div>`});
+
+  // 3) ภาพรวมความเสี่ยง
+  const deptN=S.depts.length;
+  const hazN=S.depts.reduce((a,d)=>a+d.hazards.length,0);
+  slides.push({html:`
+    <div class="s-kick">02 · ภาพรวม</div>
+    <h2 class="s-h2">ภาพรวมสิ่งคุกคาม &amp; ความเสี่ยง</h2>
+    <div class="s-stats">
+      <div class="stat"><b>${deptN}</b><span>แผนกที่สำรวจ</span></div>
+      <div class="stat"><b>${hazN}</b><span>สิ่งคุกคามที่ประเมิน</span></div>
+      <div class="stat hi"><b>${uniq(f.heat).length}</b><span>แผนกเสี่ยงความร้อนสูง</span></div>
+      <div class="stat hi"><b>${uniq(f.noise).length}</b><span>แผนกเสี่ยงเสียงดังสูง</span></div>
+      <div class="stat hi"><b>${uniq(f.silica).length}</b><span>แผนกเสี่ยงซิลิกาสูง</span></div>
+      <div class="stat warn"><b>${uniq(f.chemOver.map(x=>x.h+'|'+x.d)).length}</b><span>รายการเกินค่ามาตรฐาน</span></div>
+    </div>`});
+
+  // 4) ผลประเมินความเสี่ยงตามแผนก
+  const risks=[];
+  S.depts.forEach(d=>d.hazards.forEach(h=>{const r=effRisk(h); if(r==='สูง'||r==='ปานกลาง') risks.push({d:d.name,h:h.name,r});}));
+  risks.sort((a,b)=>(a.r==='สูง'?0:1)-(b.r==='สูง'?0:1));
+  const top=risks.slice(0,7);
+  slides.push({html:`
+    <div class="s-kick">03 · ประเมินความเสี่ยง</div>
+    <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
+    ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>ระดับ</th></tr></thead><tbody>
+    ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td><span class="rb ${x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
+    </tbody></table>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
+    :`<div class="s-empty">ไม่พบรายการความเสี่ยงระดับสูง / ปานกลาง</div>`}`});
+
+  // 5) การตรวจสุขภาพ
+  const exSet=new Set();
+  S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) EXAMS.forEach(e=>{ if(hd[e]) exSet.add(e); });});
+  const exams=[...exSet];
+  slides.push({html:`
+    <div class="s-kick">04 · ตรวจสุขภาพ</div>
+    <h2 class="s-h2">การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
+    ${exams.length?`<div class="s-chips">${exams.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div>
+    <div class="s-note">แนะนำรายการตรวจข้างต้นตามปัจจัยเสี่ยงที่พบในแต่ละแผนก</div>`
+    :`<div class="s-empty">ยังไม่ได้กำหนดรายการตรวจสุขภาพ</div>`}`});
+
+  // 6+) ข้อเสนอแนะ (สไลด์ละหัวข้อ)
+  const recs=[['ความร้อน (Heat)',c.heat],['เสียงดัง (Noise)',c.noise],['สารเคมีอันตราย (Chemical)',c.chem],['ข้อเสนอแนะเพิ่มเติม',c.extra]].filter(x=>x[1]&&x[1].trim());
+  if(recs.length){
+    recs.forEach((r,idx)=>{
+      slides.push({cls:'rec',html:`
+        <div class="s-kick">05 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}</div>
+        <h2 class="s-h2">${esc(r[0])}</h2>
+        <div class="s-body">${esc(r[1])}</div>`});
+    });
+  } else {
+    slides.push({html:`
+      <div class="s-kick">05 · ข้อเสนอแนะ</div>
+      <h2 class="s-h2">ข้อเสนอแนะ</h2>
+      <div class="s-empty">ยังไม่ได้กรอกข้อเสนอแนะ (กลับไปแท็บสรุปเพื่อร่างอัตโนมัติ)</div>`});
+  }
+
+  // ปิดท้าย
+  slides.push({cls:'cover end',html:`
+    <div class="badge">อว</div>
+    <h1 class="s-h1">ขอบคุณครับ</h1>
+    <div class="s-sub">คณะผู้เดินสำรวจอาชีวเวชศาสตร์</div>
+    <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · IKIGAI OS · OCCUMED</div>`});
+
+  const dots=slides.map((s,k)=>`<button class="dot${k===0?' a':''}" onclick="__to(${k})" aria-label="สไลด์ ${k+1}"></button>`).join('');
+  return `<div class="deck">`
+    +slides.map((s,k)=>`<section class="slide${s.cls?' '+s.cls:''}${k===0?' on':''}">${s.html}</section>`).join('')
+    +`<div class="nav"><button onclick="__go(-1)" aria-label="ก่อนหน้า">‹</button><span class="ctr"><b id="cur">1</b>/${slides.length}</span><button onclick="__go(1)" aria-label="ถัดไป">›</button></div>`
+    +`<div class="dots">${dots}</div>`
+    +`</div>`;
+}
+
+function slidesCSS(){return `*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;background:#0a1a30;color:#0B2545;display:grid;place-items:center;min-height:100vh;padding:16px}
+.deck{position:relative;width:min(96vw,1120px);aspect-ratio:16/9;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.slide{position:absolute;inset:0;padding:6% 7%;display:none;flex-direction:column;justify-content:center;animation:sf .35s ease}
+.slide.on{display:flex}
+@keyframes sf{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.s-kick{color:#C8A046;font-weight:700;letter-spacing:.14em;font-size:clamp(11px,1.5vw,15px);text-transform:uppercase;margin-bottom:10px}
+.s-h1{font-size:clamp(26px,5vw,54px);line-height:1.1;color:#0B2545}
+.s-h2{font-size:clamp(20px,3.4vw,38px);color:#0B2545;border-bottom:3px solid #C8A046;padding-bottom:12px;margin-bottom:22px;align-self:flex-start}
+.slide.cover{align-items:center;text-align:center;background:linear-gradient(150deg,#0B2545,#13315C 60%,#1b4a86)}
+.slide.cover .s-h1{color:#fff}
+.slide.cover .s-company{color:#C8A046;font-size:clamp(20px,3.2vw,34px);font-weight:700;margin-top:18px}
+.slide.cover .s-sub{color:#dfe6f2;font-size:clamp(13px,1.8vw,19px);margin-top:14px}
+.slide.cover .s-foot{color:#8fa6c4;font-size:clamp(11px,1.4vw,14px);margin-top:34px}
+.badge{width:clamp(52px,7vw,84px);aspect-ratio:1;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#C8A046,#e0be63);color:#0B2545;font-weight:800;font-size:clamp(22px,3.4vw,38px);margin-bottom:22px}
+.s-kv{display:grid;grid-template-columns:1fr 1fr;gap:14px 34px}
+.s-kv>div{display:flex;flex-direction:column;gap:4px;border-left:3px solid #C8A046;padding-left:14px}
+.s-kv span{color:#6b7a90;font-size:clamp(11px,1.4vw,14px)}
+.s-kv b{color:#0B2545;font-size:clamp(14px,1.9vw,21px);font-weight:700}
+.s-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.stat{background:#f2f5fa;border-radius:14px;padding:18px 16px;text-align:center;border-top:4px solid #0B2545}
+.stat b{display:block;font-size:clamp(26px,4.4vw,46px);color:#0B2545;line-height:1}
+.stat span{color:#6b7a90;font-size:clamp(10px,1.3vw,14px);margin-top:8px;display:block}
+.stat.hi{border-top-color:#c0392b}.stat.hi b{color:#c0392b}
+.stat.warn{border-top-color:#C8A046}.stat.warn b{color:#b8860b}
+.s-tbl{width:100%;border-collapse:collapse;font-size:clamp(12px,1.6vw,18px)}
+.s-tbl th{background:#0B2545;color:#fff;text-align:left;padding:10px 14px}
+.s-tbl td{padding:9px 14px;border-bottom:1px solid #e3e8f0}
+.rb{font-weight:700;padding:3px 12px;border-radius:20px;font-size:.82em;white-space:nowrap}
+.rb.h{background:#fbe6e2;color:#c0392b}.rb.m{background:#fdf1dd;color:#c9820a}
+.s-more{color:#6b7a90;margin-top:14px;font-size:clamp(11px,1.4vw,15px)}
+.s-chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{background:#0B2545;color:#fff;padding:8px 16px;border-radius:24px;font-size:clamp(12px,1.6vw,17px);font-weight:600}
+.s-note,.s-body{color:#3a4657;font-size:clamp(13px,1.8vw,20px);line-height:1.6;margin-top:12px}
+.slide.rec .s-body{background:#f2f5fa;border-left:5px solid #C8A046;padding:18px 22px;border-radius:0 12px 12px 0;overflow:auto;max-height:62%}
+.s-empty{color:#8a97a8;font-size:clamp(14px,2vw,20px);font-style:italic}
+.nav{position:absolute;bottom:18px;right:24px;display:flex;align-items:center;gap:12px;z-index:5}
+.nav button{width:40px;height:40px;border:none;border-radius:50%;background:#0B2545;color:#C8A046;font-size:22px;cursor:pointer;display:grid;place-items:center;line-height:1}
+.nav button:hover{background:#13315C}
+.ctr{color:#6b7a90;font-size:14px;font-weight:600}.ctr b{color:#0B2545}
+.dots{position:absolute;bottom:24px;left:24px;display:flex;gap:8px;z-index:5}
+.dot{width:9px;height:9px;border-radius:50%;border:none;background:#cfd8e6;cursor:pointer;padding:0;transition:width .2s}
+.dot.a{background:#C8A046;width:22px;border-radius:6px}
+@media print{
+  body{background:#fff;display:block;padding:0}
+  .deck{width:100%;aspect-ratio:auto;box-shadow:none;border-radius:0}
+  .slide{position:relative;display:flex!important;page-break-after:always;height:100vh;inset:auto}
+  .nav,.dots{display:none!important}
+  @page{size:landscape;margin:0}
+}`}
+
+function standaloneSlides(){
+  return '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    +'<title>สไลด์นำเสนอ · '+esc(S.general.company||'สถานประกอบการ')+'</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
+    +'<style>'+slidesCSS()+'</style></head><body>'
+    +buildSlides()
+    +'<script>'+SLIDE_RUNTIME+'<\/script></body></html>';
+}
+function openSlides(){
+  document.getElementById('slideFrame').srcdoc=standaloneSlides();
+  document.getElementById('slideModal').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closeSlides(){document.getElementById('slideModal').classList.remove('show');document.body.style.overflow=''}
+function copySlides(){ copyText(standaloneSlides(),'คัดลอกโค้ดสไลด์แล้ว — วางเพื่อ deploy ได้เลย'); }
+function downloadSlides(){
+  const blob=new Blob([standaloneSlides()],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='สไลด์นำเสนอ_'+(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)+'_'+beYear()+'.html';
+  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์สไลด์แล้ว');
+}
+function printSlides(){ const fr=document.getElementById('slideFrame'); if(fr&&fr.contentWindow){fr.contentWindow.focus();fr.contentWindow.print();} }
 
 /* ============================================================
    EXPORT / IMPORT
