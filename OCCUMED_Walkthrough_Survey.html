@@ -413,7 +413,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
         <div class="grid g2" style="margin-top:10px">
           <div class="field"><label>ชื่อผู้สำรวจ (แสดงต่อทีม)</label><input id="jName" placeholder="เช่น นายแพทย์ ทดสอบ ระบบรายงาน"></div>
           <div class="field"><label>บทบาท</label>
-            <select id="jRole"><option>แพทย์อาชีวเวชศาสตร์</option><option>แพทย์</option><option>เจ้าหน้าที่ความปลอดภัย (จป.)</option><option>พยาบาลอาชีวอนามัย</option><option>HR</option><option>ผู้สังเกตการณ์</option></select>
+            <select id="jRole"><option>แพทย์อาชีวเวชศาสตร์</option><option>แพทย์</option><option>เจ้าหน้าที่ความปลอดภัยในการทำงาน (จป.)</option><option>พยาบาลอาชีวอนามัย</option><option>ฝ่ายทรัพยากรบุคคล (HR)</option><option>ผู้สังเกตการณ์</option></select>
           </div>
         </div>
         <div class="btnrow" style="margin-top:14px;gap:8px">
@@ -510,7 +510,7 @@ function templateData(){
       workers:'', workersFull:'', workersSub:'',
       days:'จันทร์ – เสาร์ (6 วัน/สัปดาห์)',
       shifts:'2 กะ สลับกะทุก 1 สัปดาห์ ทำงาน 8 ชั่วโมง/กะ',
-      shiftDetail:'กะเช้า 08.00–17.00 น. / กะดึก 20.00–05.00 น. · พัก 1 ชั่วโมง · OT ไม่เกิน 4 ชั่วโมง',
+      shiftDetail:'กะเช้า 08.00–17.00 น. / กะดึก 20.00–05.00 น. · พัก 1 ชั่วโมง · ทำงานล่วงเวลา (OT) ไม่เกิน 4 ชั่วโมง',
       surveyDate:new Date().toISOString().slice(0,10), surveyTime:'09.00 น.',
       threats:'ด้านกายภาพ (เสียง ความร้อน ความสั่นสะเทือน แสง) และด้านเคมี (ฝุ่นโลหะ ฝุ่นซิลิกา ฟูมเชื่อม ไอระเหยสารทำละลาย/สี ละอองน้ำมัน)',
       controllers:'อ.นพ. / พญ. ผู้ควบคุมการเดินสำรวจ',
@@ -604,17 +604,17 @@ function save(){
 function touch(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400); if(!CB.applying) pushFull(); }
 
 function loadTemplate(confirmFirst){
-  if(confirmFirst && !confirm('โหลดข้อมูลโรงงานตัวอย่าง (12 กระบวนการ) ทับข้อมูลปัจจุบัน?\nข้อมูลที่กรอกไว้จะถูกแทนที่')) return;
-  S=newState(); save(); renderAll(); bxFull(); toast('โหลดข้อมูลโรงงานตัวอย่างแล้ว');
+  if(confirmFirst && !confirm('โหลดข้อมูลโรงงานตัวอย่าง (12 กระบวนการ) แทนที่ข้อมูลปัจจุบันหรือไม่?\nข้อมูลที่กรอกไว้จะถูกแทนที่ทั้งหมด')) return;
+  S=newState(); save(); renderAll(); bxFull(); toast('โหลดข้อมูลโรงงานตัวอย่างเรียบร้อยแล้ว');
 }
 function newBlankReport(){
   if(CB.active){
-    if(!confirm('ขณะนี้อยู่ในห้อง '+CB.id+'\nการเริ่มรายงานใหม่จะออกจากห้องนี้ก่อน (ข้อมูลของห้องยังอยู่ใน Supabase — กลับเข้าห้องเดิมได้ทุกเมื่อ)\n\nดำเนินการต่อ?')) return;
+    if(!confirm('ขณะนี้อยู่ในห้อง '+CB.id+'\nการเริ่มรายงานใหม่จะออกจากห้องนี้ก่อน (ข้อมูลของห้องยังคงอยู่ใน Supabase สามารถกลับเข้าห้องเดิมได้ทุกเมื่อ)\n\nต้องการดำเนินการต่อหรือไม่?')) return;
     leaveRoom();
   } else if((S.general&&S.general.company)||(S.depts&&S.depts.length)){
-    if(!confirm('ล้างฟอร์มปัจจุบันเพื่อเริ่มรายงานเปล่าใหม่?\n⚠️ ถ้ายังไม่ได้เข้าห้อง/บันทึกเข้าห้อง ข้อมูลนี้จะหาย')) return;
+    if(!confirm('ต้องการล้างฟอร์มปัจจุบันเพื่อเริ่มรายงานเปล่าใหม่หรือไม่?\n⚠️ หากยังไม่ได้บันทึกเข้าห้อง ข้อมูลนี้จะสูญหาย')) return;
   }
-  S=blankState(); save(); renderAll(); setTab(0); bxFull(); toast('เริ่มรายงานใหม่ (ฟอร์มเปล่า) แล้ว');
+  S=blankState(); save(); renderAll(); setTab(0); bxFull(); toast('เริ่มรายงานใหม่ (ฟอร์มเปล่า) เรียบร้อยแล้ว');
 }
 
 /* ============================================================
@@ -682,8 +682,8 @@ function renderGeneral(){
         ${area('ที่อยู่','address',g.address,'เลขที่ ... นิคมอุตสาหกรรม ... ตำบล ... อำเภอ ... จังหวัด ...')}
         ${area('ประเภท/ชนิด/ลักษณะของสถานประกอบการ','type',g.type,'')}
         <div class="grid g3">
-          ${fld('ขนาดพื้นที่ (ตร.ม.)','area',g.area,'เช่น 50,400')}
-          ${fld('บุคคลติดต่อ / โทร.','contact',g.contact,'')}
+          ${fld('ขนาดพื้นที่ (ตารางเมตร)','area',g.area,'เช่น 50,400')}
+          ${fld('บุคคลติดต่อ / โทรศัพท์','contact',g.contact,'')}
           ${fld('ปีที่ก่อตั้ง (พ.ศ.)','founded',g.founded,'เช่น 2536')}
         </div>
         <div class="grid g2">
@@ -701,13 +701,13 @@ function renderGeneral(){
       <div class="grid g3">
         ${fld('พนักงานทั้งหมด (คน)','workers',g.workers,'','number')}
         ${fld('พนักงานประจำ (คน)','workersFull',g.workersFull,'','number')}
-        ${fld('Subcontract (คน)','workersSub',g.workersSub,'','number')}
+        ${fld('ผู้รับเหมาช่วง (คน)','workersSub',g.workersSub,'','number')}
       </div>
       <div class="grid g2" style="margin-top:13px">
         ${fld('วันทำงาน','days',g.days,'')}
         ${fld('ระบบกะ','shifts',g.shifts,'')}
       </div>
-      ${area('รายละเอียดเวลาทำงาน / OT','shiftDetail',g.shiftDetail,'')}
+      ${area('รายละเอียดเวลาทำงาน / การทำงานล่วงเวลา (OT)','shiftDetail',g.shiftDetail,'')}
     </div>
   </div>
 
@@ -809,7 +809,7 @@ function setH(did,hid,k,v){findHaz(findDept(did),hid)[k]=v;touch(); bx({k:'h',di
 function toggleDept(id){const d=findDept(id);d.open=!d.open;document.querySelector(`.dept[data-d="${id}"]`).classList.toggle('open',d.open);touch()}
 function expandAll(o){S.depts.forEach(d=>d.open=o);renderDepts();touch()}
 function addDept(){S.depts.push({id:uid(),name:'แผนกใหม่',en:'',proc:'',machines:'',hazards:[],open:true});syncHealth(S);renderDepts();touch();bxFull()}
-function delDept(id){if(!confirm('ลบแผนกนี้และข้อมูลทั้งหมด?'))return;S.depts=S.depts.filter(d=>d.id!==id);delete S.health[id];renderDepts();touch();bxFull()}
+function delDept(id){if(!confirm('ต้องการลบแผนกนี้และข้อมูลทั้งหมดหรือไม่?'))return;S.depts=S.depts.filter(d=>d.id!==id);delete S.health[id];renderDepts();touch();bxFull()}
 function addHaz(did){findDept(did).hazards.push(haz('กายภาพ','','',''));renderDepts();touch();bxFull()}
 function delHaz(did,hid){const d=findDept(did);d.hazards=d.hazards.filter(h=>h.id!==hid);renderDepts();touch();bxFull()}
 
@@ -924,7 +924,7 @@ function autoHealth(){
     if(has(/แสง|uv|เชื่อม|weld|มองเห็น/)){set('การมองเห็น');set('VA');}
     if(has(/สั่นสะเทือน|vibration|hav|ยก|manual|การยศาสตร์/)){set('กระดูกและกล้ามเนื้อ');}
   });
-  renderHealth(); touch(); bxFull(); toast('แนะนำรายการตรวจตามสิ่งคุกคามแล้ว');
+  renderHealth(); touch(); bxFull(); toast('แนะนำรายการตรวจตามสิ่งคุกคามเรียบร้อยแล้ว');
 }
 
 /* ============================================================
@@ -989,7 +989,7 @@ function autoConclusion(){
   if(f.noise.length) c.noise=`ผลการประเมินความเสี่ยงด้านเสียงดังพบว่าแผนก ${uniq(f.noise).join(', ')} อยู่ในระดับสูง แนะนำให้จัดทำมาตรการอนุรักษ์การได้ยินตามกฎหมาย อย่างน้อยประกอบด้วย (1) นโยบายการอนุรักษ์การได้ยิน (2) การเฝ้าระวังเสียงดัง (Noise monitoring) (3) การเฝ้าระวังการได้ยิน (Audiometry ปีละ 1 ครั้ง) (4) หน้าที่ความรับผิดชอบของผู้เกี่ยวข้อง และให้ใช้อุปกรณ์ป้องกันเสียง เช่น foam ear plug NRR อย่างน้อย 19`;
   if(f.silica.length) c.chem=`ผลการประเมินความเสี่ยงต่อสุขภาพส่วนใหญ่อยู่ในเกณฑ์ต่ำ ยกเว้นฝุ่นซิลิกา (silica dust) ที่อยู่ในเกณฑ์สูง ในแผนก ${uniq(f.silica).join(', ')} เนื่องจากยังไม่ได้ตรวจวัดปริมาณในอากาศ แนะนำให้ตรวจวัดปริมาณ silica dust ในอากาศ เพื่อให้เป็นไปตามกฎกระทรวงกำหนดมาตรฐานในการบริหาร จัดการ และดำเนินการด้านความปลอดภัย อาชีวอนามัย และสภาพแวดล้อมในการทำงาน เกี่ยวกับสารเคมีอันตราย พ.ศ. 2556`;
   else c.chem=c.chem||`ผลการประเมินความเสี่ยงต่อสุขภาพจากสารเคมีส่วนใหญ่อยู่ในเกณฑ์ต่ำ แนะนำให้ตรวจวัดสิ่งคุกคามที่ยังไม่ได้วัด และเฝ้าระวังตามปัจจัยเสี่ยงของแต่ละแผนก`;
-  renderSummary(); touch(); bxFull(); toast('ร่างข้อเสนอแนะแล้ว');
+  renderSummary(); touch(); bxFull(); toast('ร่างข้อเสนอแนะเรียบร้อยแล้ว');
 }
 
 /* ============================================================
@@ -1021,7 +1021,7 @@ function buildReport(){
     <dt>ชื่อสถานประกอบการ</dt><dd>${esc(g.company)||'—'}</dd>
     <dt>ที่อยู่</dt><dd>${esc(g.address)||'—'}</dd>
     <dt>ประเภท/ชนิดของโรงงาน</dt><dd>${esc(g.type)||'—'}</dd>
-    <dt>ขนาดของโรงงาน</dt><dd>${esc(g.area)||'—'} ตร.ม.</dd>
+    <dt>ขนาดของโรงงาน</dt><dd>${esc(g.area)||'—'} ตารางเมตร</dd>
     <dt>สิ่งคุกคามสุขภาพ</dt><dd>${esc(g.threats)||'—'}</dd>
     <dt>วันที่เดินสำรวจ</dt><dd>${beDate(g.surveyDate)||'—'} เวลา ${esc(g.surveyTime)||'—'}</dd>
   </dl>
@@ -1050,12 +1050,12 @@ function buildReport(){
     <dt>ชื่อสถานประกอบการ</dt><dd>${esc(g.company)||'—'}</dd>
     <dt>ประเภท ชนิด ลักษณะ</dt><dd>${esc(g.type)||'—'}</dd>
     <dt>ที่อยู่</dt><dd>${esc(g.address)||'—'}</dd>
-    <dt>บุคคลติดต่อ / โทร.</dt><dd>${esc(g.contact)||'—'}</dd>
+    <dt>บุคคลติดต่อ / โทรศัพท์</dt><dd>${esc(g.contact)||'—'}</dd>
     <dt>ปีที่ก่อตั้ง</dt><dd>พ.ศ. ${esc(g.founded)||'—'}</dd>
     <dt>ปีที่เริ่มผลิต</dt><dd>พ.ศ. ${esc(g.prodStart)||'—'}</dd>
     <dt>การบริหารงาน</dt><dd>${esc(g.mgmt)||'—'}</dd>
-    <dt>ขนาดพื้นที่</dt><dd>${esc(g.area)||'—'} ตร.ม.</dd>
-    <dt>บุคลากร</dt><dd>${esc(g.workers)||'—'} คน (ประจำ ${esc(g.workersFull)||'—'} · Subcontract ${esc(g.workersSub)||'—'})</dd>
+    <dt>ขนาดพื้นที่</dt><dd>${esc(g.area)||'—'} ตารางเมตร</dd>
+    <dt>บุคลากร</dt><dd>${esc(g.workers)||'—'} คน (ประจำ ${esc(g.workersFull)||'—'} · ผู้รับเหมาช่วง ${esc(g.workersSub)||'—'})</dd>
     <dt>วันทำงาน</dt><dd>${esc(g.days)||'—'}</dd>
     <dt>ระบบกะ</dt><dd>${esc(g.shifts)||'—'}</dd>
     <dt>เวลาทำงาน</dt><dd>${esc(g.shiftDetail)||'—'}</dd>
@@ -1187,10 +1187,10 @@ function openReport(){
 function closeReport(){document.getElementById('reportModal').classList.remove('show');document.body.style.overflow=''}
 function copyReport(){
   const txt=standaloneReport();
-  navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกโค้ด HTML รายงานแล้ว — วางเพื่อ deploy ได้เลย'))
+  navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกโค้ด HTML รายงานเรียบร้อยแล้ว — สามารถวางเพื่อนำขึ้นใช้งาน (deploy) ได้ทันที'))
     .catch(()=>{ // fallback
       const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
-      try{document.execCommand('copy');toast('คัดลอกแล้ว');}catch(e){toast('คัดลอกไม่สำเร็จ ลองบันทึกไฟล์แทน');}
+      try{document.execCommand('copy');toast('คัดลอกเรียบร้อยแล้ว');}catch(e){toast('คัดลอกไม่สำเร็จ กรุณาบันทึกไฟล์แทน');}
       ta.remove();
     });
 }
@@ -1199,7 +1199,7 @@ function downloadReport(){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download=`รายงานเดินสำรวจ_${(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)}_${beYear()}.html`;
-  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์รายงานแล้ว');
+  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์รายงานเรียบร้อยแล้ว');
 }
 
 /* ============================================================
@@ -1254,7 +1254,7 @@ function buildSlides(){
       <div><span>ประเภท / ชนิด</span><b>${esc(g.type)||'—'}</b></div>
       <div><span>ที่อยู่</span><b>${esc(g.address)||'—'}</b></div>
       <div><span>จำนวนบุคลากร</span><b>${esc(g.workers)||'—'} คน</b></div>
-      <div><span>ขนาดพื้นที่</span><b>${esc(g.area)||'—'} ตร.ม.</b></div>
+      <div><span>ขนาดพื้นที่</span><b>${esc(g.area)||'—'} ตารางเมตร</b></div>
       <div><span>วันทำงาน</span><b>${esc(g.days)||'—'}</b></div>
       <div><span>ระบบกะ</span><b>${esc(g.shifts)||'—'}</b></div>
     </div>`});
@@ -1393,13 +1393,13 @@ function openSlides(){
   document.body.style.overflow='hidden';
 }
 function closeSlides(){document.getElementById('slideModal').classList.remove('show');document.body.style.overflow=''}
-function copySlides(){ copyText(standaloneSlides(),'คัดลอกโค้ดสไลด์แล้ว — วางเพื่อ deploy ได้เลย'); }
+function copySlides(){ copyText(standaloneSlides(),'คัดลอกโค้ดสไลด์เรียบร้อยแล้ว — สามารถวางเพื่อนำขึ้นใช้งาน (deploy) ได้ทันที'); }
 function downloadSlides(){
   const blob=new Blob([standaloneSlides()],{type:'text/html;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='สไลด์นำเสนอ_'+(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)+'_'+beYear()+'.html';
-  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์สไลด์แล้ว');
+  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์สไลด์เรียบร้อยแล้ว');
 }
 function printSlides(){ const fr=document.getElementById('slideFrame'); if(fr&&fr.contentWindow){fr.contentWindow.focus();fr.contentWindow.print();} }
 
@@ -1411,12 +1411,12 @@ function doExport(){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download=`survey_${(S.general.company||'data').replace(/[\/\\?%*:|"<>]/g,'').slice(0,30)}.json`;
-  a.click(); URL.revokeObjectURL(a.href); toast('ส่งออกข้อมูลแล้ว');
+  a.click(); URL.revokeObjectURL(a.href); toast('ส่งออกข้อมูลเรียบร้อยแล้ว');
 }
 function doImport(e){
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{const d=JSON.parse(r.result); S=d; syncHealth(S); save(); renderAll(); setTab(0); toast('นำเข้าข้อมูลสำเร็จ'); }catch(err){alert('ไฟล์ไม่ถูกต้อง: '+err.message);} };
+  r.onload=()=>{ try{const d=JSON.parse(r.result); S=d; syncHealth(S); save(); renderAll(); setTab(0); toast('นำเข้าข้อมูลเรียบร้อยแล้ว'); }catch(err){alert('ไฟล์ไม่ถูกต้อง: '+err.message);} };
   r.readAsText(f); e.target.value='';
 }
 
@@ -1537,17 +1537,17 @@ function roomsListHTML(){
 }
 function saveCfg(){
   const url=(document.getElementById('sbUrl').value||'').trim(), key=(document.getElementById('sbKey').value||'').trim();
-  if(!url||!key){ toast('กรอก URL และ anon key ให้ครบ'); return; }
+  if(!url||!key){ toast('กรุณากรอก URL และ anon key ให้ครบถ้วน'); return; }
   localStorage.setItem('occumed_sb_cfg',JSON.stringify({url,key}));
   document.getElementById('sbState').textContent='บันทึกแล้ว ✓';
-  toast('บันทึกการตั้งค่า Supabase แล้ว');
+  toast('บันทึกการตั้งค่า Supabase เรียบร้อยแล้ว');
 }
 function copyText(t,msg){
-  const ok=()=>toast(msg||'คัดลอกแล้ว');
+  const ok=()=>toast(msg||'คัดลอกเรียบร้อยแล้ว');
   if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(ok).catch(()=>fallbackCopy(t,ok)); }
   else fallbackCopy(t,ok);
 }
-function fallbackCopy(t,ok){ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');ok();}catch(e){toast('คัดลอกไม่สำเร็จ');} ta.remove(); }
+function fallbackCopy(t,ok){ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');ok();}catch(e){toast('คัดลอกไม่สำเร็จ กรุณาลองอีกครั้ง');} ta.remove(); }
 function copySQL(){ copyText(SB_SQL,'คัดลอก SQL ติดตั้งแล้ว — วางใน Supabase SQL Editor'); }
 
 /* ---- broadcast + persistence ---- */
@@ -1616,7 +1616,7 @@ function renderPresence(){
 function updateCollabUI(){
   const chip=document.getElementById('collabChip'); if(!chip) return;
   const lbl=chip.querySelector('.clbl');
-  if(CB.active){ chip.classList.add('on'); const n=peerList().length; lbl.textContent=CB.id+(n>1?(' · '+n+' คน'):' · เดี่ยว'); }
+  if(CB.active){ chip.classList.add('on'); const n=peerList().length; lbl.textContent=CB.id+(n>1?(' · '+n+' คน'):' · คนเดียว'); }
   else{ chip.classList.remove('on'); lbl.textContent='ทำงานคนเดียว'; }
   renderPresence();
 }
@@ -1642,17 +1642,17 @@ function renderCollabStatus(){
     + roomsListHTML();
 }
 async function doJoin(create){
-  const c=cfgGet(); if(!c){ toast('ตั้งค่า Supabase ก่อนครั้งแรก'); csTab(2); return; }
+  const c=cfgGet(); if(!c){ toast('กรุณาตั้งค่า Supabase ก่อนใช้งานครั้งแรก'); csTab(2); return; }
   const id=(document.getElementById('jId').value||'').trim().toUpperCase();
   const pass=(document.getElementById('jPass').value||'').trim();
   const name=(document.getElementById('jName').value||'').trim();
   const role=document.getElementById('jRole').value;
-  if(!id||!pass||!name){ toast('กรอกรหัสสำรวจ รหัสผ่านทีม และชื่อผู้สำรวจ'); return; }
+  if(!id||!pass||!name){ toast('กรุณากรอกรหัสสำรวจ รหัสผ่านทีม และชื่อผู้สำรวจให้ครบถ้วน'); return; }
   if(create){
     const cur=(S.general&&S.general.company)?S.general.company:'(ยังไม่ระบุชื่อสถานประกอบการ)';
     if(!confirm('สร้างห้อง '+id+' โดยใช้ข้อมูลในฟอร์ม “ปัจจุบัน” เป็นจุดเริ่มต้นของห้อง\nสถานประกอบการ: '+cur+'\n\n• ถ้านี่คือข้อมูลที่ต้องการ → กดตกลง\n• ถ้าต้องการเริ่มห้องจากฟอร์มเปล่า → กดยกเลิก แล้วกด “＋ รายงานใหม่” ก่อน')) return;
   }
-  CB.sb=sbClient(); if(!CB.sb){ toast('เชื่อมต่อ Supabase ไม่สำเร็จ ตรวจ URL/key'); return; }
+  CB.sb=sbClient(); if(!CB.sb){ toast('เชื่อมต่อ Supabase ไม่สำเร็จ กรุณาตรวจสอบ URL และ key'); return; }
   CB.id=id; CB.pass=pass; CB.me.id=meId(); CB.me.name=name; CB.me.role=role;
   toast(create?'กำลังสร้างห้อง…':'กำลังเข้าห้อง…');
   try{
@@ -1674,13 +1674,13 @@ async function doJoin(create){
     subscribeChannel();
     updateCollabUI(); renderCollabStatus(); csTab(0);
     if(create) pushFull();
-    toast('เข้าห้อง '+id+' แล้ว — ทำงานร่วมกันได้เลย');
+    toast('เข้าห้อง '+id+' เรียบร้อยแล้ว — เริ่มทำงานร่วมกันได้ทันที');
   }catch(e){ toast('เกิดข้อผิดพลาด: '+(e.message||e)); }
 }
 function leaveRoom(){
   if(CB.ch){ try{CB.sb.removeChannel(CB.ch);}catch(e){} CB.ch=null; }
   CB.active=false; localStorage.removeItem('occumed_last_room');
-  updateCollabUI(); renderCollabStatus(); toast('ออกจากห้องแล้ว — กลับสู่โหมดทำงานคนเดียว');
+  updateCollabUI(); renderCollabStatus(); toast('ออกจากห้องเรียบร้อยแล้ว — กลับสู่โหมดทำงานคนเดียว');
 }
 document.getElementById('collabModal').addEventListener('click',e=>{ if(e.target.id==='collabModal') closeCollab(); });
 
@@ -1700,7 +1700,7 @@ document.getElementById('collabModal').addEventListener('click',e=>{ if(e.target
         const {data,error}=await CB.sb.rpc('survey_join',{p_id:lr.id,p_pass:lr.pass});
         if(!error&&data&&data.ok!==false){
           if(data.state&&Object.keys(data.state).length){ S=data.state; syncHealth(S); save(); renderAll(); setTab(curTab); }
-          CB.ver=data.ver||1; CB.active=true; subscribeChannel(); updateCollabUI(); toast('กลับเข้าห้อง '+lr.id+' แล้ว');
+          CB.ver=data.ver||1; CB.active=true; subscribeChannel(); updateCollabUI(); toast('กลับเข้าห้อง '+lr.id+' เรียบร้อยแล้ว');
         }
       }catch(e){}
     }
