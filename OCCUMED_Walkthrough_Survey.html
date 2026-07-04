@@ -849,6 +849,7 @@ function renderDepts(){
   </div>
   <div class="btnrow" style="margin-bottom:14px">
     <button class="btn gold sm" onclick="addDept()">＋ เพิ่มแผนก</button>
+    <button class="btn ghost sm" onclick="fillStdFromKB()" title="เติมค่ามาตรฐาน OEL/TLV (ACGIH) ให้สิ่งคุกคามที่มีค่าเดี่ยวชัดเจน เฉพาะช่องที่ยังว่าง">◈ เติมค่ามาตรฐาน ACGIH</button>
     <button class="btn ghost sm" onclick="expandAll(true)">ขยายทั้งหมด</button>
     <button class="btn ghost sm" onclick="expandAll(false)">ย่อทั้งหมด</button>
   </div>`;
@@ -1083,6 +1084,33 @@ const KB=[
  {k:['biological','ชีวภาพ','เชื้อ','bioaerosol'],hz:'Biological Agent / สิ่งคุกคามชีวภาพ',cat:'Biological',eff:'การติดเชื้อ, ภูมิแพ้, ระคายจาก bioaerosol ตามชนิดเชื้อ',dz:'โรคติดเชื้อจากงาน; hypersensitivity pneumonitis ตามชนิดเชื้อ',oel:'ACGIH 2022 Biological Agents: ไม่มี TLV ทั่วไป — ใช้ risk assessment และแนวทางเฉพาะเชื้อ',bei:'None',med:'ทบทวนวัคซีนที่เกี่ยวข้อง, เฝ้าระวังอาการ, โปรโตคอลเมื่อสัมผัส, ประเมินหลังสัมผัสของมีคม/สารคัดหลั่ง',hoc:'Engineering: containment, ระบายอากาศ, sharps safety · Administrative: SOP, สุขอนามัย, วัคซีน, การตอบสนองเมื่อสัมผัส · PPE: ถุงมือ, หน้ากาก/respirator, ป้องกันตาตามช่องทาง',law:_LB,ev:'B',auth:'ACGIH 2022 Biological Agents; กฎหมายโรคจากการทำงานไทย'}
 ];
 function kbMatch(name){ const n=(name||'').toLowerCase(); for(const e of KB){ for(const k of e.k){ if(n.includes(k)) return e; } } return null; }
+/* ค่ามาตรฐาน OEL/TLV เดี่ยวที่ชัดเจน (ACGIH) — ใช้เติมช่อง "ค่ามาตรฐาน" อัตโนมัติ; สิ่งคุกคามที่ค่าขึ้นกับ speciation/workload ไม่ใส่ (ต้องกรอกเอง) */
+const KB_STD={
+  'Noise / เสียงดัง':{v:'85',u:'dBA'},
+  'Respirable Crystalline Silica / ฝุ่นซิลิกา':{v:'0.025',u:'mg/m³'},
+  'Xylene / ไซลีน':{v:'20',u:'ppm'},
+  'Toluene / โทลูอีน':{v:'20',u:'ppm'},
+  'n-Hexane / เอ็น-เฮกเซน':{v:'50',u:'ppm'},
+  'Carbon Monoxide / คาร์บอนมอนอกไซด์':{v:'25',u:'ppm'},
+  'Oil Mist / ละอองน้ำมัน (Metalworking fluid)':{v:'5',u:'mg/m³'},
+  'Manganese / แมงกานีส':{v:'0.02',u:'mg/m³'}
+};
+function fillStdFromKB(){
+  let filled=0, kept=0, needManual=0;
+  (S.depts||[]).forEach(d=>(d.hazards||[]).forEach(h=>{
+    const e=kbMatch(h.name); if(!e) return;
+    const std=KB_STD[e.hz];
+    if(!std){ needManual++; return; }                 // มีใน KB แต่ไม่มีค่าเดี่ยว
+    if((h.std||'').trim()){ kept++; return; }          // มีค่าอยู่แล้ว ไม่ทับ
+    h.std=std.v; if(!(h.unit||'').trim()||h.unit==='-') h.unit=std.u;
+    filled++;
+  }));
+  if(filled){ renderDepts(); touch(); bxFull(); }
+  let msg = filled ? ('เติมค่ามาตรฐาน ACGIH '+filled+' รายการ') : 'ไม่มีช่องว่างให้เติม';
+  if(kept) msg+=' · คงค่าเดิม '+kept;
+  if(needManual) msg+=' · '+needManual+' รายการต้องกรอกเอง (ค่าขึ้นกับ speciation/workload)';
+  toast(msg);
+}
 function kbForSurvey(){
   const seen={}, entries=[], unmatched=[];
   (S.depts||[]).forEach(d=>(d.hazards||[]).forEach(h=>{
