@@ -1,0 +1,6 @@
+# Copyrighted / large reference source material — keep local, never commit or deploy
+*.pdf
+039(2)BookACGIH2025.pdf
+
+# Local working / temp files
+.claude/
