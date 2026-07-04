@@ -328,7 +328,11 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .lbrand{text-align:center;margin-bottom:6px}
 .lbrand b{display:block;font-size:19px;color:var(--navy);line-height:1.25}
 .lbrand span{display:block;font-size:11px;letter-spacing:1.6px;color:var(--gold-dk);text-transform:uppercase;margin-top:4px;font-weight:700}
-.lintro{text-align:center;color:var(--muted);font-size:13px;line-height:1.6;margin:10px 0 18px}
+.lintro{text-align:center;color:var(--muted);font-size:13px;line-height:1.6;margin:10px 0 16px}
+.lseg{display:flex;gap:6px;margin:4px 0 10px;background:var(--line2);padding:4px;border-radius:11px}
+.lseg button{flex:1;border:none;background:transparent;padding:10px;border-radius:8px;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.lseg button.active{background:#fff;color:var(--navy);box-shadow:var(--shadow)}
+.lmodenote{color:var(--muted);font-size:11.5px;line-height:1.55;margin:0 0 12px;text-align:center}
 .lform .field{margin-bottom:11px}
 .ldiv{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:var(--muted);font-size:12px}
 .ldiv::before,.ldiv::after{content:"";flex:1;height:1px;background:var(--line)}
@@ -346,26 +350,31 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <b>ระบบเดินสำรวจสถานประกอบการ</b>
       <span>OCCMED · Walk-through Survey</span>
     </div>
-    <p class="lintro">เข้าห้องสำรวจด้วยรหัสห้องเพื่อทำงานร่วมกันแบบเรียลไทม์ หรือเริ่มทำงานคนเดียวได้ทันที</p>
+    <p class="lintro">เลือกโปรเจคต์ที่จะทำงาน — แต่ละโปรเจคต์ทำงานร่วมกันแบบเรียลไทม์และบันทึกอัตโนมัติตลอดเวลา</p>
+
+    <div class="lseg">
+      <button id="lsegExist" class="active" onclick="landingMode('exist')">เข้าโปรเจคต์เดิม</button>
+      <button id="lsegNew" onclick="landingMode('new')">สร้างโปรเจคต์ใหม่</button>
+    </div>
+    <p class="lmodenote" id="lModeNote"></p>
+
     <div class="lform">
-      <div class="field"><label>รหัสห้อง (Survey ID)</label><input id="lId" placeholder="เช่น TM-2569-001" oninput="this.value=this.value.toUpperCase()"></div>
-      <div class="field"><label>รหัสผ่านทีม (Passcode)</label><input id="lPass" type="text" placeholder="รหัสผ่านของห้อง"></div>
+      <div class="field"><label id="lIdLabel">รหัสโปรเจคต์ (Survey ID)</label><input id="lId" placeholder="เช่น TM-2569-001" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="field"><label>รหัสผ่านทีม (Passcode)</label><input id="lPass" type="text" placeholder="รหัสผ่านของโปรเจคต์"></div>
       <div class="grid g2">
         <div class="field"><label>ชื่อผู้สำรวจ</label><input id="lName" placeholder="เช่น นายแพทย์ ทดสอบ ระบบรายงาน"></div>
         <div class="field"><label>บทบาท</label>
           <select id="lRole"><option>แพทย์</option><option>แพทย์อาชีวเวชศาสตร์</option><option>เจ้าหน้าที่ความปลอดภัยในการทำงาน (จป.)</option><option>พยาบาลอาชีวอนามัย</option><option>ฝ่ายทรัพยากรบุคคล (HR)</option><option>ผู้สังเกตการณ์</option></select>
         </div>
       </div>
-      <div class="btnrow" style="margin-top:4px">
-        <button class="btn pri" style="flex:1" onclick="enterFromLanding(false)">เข้าห้อง</button>
-        <button class="btn gold" style="flex:1" onclick="enterFromLanding(true)">สร้างห้องใหม่</button>
-      </div>
+      <button class="btn pri block" id="lPrimary" style="margin-top:4px" onclick="landingSubmit()">เข้าโปรเจคต์</button>
     </div>
+
     <div id="lRooms"></div>
     <div class="ldiv">หรือ</div>
-    <button class="btn ghost block" onclick="workSolo()">ทำงานคนเดียว (ไม่ต่อห้อง)</button>
-    <button class="lsettings" onclick="landingSettings()">ตั้งค่า Supabase (จำเป็นก่อนใช้ห้อง)</button>
-    <p class="lnote">การเข้า/สร้างห้องต้องตั้งค่า Supabase ก่อน · ข้อมูลแต่ละห้องเก็บแยกและเข้ารหัสรหัสผ่านทีม (สอดคล้อง PDPA)</p>
+    <button class="btn ghost block" onclick="workSolo()">ทำงานคนเดียว (ไม่ต่อโปรเจคต์)</button>
+    <button class="lsettings" onclick="landingSettings()">ตั้งค่า Supabase (จำเป็นก่อนใช้โปรเจคต์)</button>
+    <p class="lnote">ข้อมูลแต่ละโปรเจคต์เก็บแยกและเข้ารหัสรหัสผ่านทีม (สอดคล้อง PDPA)</p>
   </div>
 </div>
 
@@ -1702,14 +1711,14 @@ function renderCollabStatus(){
     + '<div class="btnrow" style="margin-top:12px"><button class="btn danger sm" onclick="leaveRoom()">ออกจากห้อง</button><div class="sp" style="flex:1"></div><span class="cnote" style="margin:0">ข้อมูลซิงก์อัตโนมัติ</span></div>'
     + roomsListHTML();
 }
-async function doJoin(create){
+async function doJoin(create,opts){
   const c=cfgGet(); if(!c){ toast('กรุณาตั้งค่า Supabase ก่อนใช้งานครั้งแรก'); csTab(2); return; }
   const id=(document.getElementById('jId').value||'').trim().toUpperCase();
   const pass=(document.getElementById('jPass').value||'').trim();
   const name=(document.getElementById('jName').value||'').trim();
   const role=document.getElementById('jRole').value;
   if(!id||!pass||!name){ toast('กรุณากรอกรหัสสำรวจ รหัสผ่านทีม และชื่อผู้สำรวจให้ครบถ้วน'); return; }
-  if(create){
+  if(create && !(opts&&opts.silent)){
     const cur=(S.general&&S.general.company)?S.general.company:'(ยังไม่ระบุชื่อสถานประกอบการ)';
     if(!confirm('สร้างห้อง '+id+' โดยใช้ข้อมูลในฟอร์ม “ปัจจุบัน” เป็นจุดเริ่มต้นของห้อง\nสถานประกอบการ: '+cur+'\n\n• ถ้านี่คือข้อมูลที่ต้องการ → กดตกลง\n• ถ้าต้องการเริ่มห้องจากฟอร์มเปล่า → กดยกเลิก แล้วกด “＋ รายงานใหม่” ก่อน')) return;
   }
@@ -1749,7 +1758,7 @@ document.getElementById('collabModal').addEventListener('click',e=>{ if(e.target
    LANDING PAGE  (หน้าแรก: เข้าห้อง / สร้างห้อง / ทำงานคนเดียว)
    ============================================================ */
 function lval(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
-function showLanding(){ const el=document.getElementById('landing'); if(!el) return; renderLandingRooms(); prefillLanding(); el.classList.add('show'); document.body.style.overflow='hidden'; }
+function showLanding(){ const el=document.getElementById('landing'); if(!el) return; renderLandingRooms(); prefillLanding(); landingMode(landingModeCur); el.classList.add('show'); document.body.style.overflow='hidden'; }
 function hideLanding(){ const el=document.getElementById('landing'); if(!el) return; el.classList.remove('show'); document.body.style.overflow=''; }
 function prefillLanding(){
   const lr=lastRoom(); if(!lr) return;
@@ -1762,7 +1771,7 @@ function renderLandingRooms(){
   const el=document.getElementById('lRooms'); if(!el) return;
   const list=recentRooms();
   if(!list.length){ el.innerHTML=''; return; }
-  el.innerHTML='<div class="subhd" style="margin:18px 0 8px">ห้องล่าสุด</div>'
+  el.innerHTML='<div class="subhd" style="margin:18px 0 8px">โปรเจคต์ล่าสุด</div>'
     + list.map(r=>{
         const id=String(r.id).replace(/'/g,"\\'");
         return '<div class="roomrow" onclick="enterRecent(\''+id+'\')" title="เข้าห้องนี้">'
@@ -1772,19 +1781,48 @@ function renderLandingRooms(){
       }).join('');
 }
 function forgetRoomLanding(id,ev){ if(ev) ev.stopPropagation(); localStorage.setItem('occumed_rooms',JSON.stringify(recentRooms().filter(x=>x.id!==id))); renderLandingRooms(); }
-async function enterFromLanding(create){
-  if(!lval('lId')||!lval('lPass')||!lval('lName')){ toast('กรุณากรอกรหัสห้อง รหัสผ่านทีม และชื่อผู้สำรวจให้ครบถ้วน'); return; }
-  if(!cfgGet()){ toast('กรุณาตั้งค่า Supabase ก่อนใช้ห้อง'); landingSettings(); return; }
+let landingModeCur='exist';
+function landingMode(m){
+  landingModeCur=m;
+  const eb=document.getElementById('lsegExist'), nb=document.getElementById('lsegNew');
+  if(eb) eb.classList.toggle('active',m==='exist');
+  if(nb) nb.classList.toggle('active',m==='new');
+  const note=document.getElementById('lModeNote'), primary=document.getElementById('lPrimary'), idl=document.getElementById('lIdLabel');
+  if(m==='new'){
+    if(note) note.textContent='ตั้งรหัสโปรเจคต์และรหัสผ่านทีมสำหรับโรงงานใหม่ — เริ่มจากฟอร์มเปล่า';
+    if(primary) primary.textContent='สร้างโปรเจคต์ใหม่';
+    if(idl) idl.textContent='ตั้งรหัสโปรเจคต์ใหม่ (Survey ID)';
+  }else{
+    if(note) note.textContent='ใส่รหัสโปรเจคต์และรหัสผ่านทีมที่มีอยู่แล้ว เพื่อเข้าไปแก้ไขข้อมูลร่วมกัน';
+    if(primary) primary.textContent='เข้าโปรเจคต์';
+    if(idl) idl.textContent='รหัสโปรเจคต์ (Survey ID)';
+  }
+}
+function landingToJoin(){
   document.getElementById('jId').value=lval('lId');
   document.getElementById('jPass').value=lval('lPass');
   document.getElementById('jName').value=lval('lName');
   document.getElementById('jRole').value=document.getElementById('lRole').value;
-  await doJoin(create);
+}
+function landingSubmit(){ if(landingModeCur==='new') createProject(); else openProject(); }
+async function openProject(){
+  if(!lval('lId')||!lval('lPass')||!lval('lName')){ toast('กรุณากรอกรหัสโปรเจคต์ รหัสผ่านทีม และชื่อผู้สำรวจให้ครบถ้วน'); return; }
+  if(!cfgGet()){ toast('กรุณาตั้งค่า Supabase ก่อนใช้โปรเจคต์'); landingSettings(); return; }
+  landingToJoin();
+  await doJoin(false);
+  if(CB.active) hideLanding();
+}
+async function createProject(){
+  if(!lval('lId')||!lval('lPass')||!lval('lName')){ toast('กรุณาตั้งรหัสโปรเจคต์ รหัสผ่านทีม และกรอกชื่อผู้สำรวจให้ครบถ้วน'); return; }
+  if(!cfgGet()){ toast('กรุณาตั้งค่า Supabase ก่อนใช้โปรเจคต์'); landingSettings(); return; }
+  S=blankState(); syncHealth(S); save(); renderAll(); setTab(0);   /* โปรเจคต์ใหม่เริ่มจากฟอร์มเปล่า */
+  landingToJoin();
+  await doJoin(true,{silent:true});
   if(CB.active) hideLanding();
 }
 async function enterRecent(id){
   const r=recentRooms().find(x=>x.id===id); if(!r) return;
-  if(!cfgGet()){ toast('กรุณาตั้งค่า Supabase ก่อนใช้ห้อง'); landingSettings(); return; }
+  if(!cfgGet()){ toast('กรุณาตั้งค่า Supabase ก่อนใช้โปรเจคต์'); landingSettings(); return; }
   document.getElementById('jId').value=r.id;
   document.getElementById('jPass').value=r.pass||'';
   if(r.name) document.getElementById('jName').value=r.name;
@@ -1792,7 +1830,7 @@ async function enterRecent(id){
   await doJoin(false);
   if(CB.active) hideLanding();
 }
-function workSolo(){ hideLanding(); toast('เริ่มทำงานคนเดียว (ไม่ต่อห้อง)'); }
+function workSolo(){ hideLanding(); toast('เริ่มทำงานคนเดียว (ไม่ต่อโปรเจคต์)'); }
 function landingSettings(){ openCollab(); csTab(2); }
 
 (function init(){
