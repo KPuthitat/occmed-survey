@@ -77,6 +77,14 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .tbtn.gold:hover{background:var(--gold-lt)}
 .savedot{font-size:11px;color:#9fb3cc;display:flex;align-items:center;gap:5px}
 .savedot i{width:7px;height:7px;border-radius:50%;background:#3ecb7a;display:inline-block}
+/* toolbar overflow menu (มือถือ) */
+.tbmenu{position:relative;display:none}
+.tbmenu-panel{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border-radius:12px;box-shadow:0 14px 34px rgba(11,37,69,.3);padding:6px;min-width:214px;z-index:60;display:none;flex-direction:column;gap:2px}
+.tbmenu-panel.show{display:flex}
+.tbmenu-panel button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;padding:12px;border-radius:9px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+.tbmenu-panel button:hover,.tbmenu-panel button:active{background:var(--line2)}
+.tbmenu-panel .mi-ic{color:var(--gold-dk);font-weight:800;width:18px;text-align:center;flex:none}
+@media(max-width:520px){ .tbacts{display:none} .tbmenu{display:block} }
 
 /* ---------- Tabs ---------- */
 .tabs{
@@ -389,10 +397,21 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <div id="presence"></div>
   <div id="collabChip" onclick="openCollab()" title="การทำงานร่วมกัน"><span class="cdot"></span><span class="clbl">ทำงานคนเดียว</span></div>
   <span class="savedot hide-sm" id="saveDot"><i></i>บันทึกอัตโนมัติ</span>
-  <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">↓<span class="lbl"> ส่งออก</span></button>
-  <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
-  <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
-  <button class="tbtn" onclick="openSlides()" title="สร้างสไลด์นำเสนอ">▦<span class="lbl"> สไลด์</span></button>
+  <span class="tbacts">
+    <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">↓<span class="lbl"> ส่งออก</span></button>
+    <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
+    <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
+    <button class="tbtn" onclick="openSlides()" title="สร้างสไลด์นำเสนอ">▦<span class="lbl"> สไลด์</span></button>
+  </span>
+  <div class="tbmenu">
+    <button class="tbtn gold" onclick="toggleTbMenu(event)" aria-haspopup="true" title="เมนู">เมนู ▾</button>
+    <div class="tbmenu-panel" id="tbMenuPanel">
+      <button onclick="tbGo(openReport)"><span class="mi-ic">▤</span> สร้างรายงาน</button>
+      <button onclick="tbGo(openSlides)"><span class="mi-ic">▦</span> สร้างสไลด์นำเสนอ</button>
+      <button onclick="tbGo(doExport)"><span class="mi-ic">↓</span> ส่งออกข้อมูล (JSON)</button>
+      <button onclick="tbImport()"><span class="mi-ic">↑</span> นำเข้าข้อมูล</button>
+    </div>
+  </div>
   <input type="file" id="impFile" accept="application/json" style="display:none" onchange="doImport(event)">
 </div>
 
@@ -1485,6 +1504,13 @@ function doImport(e){
   r.onload=()=>{ try{const d=JSON.parse(r.result); S=d; syncHealth(S); save(); renderAll(); setTab(0); toast('นำเข้าข้อมูลเรียบร้อยแล้ว'); }catch(err){alert('ไฟล์ไม่ถูกต้อง: '+err.message);} };
   r.readAsText(f); e.target.value='';
 }
+
+/* ---- toolbar overflow menu (มือถือ) ---- */
+function toggleTbMenu(e){ if(e) e.stopPropagation(); const p=document.getElementById('tbMenuPanel'); if(p) p.classList.toggle('show'); }
+function closeTbMenu(){ const p=document.getElementById('tbMenuPanel'); if(p) p.classList.remove('show'); }
+function tbGo(fn){ closeTbMenu(); if(typeof fn==='function') fn(); }
+function tbImport(){ closeTbMenu(); document.getElementById('impFile').click(); }
+document.addEventListener('click',e=>{ const p=document.getElementById('tbMenuPanel'); if(p&&p.classList.contains('show')&&!e.target.closest('.tbmenu')) p.classList.remove('show'); });
 
 /* ============================================================
    INIT
