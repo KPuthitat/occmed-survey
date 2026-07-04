@@ -291,9 +291,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
   /* ติ๊กช่องตรวจสุขภาพง่ายขึ้น */
   .hcgrid input[type=checkbox]{width:22px;height:22px}
   .hcgrid th,.hcgrid td{padding:9px 8px}
-  /* modal เต็มจอขึ้น + ปุ่มหัว modal ตัดบรรทัดได้ */
-  .modal{padding:10px}
-  .modal .mhd{flex-wrap:wrap;gap:8px}
+  /* modal เต็มจอขึ้น + จัดปุ่มหัว modal ให้เรียงสวย (หัวข้อบรรทัดเดียว, ✕ มุมขวาบน, ปุ่มการกระทำเต็มความกว้าง) */
+  .modal{padding:8px}
+  .modal .sheet{border-radius:14px}
+  .modal .mhd{flex-wrap:wrap;gap:8px;position:relative;padding:12px 14px;padding-right:46px}
+  .modal .mhd h3{flex:1 1 100%;font-size:14px;line-height:1.35}
+  .modal .mhd .close{position:absolute;top:8px;right:10px;margin:0;padding:4px 8px}
+  .modal .mhd .btn.sm{flex:1 1 100%;justify-content:center;min-height:44px;font-size:13.5px}
 }
 /* ---- Collaboration ---- */
 #collabChip{display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;transition:.15s}
@@ -401,13 +405,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">↓<span class="lbl"> ส่งออก</span></button>
     <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
     <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
-    <button class="tbtn" onclick="openSlides()" title="สร้างสไลด์นำเสนอ">▦<span class="lbl"> สไลด์</span></button>
+    <button class="tbtn" onclick="openSlides()" title="สร้างไฟล์นำเสนอ">▦<span class="lbl"> นำเสนอ</span></button>
   </span>
   <div class="tbmenu">
     <button class="tbtn gold" onclick="toggleTbMenu(event)" aria-haspopup="true" title="เมนู">เมนู ▾</button>
     <div class="tbmenu-panel" id="tbMenuPanel">
       <button onclick="tbGo(openReport)"><span class="mi-ic">▤</span> สร้างรายงาน</button>
-      <button onclick="tbGo(openSlides)"><span class="mi-ic">▦</span> สร้างสไลด์นำเสนอ</button>
+      <button onclick="tbGo(openSlides)"><span class="mi-ic">▦</span> สร้างไฟล์นำเสนอ</button>
       <button onclick="tbGo(doExport)"><span class="mi-ic">↓</span> ส่งออกข้อมูล (JSON)</button>
       <button onclick="tbImport()"><span class="mi-ic">↑</span> นำเข้าข้อมูล</button>
     </div>
@@ -454,7 +458,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <h3>รายงานผลการเดินสำรวจสถานประกอบการ</h3>
       <button class="btn gold sm" onclick="copyReport()">⧉ คัดลอกโค้ด (Deploy)</button>
       <button class="btn ghost sm" onclick="downloadReport()">↓ บันทึก .html</button>
-      <button class="btn ghost sm" onclick="window.print()">พิมพ์ / PDF</button>
+      <button class="btn ghost sm" onclick="printReport()">พิมพ์ / PDF</button>
       <button class="close" onclick="closeReport()">✕</button>
     </div>
     <div class="mbd"><div id="reportDoc"></div></div>
@@ -465,13 +469,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
 <div class="modal" id="slideModal">
   <div class="sheet" style="max-width:1160px">
     <div class="mhd">
-      <h3>สไลด์นำเสนอผลการเดินสำรวจ</h3>
+      <h3>ไฟล์นำเสนอผลการเดินสำรวจ</h3>
       <button class="btn gold sm" onclick="copySlides()">⧉ คัดลอกโค้ด (Deploy)</button>
       <button class="btn ghost sm" onclick="downloadSlides()">↓ บันทึก .html</button>
       <button class="btn ghost sm" onclick="printSlides()">พิมพ์ / PDF</button>
       <button class="close" onclick="closeSlides()">✕</button>
     </div>
-    <div class="mbd" style="padding:0;background:#0a1a30"><iframe id="slideFrame" title="สไลด์นำเสนอ" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
+    <div class="mbd" style="padding:0;background:#0a1a30"><iframe id="slideFrame" title="ไฟล์นำเสนอ" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
   </div>
 </div>
 
@@ -1061,9 +1065,9 @@ function renderSummary(){
   <div class="card"><div class="bd" style="text-align:center;padding:22px">
     <div class="btnrow" style="justify-content:center;gap:10px;flex-wrap:wrap">
       <button class="btn gold" style="padding:13px 28px;font-size:15px" onclick="openReport()">▤ สร้างรายงานฉบับสมบูรณ์</button>
-      <button class="btn pri" style="padding:13px 28px;font-size:15px" onclick="openSlides()">สร้างสไลด์นำเสนอ</button>
+      <button class="btn pri" style="padding:13px 28px;font-size:15px" onclick="openSlides()">สร้างไฟล์นำเสนอ</button>
     </div>
-    <div class="hint" style="margin-top:8px">รายงาน/สไลด์จัดรูปแบบตามธีม CI · พิมพ์ PDF / คัดลอกโค้ด / บันทึกไฟล์ได้</div>
+    <div class="hint" style="margin-top:8px">รายงาน/ไฟล์นำเสนอจัดรูปแบบตามธีม CI · พิมพ์ PDF / คัดลอกโค้ด / บันทึกไฟล์ได้</div>
   </div></div>`;
 }
 function setC(k,v){S.conclusion[k]=v;touch(); bx({k:'c',key:k,v})}
@@ -1405,7 +1409,7 @@ function buildSlides(){
     <div class="s-sub">คณะผู้เดินสำรวจอาชีวเวชศาสตร์</div>
     <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · OCCMED</div>`});
 
-  const dots=slides.map((s,k)=>`<button class="dot${k===0?' a':''}" onclick="__to(${k})" aria-label="สไลด์ ${k+1}"></button>`).join('');
+  const dots=slides.map((s,k)=>`<button class="dot${k===0?' a':''}" onclick="__to(${k})" aria-label="หน้า ${k+1}"></button>`).join('');
   return `<div class="deck">`
     +slides.map((s,k)=>`<section class="slide${s.cls?' '+s.cls:''}${k===0?' on':''}">${s.html}</section>`).join('')
     +`<div class="nav"><button onclick="__go(-1)" aria-label="ก่อนหน้า">‹</button><span class="ctr"><b id="cur">1</b>/${slides.length}</span><button onclick="__go(1)" aria-label="ถัดไป">›</button></div>`
@@ -1466,7 +1470,7 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;backg
 
 function standaloneSlides(){
   return '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    +'<title>สไลด์นำเสนอ · '+esc(S.general.company||'สถานประกอบการ')+'</title>'
+    +'<title>ไฟล์นำเสนอ · '+esc(S.general.company||'สถานประกอบการ')+'</title>'
     +'<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
     +'<style>'+slidesCSS()+'</style></head><body>'
     +buildSlides()
@@ -1478,15 +1482,29 @@ function openSlides(){
   document.body.style.overflow='hidden';
 }
 function closeSlides(){document.getElementById('slideModal').classList.remove('show');document.body.style.overflow=''}
-function copySlides(){ copyText(standaloneSlides(),'คัดลอกโค้ดสไลด์เรียบร้อยแล้ว — สามารถวางเพื่อนำขึ้นใช้งาน (deploy) ได้ทันที'); }
+function copySlides(){ copyText(standaloneSlides(),'คัดลอกโค้ดไฟล์นำเสนอเรียบร้อยแล้ว — สามารถวางเพื่อนำขึ้นใช้งาน (deploy) ได้ทันที'); }
 function downloadSlides(){
   const blob=new Blob([standaloneSlides()],{type:'text/html;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='สไลด์นำเสนอ_'+(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)+'_'+beYear()+'.html';
-  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์สไลด์เรียบร้อยแล้ว');
+  a.download='ไฟล์นำเสนอ_'+(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)+'_'+beYear()+'.html';
+  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์นำเสนอเรียบร้อยแล้ว');
 }
-function printSlides(){ const fr=document.getElementById('slideFrame'); if(fr&&fr.contentWindow){fr.contentWindow.focus();fr.contentWindow.print();} }
+/* เปิดเอกสารในแท็บใหม่แล้วสั่งพิมพ์ — ทำงานได้ทั้ง desktop และมือถือ (iOS) ที่ window.print()/iframe.print() มักไม่ทำงาน */
+function openForPrint(html,fname){
+  const withPrint=html.replace('</body>','<script>setTimeout(function(){try{window.focus();window.print();}catch(e){}},600);<\/script></body>');
+  try{
+    const w=window.open('','_blank');
+    if(w&&w.document){ w.document.open(); w.document.write(withPrint); w.document.close(); return; }
+  }catch(e){}
+  try{
+    const url=URL.createObjectURL(new Blob([withPrint],{type:'text/html'}));
+    const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+  }catch(e){ toast('เปิดเพื่อพิมพ์ไม่สำเร็จ — ใช้ปุ่ม “บันทึก .html” แล้วเปิดไฟล์เพื่อพิมพ์แทนได้'); }
+}
+function printReport(){ openForPrint(standaloneReport()); }
+function printSlides(){ openForPrint(standaloneSlides()); }
 
 /* ============================================================
    EXPORT / IMPORT
