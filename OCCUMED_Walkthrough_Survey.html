@@ -1711,6 +1711,15 @@ function renderCollabStatus(){
     + '<div class="btnrow" style="margin-top:12px"><button class="btn danger sm" onclick="leaveRoom()">ออกจากห้อง</button><div class="sp" style="flex:1"></div><span class="cnote" style="margin:0">ข้อมูลซิงก์อัตโนมัติ</span></div>'
     + roomsListHTML();
 }
+function isSetupError(error){
+  if(!error) return false;
+  const msg=(error.message||'')+' '+(error.details||'')+' '+(error.hint||'');
+  return error.code==='42883' || error.code==='PGRST202' || /gen_salt|crypt\(|does not exist|could not find the function|schema cache/i.test(msg);
+}
+function showSetupNeeded(){
+  toast('ยังไม่ได้ติดตั้งฐานข้อมูล — คัดลอก SQL ในหน้า “ตั้งค่า Supabase” ไปรันใน SQL Editor ก่อน แล้วลองอีกครั้ง');
+  openCollab(); csTab(2);
+}
 async function doJoin(create,opts){
   const c=cfgGet(); if(!c){ toast('กรุณาตั้งค่า Supabase ก่อนใช้งานครั้งแรก'); csTab(2); return; }
   const id=(document.getElementById('jId').value||'').trim().toUpperCase();
@@ -1728,13 +1737,13 @@ async function doJoin(create,opts){
   try{
     if(create){
       const {data,error}=await CB.sb.rpc('survey_create',{p_id:id,p_pass:pass,p_title:S.general.company||id,p_by:name,p_state:S});
-      if(error){ toast('ผิดพลาด: '+(error.message||'')); return; }
-      if(data&&data.ok===false){ toast(data.reason==='exists'?'มีห้องนี้อยู่แล้ว — กด “เข้าร่วมห้อง” แทน':'สร้างห้องไม่สำเร็จ'); return; }
+      if(error){ if(isSetupError(error)){ showSetupNeeded(); }else{ toast('ผิดพลาด: '+(error.message||'')); } return; }
+      if(data&&data.ok===false){ toast(data.reason==='exists'?'มีรหัสโปรเจคต์นี้อยู่แล้ว — ใช้ “เข้าโปรเจคต์เดิม” แทน':'สร้างโปรเจคต์ไม่สำเร็จ'); return; }
       CB.ver=(data&&data.ver)||1;
     }else{
       const {data,error}=await CB.sb.rpc('survey_join',{p_id:id,p_pass:pass});
-      if(error){ toast('ผิดพลาด: '+(error.message||'')); return; }
-      if(!data||data.ok===false){ toast(data&&data.reason==='badpass'?'รหัสผ่านไม่ถูกต้อง':'ไม่พบห้องนี้ — กด “สร้างห้องใหม่”'); return; }
+      if(error){ if(isSetupError(error)){ showSetupNeeded(); }else{ toast('ผิดพลาด: '+(error.message||'')); } return; }
+      if(!data||data.ok===false){ toast(data&&data.reason==='badpass'?'รหัสผ่านไม่ถูกต้อง':'ไม่พบโปรเจคต์นี้ — ใช้ “สร้างโปรเจคต์ใหม่” แทน'); return; }
       if(data.state&&Object.keys(data.state).length){ S=data.state; syncHealth(S); save(); renderAll(); setTab(0); }
       CB.ver=data.ver||1;
     }
