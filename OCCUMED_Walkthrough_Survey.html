@@ -205,6 +205,20 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .note{border-left:3px solid var(--gold);background:#fdf8ec;padding:11px 14px;border-radius:0 10px 10px 0;font-size:13px;color:#5a4d2a;margin:12px 0}
 .note b{color:var(--gold-dk)}
 .warn{border-left:3px solid var(--over);background:var(--over-bg);padding:11px 14px;border-radius:0 10px 10px 0;font-size:13px;color:#7a2b21;margin:12px 0}
+/* ---------- Knowledge Base summary ---------- */
+.kbsub{font-size:12px;letter-spacing:.3px;color:var(--navy);font-weight:800;margin:18px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--gold)}
+.kbnote{font-size:12px;color:#5a4d2a;line-height:1.6;background:#fdf8ec;border-left:3px solid var(--gold);padding:9px 12px;border-radius:0 8px 8px 0;margin:8px 0}
+.kbnote b{color:var(--gold-dk)}
+.kbtbl{width:100%;border-collapse:collapse;font-size:11.5px;min-width:580px}
+.kbtbl th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:8px 9px;font-size:11px;white-space:nowrap}
+.kbtbl td{border-bottom:1px solid var(--line2);padding:7px 9px;vertical-align:top;color:var(--ink);line-height:1.5}
+.kbtbl tbody tr:nth-child(even) td{background:#fafbfd}
+.kbtbl b{color:var(--navy2)}
+.kbref{font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px}
+.evb{display:inline-block;font-weight:800;font-size:10.5px;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.evb-a{background:var(--ok-bg);color:var(--ok)}
+.evb-b{background:var(--med-bg);color:var(--med)}
+.evb-c{background:var(--line2);color:var(--muted)}
 .empty{text-align:center;padding:34px 20px;color:var(--acc)}
 .empty svg{opacity:.4;margin-bottom:8px}
 
@@ -1034,6 +1048,70 @@ function highRiskFindings(){
   });
   return out;
 }
+/* ============================================================
+   KNOWLEDGE BASE (v1) — 20 hazards · อ้างอิง ACGIH 2022 + กฎหมายไทย
+   ใช้สร้างสรุปเชิงคลินิก/ควบคุม/กฎหมาย/หลักฐาน อัตโนมัติจากสิ่งคุกคามที่พบ
+   ============================================================ */
+const KB_REF='ACGIH. 2022 TLVs® and BEIs® (2022) · กฎหมายไทย: พ.ร.บ.ความปลอดภัยฯ 2554, กฎกระทรวงสารเคมีอันตราย 2556, ประกาศตรวจวัดสารเคมี 2559, พ.ร.บ.ควบคุมโรคจากการประกอบอาชีพฯ 2562';
+const _LC='พ.ร.บ.ความปลอดภัยฯ 2554 ม.8, ม.53 · กฎกระทรวงสารเคมีอันตราย 2556 ข้อ 1,4,6-9,28,29,31 · ประกาศตรวจวัดสารเคมี 2559 ข้อ 4-7 · พ.ร.บ.ควบคุมโรคฯ 2562 ม.26';
+const _LP='พ.ร.บ.ความปลอดภัยฯ 2554 ม.8, ม.53 · กฎกระทรวงความร้อน แสงสว่าง เสียง 2559 · พ.ร.บ.ควบคุมโรคฯ 2562 ม.26';
+const _LV=_LP+' · กฎกระทรวงเครื่องจักรฯ 2564';
+const _LE='พ.ร.บ.ความปลอดภัยฯ 2554 ม.8, ม.53 · กฎกระทรวงเครื่องจักรฯ 2564 · พ.ร.บ.ควบคุมโรคฯ 2562 ม.26';
+const _LB='พ.ร.บ.ความปลอดภัยฯ 2554 ม.8, ม.53 · พ.ร.บ.ควบคุมโรคฯ 2562 ม.26 · กฎหมายควบคุมโรคติดต่อที่เกี่ยวข้อง';
+const KB=[
+ {k:['noise','เสียง'],hz:'Noise / เสียงดัง',cat:'Physical',eff:'Temporary/permanent threshold shift, tinnitus, communication difficulty, stress',dz:'Noise-induced hearing loss (NIHL)',oel:'ACGIH 2022: TLV-TWA 85 dBA (8-hr), 3-dB exchange; กฎหมายไทยอ้างอิง 85 dBA (8 ชม.)',bei:'None',med:'Baseline audiogram, periodic audiometry, otoscopic/ear history, evaluate standard threshold shift; fit-for-work หากสูญเสียการได้ยินรุนแรง',hoc:'Engineering: enclosure, isolation, silencer, damping, maintenance · Administrative: rotation, จำกัดเวลาสัมผัส, ป้ายเตือน · PPE: ear plug/ear muff (NRR เหมาะสม)',law:_LP,ev:'A',auth:'ACGIH 2022; กฎกระทรวง HSL ไทย; NIOSH/OSHA'},
+ {k:['heat','ความร้อน','wbgt'],hz:'Heat / ความร้อน (WBGT)',cat:'Physical',eff:'Heat rash, cramps, exhaustion, syncope, heat stroke, dehydration, kidney stress',dz:'Heat-related illness / heat stress disorder',oel:'ACGIH 2022: TLV/Action Limit อิง WBGT + metabolic rate + acclimatization + clothing (ไม่มีค่าเดียวตายตัว)',bei:'None',med:'Fit-for-work งานร้อน; คัดกรองปัจจัยเสี่ยง (ประวัติ heat illness, โรคหัวใจ/ไต, ตั้งครรภ์, อ้วน, ยา); เฝ้าระวังอาการระหว่างทำงาน',hoc:'Engineering: ระบายอากาศ, radiant heat shield, ฉนวน, cooling · Administrative: work-rest cycle, acclimatization, จัดตาราง · PPE: cooling vest, เสื้อผ้าระบายอากาศ',law:_LP,ev:'A',auth:'ACGIH 2022; กฎกระทรวง HSL ไทย'},
+ {k:['vibration','สั่นสะเทือน'],hz:'Vibration / ความสั่นสะเทือน',cat:'Physical',eff:'Hand-arm vibration syndrome, ชา, อาการหลอดเลือด, ปวดกล้ามเนื้อ; whole-body → ปวดหลัง/ล้า',dz:'Hand-arm vibration syndrome; WMSD',oel:'ACGIH 2022: HAV/WBV TLV อิง frequency-weighted acceleration + ระยะเวลาสัมผัส (ขึ้นกับแกน/เวลา)',bei:'None',med:'แบบสอบถามอาการ (ชา, ซ่า, ซีดขาว), ตรวจระบบประสาท/หลอดเลือดมือ, ประเมินกล้ามเนื้อ; baseline + periodic',hoc:'Engineering: เครื่องมือ vibration ต่ำ, anti-vibration handle, maintenance · Administrative: จำกัด trigger time/rotation · PPE: ถุงมือกันสั่น (เสริมความสบาย ไม่แทนการควบคุม)',law:_LV,ev:'A',auth:'ACGIH 2022; กฎกระทรวงเครื่องจักร/HSL ไทย'},
+ {k:['light','แสง','lighting','optical','uv','รังสี'],hz:'Light / แสงสว่าง & รังสีจากงาน',cat:'Physical',eff:'ปวดตา, ล้าสายตา, ปวดศีรษะ, เสี่ยงอุบัติเหตุจากแสงไม่พอ/จ้าเกิน; รังสี UV-IR จากการตัด/เชื่อม',dz:'Work-related visual strain; เสี่ยงอุบัติเหตุ (มากกว่าเป็นโรคคลาสสิก)',oel:'ACGIH 2022 ครอบคลุม optical radiation; ระดับแสงสว่างใช้เกณฑ์กฎกระทรวง HSL ไทยตามลักษณะงาน',bei:'None',med:'คัดกรอง visual acuity สำหรับงานที่ใช้สายตามาก; ทบทวนอาการล้าตา/ปวดศีรษะ; ส่งจักษุแพทย์หากผิดปกติ',hoc:'Engineering: แสงเฉพาะจุดพอเพียง, ควบคุมแสงจ้า, diffuser, maintenance · Administrative: ออกแบบงาน/พัก · PPE: แว่นกันแสง/รังสีเมื่อมีความเสี่ยง',law:_LP,ev:'B',auth:'กฎกระทรวง HSL ไทย; ACGIH 2022 optical radiation'},
+ {k:['silica','ซิลิกา'],hz:'Respirable Crystalline Silica / ฝุ่นซิลิกา',cat:'Chemical',eff:'ไอ, หายใจลำบาก, สมรรถภาพปอดลดลง, เสี่ยงวัณโรค, ผลต่อภูมิ/ไต',dz:'Silicosis, COPD, มะเร็งปอด (crystalline silica), pneumoconiosis',oel:'ACGIH 2022: TLV-TWA 0.025 mg/m³ (respirable fraction; quartz/cristobalite)',bei:'None',med:'แบบสอบถามระบบหายใจ, spirometry, chest X-ray/ILO classification เมื่อมีข้อบ่งชี้, คัดกรองวัณโรค, ประวัติสูบบุหรี่; baseline + periodic',hoc:'Engineering: wet method, enclosure, LEV, เปลี่ยน abrasive · Administrative: เขตจำกัด, housekeeping แบบเปียก/HEPA · PPE: respirator P100/เหมาะสม',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย; ILO/NIOSH'},
+ {k:['welding fume','ฟูม'],hz:'Welding Fume / ฟูมจากการเชื่อม',cat:'Chemical',eff:'Metal fume fever, ระคายทางเดินหายใจ, หอบหืดจากงาน, หลอดลมอักเสบเรื้อรัง, ผลต่อประสาทหาก Mn, เสี่ยงมะเร็งหาก Cr(VI)/Ni',dz:'Occupational asthma, COPD/หลอดลมอักเสบเรื้อรัง, metal fume fever; เสี่ยงมะเร็งตามองค์ประกอบ',oel:'ACGIH 2022: ไม่มี TLV เดียวสำหรับฟูมทุกชนิด — ประเมินโลหะองค์ประกอบ (Fe oxide, Mn, Cr(VI), Ni, ozone) เทียบ TLV แต่ละตัว',bei:'เฉพาะองค์ประกอบ (Cr/Ni/Mn โดยทั่วไปไม่ใช่ BEI routine ใน v1)',med:'แบบสอบถามระบบหายใจ, spirometry, ประเมินผิว/ตา; ทบทวนอาการทางประสาทหากสัมผัส Mn; CXR หากสัมผัสเรื้อรัง/ผิดปกติ',hoc:'Engineering: LEV, source capture, เปลี่ยนลวด low-fume · Administrative: อบรม, จัดท่าเชื่อม · PPE: หน้ากากเชื่อม, respirator เหมาะสม (P100/ผสม)',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย; IARC/NIOSH'},
+ {k:['chromium','โครเมียม','cr(vi)'],hz:'Chromium / โครเมียมและสารประกอบ',cat:'Chemical',eff:'ระคาย/แผลผิวหนัง, ผื่นแพ้สัมผัส, หอบหืด/ระคายหายใจ; Cr(VI) ก่อมะเร็ง',dz:'Occupational asthma, contact dermatitis, แผล/ทะลุผนังกั้นจมูก; มะเร็งปอด (Cr VI)',oel:'ACGIH 2022: TLV ขึ้นกับ species — Cr โลหะ, Cr(III), Cr(VI) ต่างกัน อย่าใช้ค่าเดียวโดยไม่ระบุ speciation',bei:'ไม่มี BEI สากลง่ายๆ ใน v1; urine chromium ต้องตีความโดยผู้เชี่ยวชาญตาม species/กระบวนการ',med:'ทบทวนอาการผิว/จมูก/หายใจ, spirometry หากสัมผัสทางหายใจ, CXR หากสัมผัส Cr(VI)/เชื่อมมาก, เฝ้าระวัง dermatitis/asthma',hoc:'Engineering: LEV, แยกกระบวนการ, ใช้ consumable Cr ต่ำเมื่อทำได้ · Administrative: สุขอนามัย, ไม่กวาดแห้ง, อบรม · PPE: respirator, ถุงมือ, ป้องกันตา/หน้า',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย; IARC'},
+ {k:['nickel','นิกเกิล'],hz:'Nickel / นิกเกิลและสารประกอบ',cat:'Chemical',eff:'ผื่นแพ้สัมผัส, หอบหืด/แพ้ทางเดินหายใจ, เสี่ยงมะเร็งจมูก/ปอดสำหรับบางสารประกอบ',dz:'Occupational asthma, allergic contact dermatitis, เสี่ยงมะเร็งตามสารประกอบ',oel:'ACGIH 2022: TLV ขึ้นกับรูป (metal, soluble/insoluble compounds, subsulfide); ควรระบุรูปสาร',bei:'ไม่มี BEI routine ใน v1; ไม่ใช่ biomonitoring หลักหากไม่มีโปรแกรมเฉพาะ',med:'ตรวจผิว, แบบสอบถามระบบหายใจ, spirometry หากเป็น sensitizer/สัมผัสหายใจ, CXR หากสัมผัสเรื้อรัง/ผิดปกติ',hoc:'Engineering: LEV, enclosure · Administrative: สุขอนามัย/ป้องกันผิว, อบรม · PPE: respirator ฟูมโลหะ, ถุงมือ, ป้องกันตา',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย; IARC'},
+ {k:['manganese','แมงกานีส'],hz:'Manganese / แมงกานีส',cat:'Chemical',eff:'ระคายทางเดินหายใจ; ผลต่อประสาทรวมถึงกลุ่มอาการคล้ายพาร์กินสันเมื่อสัมผัสเรื้อรัง',dz:'Manganism / พิษต่อระบบประสาทจากแมงกานีส',oel:'ACGIH 2022: TLV-TWA ราว 0.02 mg/m³ (respirable) และ 0.1 mg/m³ (inhalable); ตรวจสอบ notation/speciation',bei:'ไม่มี BEI routine ของ ACGIH ใน v1',med:'แบบสอบถามอาการทางประสาท, คัดกรองการเคลื่อนไหว/coordination หากสัมผัสมาก, แบบสอบถามระบบหายใจ/spirometry หากสัมผัสฟูมเชื่อม',hoc:'Engineering: LEV/source capture, consumable Mn ต่ำเมื่อทำได้ · Administrative: จำกัดสัมผัสฟูมเชื่อม · PPE: respirator P100/เชื่อมเหมาะสม',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['xylene','ไซลีน'],hz:'Xylene / ไซลีน',cat:'Chemical',eff:'ระคายตา/ทางเดินหายใจ, กดประสาทส่วนกลาง, ปวดศีรษะ, เวียนศีรษะ, ผื่น; อาจเสริมพิษหูเมื่อร่วมกับเสียง',dz:'Solvent intoxication, irritant dermatitis; เสริมความเสี่ยงสูญเสียการได้ยิน',oel:'ACGIH 2022: TLV-TWA 20 ppm',bei:'ACGIH BEI 2022: Methylhippuric acids ในปัสสาวะ (end of shift) — ตรวจสอบค่าใน BEI table ก่อนใช้',med:'แบบสอบถามอาการ solvent, ตรวจผิว, ประเมินระบบประสาท, LFT หากสัมผัสซ้ำ/สูง, audiometry หากร่วมเสียง, urinary methylhippuric acid หากมี biomonitoring',hoc:'Engineering: LEV/spray booth, ภาชนะปิด · Administrative: จำกัดเวลาจับ, อบรม · PPE: organic vapor respirator, ถุงมือ nitrile, แว่นครอบตา',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['toluene','โทลูอีน','ทลูอีน'],hz:'Toluene / โทลูอีน',cat:'Chemical',eff:'กดประสาทส่วนกลาง, ปวด/เวียนศีรษะ, ระคายเยื่อบุ, ผื่น; กังวลผลต่อการเจริญพันธุ์เมื่อสัมผัสสูง',dz:'Solvent intoxication; irritant/contact dermatitis',oel:'ACGIH 2022: TLV-TWA 20 ppm',bei:'ACGIH BEI 2022: o-Cresol ในปัสสาวะ และ/หรือ toluene ในเลือด/ปัสสาวะ — ตรวจสอบค่า/เวลาก่อนใช้',med:'แบบสอบถามอาการ solvent, ประเมินระบบประสาท, ตรวจผิว, LFT หากสัมผัสซ้ำ/สูง; BEI หากสัมผัสมาก',hoc:'Engineering: LEV, closed transfer, เปลี่ยนไปตัวทำละลายพิษต่ำ · Administrative: อบรม, ลดเวลา · PPE: organic vapor respirator, ถุงมือ nitrile, แว่นครอบตา',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['hexane','เฮกเซน','เฮ็กเซน'],hz:'n-Hexane / เอ็น-เฮกเซน',cat:'Chemical',eff:'ปลายประสาทอักเสบ (ชา/อ่อนแรง), กดประสาทส่วนกลาง, ผื่น',dz:'n-Hexane toxic neuropathy; solvent intoxication',oel:'ACGIH 2022: TLV-TWA 50 ppm',bei:'ACGIH BEI 2022: 2,5-Hexanedione ในปัสสาวะ (end of shift/workweek) — ตรวจสอบค่าก่อนใช้',med:'แบบสอบถามอาการทางประสาท, ตรวจระบบประสาทส่วนปลาย, พิจารณา nerve conduction หากมีอาการ, ตรวจผิว, BEI 2,5-hexanedione เมื่อสัมผัสมาก',hoc:'Engineering: ระบบล้างปิด, LEV, เปลี่ยนตัวทำละลาย · Administrative: จำกัดเวลาสัมผัส, อบรม · PPE: organic vapor respirator, ถุงมือเคมีเหมาะสม, แว่นครอบตา',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['isocyanate','ไอโซไซยาเนต'],hz:'Isocyanate / ไอโซไซยาเนต',cat:'Chemical',eff:'แพ้ทางเดินหายใจ, หอบหืด, ระคายตา/ผิว, ผื่น',dz:'Occupational asthma, allergic/irritant contact dermatitis',oel:'ACGIH 2022: TLV เฉพาะสาร (TDI, MDI, HDI และ oligomer) — ระบุชนิดจาก SDS ก่อนกำหนด TLV',bei:'ไม่มี BEI ทั่วไปใน v1; biomonitoring เฉพาะสารอาจมีแต่ไม่ใช้ routine',med:'แบบสอบถามระบบหายใจ + spirometry (baseline/periodic), เฝ้าระวังหอบหืด, ประเมินผิว; ประเมินทันทีเมื่อมี wheeze/แน่นหน้าอก',hoc:'Engineering: spray booth ปิด, LEV, เปลี่ยนเป็นระบบไม่มี isocyanate เมื่อทำได้ · Administrative: เขตจำกัด, อบรม · PPE: supplied-air respirator สำหรับพ่น, ถุงมือเคมี, ป้องกันตา/ผิว',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย; แนวทาง occupational asthma'},
+ {k:['ozone','โอโซน'],hz:'Ozone / โอโซน',cat:'Chemical',eff:'ระคายตา/ทางเดินหายใจ, ไอ, แน่นหน้าอก, สมรรถภาพปอดลดลง, กระตุ้นหอบหืด',dz:'Irritant-induced asthma / RADS เมื่อสัมผัสสูง',oel:'ACGIH 2022: TLV แปรตาม workload และระยะเวลา (งานหนัก TLV ต่ำกว่า) — ตรวจสอบตารางตาม workload',bei:'None',med:'แบบสอบถามระบบหายใจ, spirometry สำหรับผู้สัมผัส/มีอาการ, ทบทวนประวัติหอบหืด',hoc:'Engineering: LEV, shielding/enclosure, ทำลายโอโซน/ระบายอากาศ · Administrative: จำกัดระยะ/เวลา · PPE: respirator หลังประเมิน engineering control',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['carbon monoxide','คาร์บอนมอนอกไซด์'],hz:'Carbon Monoxide / คาร์บอนมอนอกไซด์',cat:'Chemical',eff:'ปวด/เวียนศีรษะ, คลื่นไส้, เป็นลม, ขาดออกซิเจน, เสี่ยงหัวใจขาดเลือด, พิษถึงชีวิต',dz:'Carbon monoxide poisoning',oel:'ACGIH 2022: TLV-TWA 25 ppm',bei:'ACGIH BEI 2022 อาจใช้ carboxyhemoglobin / CO ในลมหายใจ — ตรวจสอบ determinant/ค่าก่อนใช้',med:'เฝ้าระวังอาการปวด/เวียนศีรษะ; ตรวจ CO-oximetry/COHb เมื่อสงสัยสัมผัส; พิจารณาความเสี่ยงหัวใจ',hoc:'Engineering: ระบายอากาศ, บำรุงไอเสีย, เปลี่ยนเป็นรถยกไฟฟ้า · Administrative: ขั้นตอนสัญญาณเตือน, ห้ามติดเครื่องทิ้งไว้ · PPE: respirator ไม่ใช่หลัก; supplied air เฉพาะฉุกเฉิน',law:_LC,ev:'A',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['oil mist','น้ำมันตัด','ละอองน้ำมัน','coolant'],hz:'Oil Mist / ละอองน้ำมัน (Metalworking fluid)',cat:'Chemical',eff:'ระคายทางเดินหายใจ, ไอ, ผื่น/สิว; อาการหายใจจาก metalworking fluid',dz:'Irritant dermatitis, occupational asthma/hypersensitivity pneumonitis ตามการปนเปื้อน/สารเติม',oel:'ACGIH 2022: Mineral oil mist TLV ราว 5 mg/m³ (inhalable) — ยืนยันชนิดน้ำมัน/สารเติม',bei:'None',med:'ตรวจผิว, แบบสอบถามระบบหายใจ, spirometry หากมีอาการ/สัมผัสสูง; ทบทวนกลุ่มผื่น/หอบหืด',hoc:'Engineering: enclosure เครื่อง, mist collector/LEV · Administrative: บำรุงน้ำมัน/ควบคุมจุลชีพ, สุขอนามัย · PPE: ถุงมือ, ป้องกันตา, respirator หากควบคุมไม่พอ',law:_LC,ev:'B',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['voc','ตัวทำละลาย','solvent','ทินเนอร์','ไอระเหย'],hz:'VOC / ไอระเหยตัวทำละลายผสม',cat:'Chemical',eff:'ระคาย, กดประสาทส่วนกลาง, ปวด/เวียนศีรษะ, ผื่น, ผลต่อตับ/ไตตามองค์ประกอบ',dz:'Solvent intoxication, irritant/contact dermatitis; โรคเฉพาะขึ้นกับองค์ประกอบ',oel:'ACGIH 2022: ใช้สูตร mixture หรือ TLV เฉพาะองค์ประกอบ — อย่าประเมิน VOC เป็น TLV เดียวเมื่อทราบส่วนผสม',bei:'เฉพาะองค์ประกอบ (เช่น xylene/toluene/n-hexane markers)',med:'แบบสอบถามอาการ solvent, ตรวจผิว, ประเมินระบบประสาท; LFT/ไต หากสัมผัสซ้ำ/สูง; biomonitoring ตามตัวทำละลายที่พบ',hoc:'Engineering: LEV/spray booth, ภาชนะปิด · Administrative: substitution, อบรม · PPE: organic vapor respirator, ถุงมือ, แว่นครอบตา',law:_LC,ev:'B',auth:'ACGIH 2022 mixture guidance; กฎกระทรวงสารเคมีไทย'},
+ {k:['dust','ฝุ่น','particulate'],hz:'Total / Inhalable Dust / ฝุ่นรวม',cat:'Chemical',eff:'ระคายทางเดินหายใจส่วนบน, ไอ, อาการคล้ายหลอดลมอักเสบ ตามองค์ประกอบ',dz:'Irritant respiratory disease; ขึ้นกับองค์ประกอบฝุ่น',oel:'ACGIH 2022: ใช้แนวทาง PNOS/inhalable เมื่อไม่มี TLV เฉพาะ (อ้างอิงเดิม ~10 mg/m³ inhalable / 3 mg/m³ respirable) — ยืนยันวัสดุ',bei:'None',med:'แบบสอบถามระบบหายใจ; spirometry หากสัมผัส/มีอาการมาก; ระบุองค์ประกอบพิษเฉพาะ',hoc:'Engineering: LEV, enclosure, wet process · Administrative: ตารางทำความสะอาด, ลดกวาดแห้ง · PPE: particulate respirator ตามการประเมิน',law:_LC,ev:'B',auth:'ACGIH 2022; กฎกระทรวงสารเคมีไทย'},
+ {k:['manual handling','ยก','การยศาสตร์','ergonomic','ท่าทาง'],hz:'Manual Handling / การยกเคลื่อนย้าย (การยศาสตร์)',cat:'Ergonomic',eff:'ปวดหลังส่วนล่าง, ปวดไหล่/คอ, กล้ามเนื้อ/เอ็นบาดเจ็บ, ล้า',dz:'Work-related musculoskeletal disorders (WMSDs)',oel:'ACGIH 2022 Ergonomics: Lifting TLV อิงตัวแปรงาน (ไม่มีค่า กก. เดียวตายตัว)',bei:'None',med:'แบบสอบถามอาการกล้ามเนื้อ/กระดูก, ประเมิน functional สำหรับงานเสี่ยงสูง, fit-for-work/return-to-work หลังบาดเจ็บ',hoc:'Engineering: hoist, lift table, conveyor, ออกแบบภาระใหม่ · Administrative: ยกเป็นทีม, rotation, อบรม · PPE: ถุงมือ/รองเท้า; back belt ไม่ใช่การควบคุมหลัก',law:_LE,ev:'A',auth:'ACGIH 2022 ergonomics; กฎหมายเครื่องจักร/OSH ไทย'},
+ {k:['biological','ชีวภาพ','เชื้อ','bioaerosol'],hz:'Biological Agent / สิ่งคุกคามชีวภาพ',cat:'Biological',eff:'การติดเชื้อ, ภูมิแพ้, ระคายจาก bioaerosol ตามชนิดเชื้อ',dz:'โรคติดเชื้อจากงาน; hypersensitivity pneumonitis ตามชนิดเชื้อ',oel:'ACGIH 2022 Biological Agents: ไม่มี TLV ทั่วไป — ใช้ risk assessment และแนวทางเฉพาะเชื้อ',bei:'None',med:'ทบทวนวัคซีนที่เกี่ยวข้อง, เฝ้าระวังอาการ, โปรโตคอลเมื่อสัมผัส, ประเมินหลังสัมผัสของมีคม/สารคัดหลั่ง',hoc:'Engineering: containment, ระบายอากาศ, sharps safety · Administrative: SOP, สุขอนามัย, วัคซีน, การตอบสนองเมื่อสัมผัส · PPE: ถุงมือ, หน้ากาก/respirator, ป้องกันตาตามช่องทาง',law:_LB,ev:'B',auth:'ACGIH 2022 Biological Agents; กฎหมายโรคจากการทำงานไทย'}
+];
+function kbMatch(name){ const n=(name||'').toLowerCase(); for(const e of KB){ for(const k of e.k){ if(n.includes(k)) return e; } } return null; }
+function kbForSurvey(){
+  const seen={}, entries=[], unmatched=[];
+  (S.depts||[]).forEach(d=>(d.hazards||[]).forEach(h=>{
+    const nm=(h.name||'').trim(); if(!nm) return;
+    const e=kbMatch(nm);
+    if(e){ if(!seen['e'+KB.indexOf(e)]){ seen['e'+KB.indexOf(e)]=1; entries.push(e); } }
+    else if(unmatched.indexOf(nm)<0){ unmatched.push(nm); }
+  }));
+  entries.sort((a,b)=>KB.indexOf(a)-KB.indexOf(b));
+  return {entries,unmatched};
+}
+function kbBadge(ev){ const c={A:'a',B:'b',C:'c'}[ev]||'c'; const t={A:'A · หลักฐานเข้ม',B:'B · ปานกลาง',C:'C · จำกัด'}[ev]||ev; return '<span class="evb evb-'+c+'">'+t+'</span>'; }
+function buildKBInner(){
+  const {entries,unmatched}=kbForSurvey();
+  if(!entries.length && !unmatched.length) return '<div class="kbnote">ยังไม่มีสิ่งคุกคามในแบบสำรวจ — เพิ่มแผนก/สิ่งคุกคามก่อน ระบบจะสรุปเชิงคลินิกให้อัตโนมัติ</div>';
+  const H=esc, row=cells=>'<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>', hz=e=>'<b>'+H(e.hz)+'</b>';
+  let h='<div class="kbnote">อ้างอิง ACGIH 2022 + กฎหมายไทย · แสดงเฉพาะสิ่งคุกคามที่พบในการสำรวจนี้ · <b>เป็นข้อมูลช่วยตัดสินใจ ควรตรวจทานโดยแพทย์อาชีวเวชศาสตร์ก่อนใช้อ้างอิงทางการแพทย์/กฎหมาย</b></div>';
+  if(entries.length){
+    h+='<div class="kbsub">1 · สรุปทางการแพทย์ (Clinical Summary)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>ผลต่อสุขภาพ</th><th>โรคจากการทำงาน</th><th>การตรวจสุขภาพ (Medical Surveillance)</th><th>Biomonitoring (BEI)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),H(e.eff),H(e.dz),H(e.med),H(e.bei)])).join('')+'</tbody></table></div>';
+    h+='<div class="kbsub">2 · ข้อเสนอแนะการควบคุม &amp; ค่ามาตรฐาน (Control &amp; OEL/TLV)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>ค่ามาตรฐาน (OEL/TLV)</th><th>มาตรการควบคุม (Hierarchy of Control)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),H(e.oel),H(e.hoc)])).join('')+'</tbody></table></div>';
+    h+='<div class="kbsub">3 · การปฏิบัติตามกฎหมาย (Legal Compliance)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>กฎหมายที่เกี่ยวข้อง (ไทย)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),H(e.law)])).join('')+'</tbody></table></div>';
+    h+='<div class="kbsub">4 · ระดับหลักฐาน &amp; แหล่งอ้างอิง (Evidence &amp; References)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>ระดับหลักฐาน</th><th>หน่วยงาน/มาตรฐาน (Authority)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),kbBadge(e.ev),H(e.auth)])).join('')+'</tbody></table></div>';
+    h+='<div class="kbnote" style="margin-top:8px">ระดับหลักฐาน: <b>A</b>=หลักฐานคุณภาพสูง/ชัดเจน · <b>B</b>=ปานกลาง · <b>C</b>=จำกัด ควรพิจารณาบริบท</div>';
+    h+='<div class="kbref"><b>อ้างอิงรวม:</b> '+H(KB_REF)+'</div>';
+  }
+  if(unmatched.length){
+    h+='<div class="kbsub">สิ่งคุกคามที่ยังไม่มีในฐานความรู้ v1 (ประเมินเพิ่มเติมโดยแพทย์)</div><div class="kbnote">'+unmatched.map(H).join(' · ')+'</div>';
+  }
+  return h;
+}
+
 function renderSummary(){
   const el=document.getElementById('p4');
   const f=highRiskFindings();
@@ -1054,6 +1132,8 @@ function renderSummary(){
     </div>
     ${f.chemOver.length?`<div class="warn" style="margin-top:14px"><b>เกินค่ามาตรฐาน:</b> ${uniq(f.chemOver.map(x=>x.h+' ('+x.d+')')).join(', ')}</div>`:''}
   </div></div>
+
+  <div class="card kbcard"><div class="hd"><span class="eyebrow">สรุปเชิงคลินิก · อิงฐานความรู้ (Knowledge Base v1)</span></div><div class="bd">${buildKBInner()}</div></div>
 
   <div class="card"><div class="hd"><span class="eyebrow">ข้อเสนอแนะ</span><div class="sp"></div><button class="btn ghost sm" onclick="autoConclusion()">ร่างอัตโนมัติ</button></div><div class="bd">
     <div class="field"><label>1. ความร้อน (Heat)</label><textarea data-sync="c:heat" oninput="setC('heat',this.value)" placeholder="เช่น ควบคุมตามหลัก Hierarchy of control, ตรวจ Fit for work ...">${esc(c.heat)}</textarea></div>
@@ -1197,6 +1277,9 @@ function buildReport(){
   });
   h+=`</tbody></table>`;
 
+  // --- สรุปเชิงคลินิก (Knowledge Base v1) ---
+  h+=`<h2>◆ สรุปเชิงคลินิก (อ้างอิงฐานความรู้ v1)</h2>`+buildKBInner();
+
   // --- สรุป ---
   const c=S.conclusion;
   h+=`<h2>◆ บทสรุปและข้อเสนอแนะ</h2>`;
@@ -1259,6 +1342,17 @@ function reportCSS(){
   .rp .toc{list-style:none;padding:0}.rp .toc li{display:flex;justify-content:space-between;border-bottom:1px dotted #bbb;padding:6px 0}
   .rp .heat td.hi{background:#fbe6e2;color:#c0392b;font-weight:700}
   .rp .sig{margin-top:40px;text-align:right}.rp hr{border:none;border-top:1px solid #ddd;margin:26px 0}
+  .rp .kbsub{font-size:13px;color:#0B2545;font-weight:700;margin:16px 0 7px;padding-bottom:4px;border-bottom:2px solid #C8A046}
+  .rp .kbnote{font-size:11px;color:#5a4d2a;line-height:1.6;background:#fdf8ec;border-left:3px solid #C8A046;padding:8px 11px;border-radius:0 8px 8px 0;margin:8px 0}
+  .rp .kbnote b{color:#8a6d1e}
+  .rp .kbtbl{width:100%;border-collapse:collapse;font-size:10px;margin:6px 0}
+  .rp .kbtbl th{background:#0B2545;color:#fff;font-weight:600;text-align:left;padding:5px 6px}
+  .rp .kbtbl td{border:1px solid #ccc;padding:5px 6px;vertical-align:top}
+  .rp .kbtbl b{color:#0B2545}
+  .rp .kbref{font-size:10px;color:#777;margin-top:8px}
+  .rp .evb{display:inline-block;font-weight:700;font-size:9.5px;padding:2px 7px;border-radius:20px;white-space:nowrap}
+  .rp .evb-a{background:#e7f3ec;color:#2e7d54}.rp .evb-b{background:#fdf1dd;color:#c9820a}.rp .evb-c{background:#eef1f6;color:#516079}
+  .rp .tbl-scroll{overflow-x:visible}
   @media print{body{background:#fff}#reportDoc{box-shadow:none}.rp{padding:0}}`;
 }
 function standaloneReport(){
