@@ -422,7 +422,6 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <button class="btn ghost" id="btnPrev" onclick="go(-1)">‹ ก่อนหน้า</button>
     <div class="sp"></div>
     <button class="btn ghost sm" onclick="newBlankReport()" title="เริ่มรายงานใหม่ (ฟอร์มเปล่า)">＋<span class="nflbl"> รายงานใหม่</span></button>
-    <button class="btn ghost" onclick="loadTemplate(true)" title="โหลดข้อมูลโรงงานตัวอย่าง" style="font-size:22px;font-weight:800;line-height:1;padding:8px 15px">↻</button>
     <button class="btn pri" id="btnNext" onclick="go(1)">ถัดไป ›</button>
   </div>
 </div>
@@ -672,10 +671,6 @@ function save(){
 }
 function touch(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400); if(!CB.applying) pushFull(); }
 
-function loadTemplate(confirmFirst){
-  if(confirmFirst && !confirm('โหลดข้อมูลโรงงานตัวอย่าง (12 กระบวนการ) แทนที่ข้อมูลปัจจุบันหรือไม่?\nข้อมูลที่กรอกไว้จะถูกแทนที่ทั้งหมด')) return;
-  S=newState(); save(); renderAll(); bxFull(); toast('โหลดข้อมูลโรงงานตัวอย่างเรียบร้อยแล้ว');
-}
 function newBlankReport(){
   if(CB.active){
     if(!confirm('ขณะนี้อยู่ในห้อง '+CB.id+'\nการเริ่มรายงานใหม่จะออกจากห้องนี้ก่อน (ข้อมูลของห้องยังคงอยู่ใน Supabase สามารถกลับเข้าห้องเดิมได้ทุกเมื่อ)\n\nต้องการดำเนินการต่อหรือไม่?')) return;
@@ -820,7 +815,7 @@ function renderDepts(){
   </div>`;
 
   if(!S.depts.length){
-    html+=`<div class="card"><div class="empty">ยังไม่มีแผนก — กด “เพิ่มแผนก” หรือ “โหลดข้อมูลโรงงานตัวอย่าง” ด้านล่าง</div></div>`;
+    html+=`<div class="card"><div class="empty">ยังไม่มีแผนก — กด “＋ เพิ่มแผนก” ด้านล่างเพื่อเริ่ม</div></div>`;
   }
 
   S.depts.forEach((d,i)=>{
@@ -1845,7 +1840,7 @@ function landingSettings(){ openCollab(); csTab(2); }
 
 (function init(){
   load();
-  if(!S.depts.length && !S.general.company){ S=newState(); }
+  if(!S.depts.length && !S.general.company){ S=blankState(); }
   CB.me.id=meId();
   renderAll(); setTab(0); save();
   updateCollabUI();
