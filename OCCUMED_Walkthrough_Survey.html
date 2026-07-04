@@ -321,12 +321,56 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .roomrow .roomgo{font-size:12px;font-weight:700;color:var(--gold-dk);white-space:nowrap}
 .roomrow .roomx{flex:none;border:none;background:transparent;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:6px}
 .roomrow .roomx:hover{color:#c0392b;background:#fbe6e2}
+/* ---------- Landing ---------- */
+.landing{position:fixed;inset:0;z-index:150;background:linear-gradient(160deg,#0B2545,#13315C 55%,#1b4a86);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 16px}
+.landing.show{display:flex}
+.lcard{width:100%;max-width:440px;background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.4);padding:26px 22px;margin:auto}
+.lbrand{text-align:center;margin-bottom:6px}
+.lbrand b{display:block;font-size:19px;color:var(--navy);line-height:1.25}
+.lbrand span{display:block;font-size:11px;letter-spacing:1.6px;color:var(--gold-dk);text-transform:uppercase;margin-top:4px;font-weight:700}
+.lintro{text-align:center;color:var(--muted);font-size:13px;line-height:1.6;margin:10px 0 18px}
+.lform .field{margin-bottom:11px}
+.ldiv{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:var(--muted);font-size:12px}
+.ldiv::before,.ldiv::after{content:"";flex:1;height:1px;background:var(--line)}
+.lsettings{display:block;margin:16px auto 0;background:none;border:none;color:var(--navy);font-weight:700;font-size:12.5px;text-decoration:underline;cursor:pointer}
+.lnote{text-align:center;color:var(--muted);font-size:11px;line-height:1.6;margin-top:14px}
+@media(max-width:520px){.lcard{padding:22px 16px}.landing{padding:14px 12px}.lform .field input,.lform .field select,.lcard input,.lcard select{font-size:16px}}
 </style>
 </head>
 <body>
 
+<!-- LANDING -->
+<div class="landing" id="landing">
+  <div class="lcard">
+    <div class="lbrand">
+      <b>ระบบเดินสำรวจสถานประกอบการ</b>
+      <span>OCCMED · Walk-through Survey</span>
+    </div>
+    <p class="lintro">เข้าห้องสำรวจด้วยรหัสห้องเพื่อทำงานร่วมกันแบบเรียลไทม์ หรือเริ่มทำงานคนเดียวได้ทันที</p>
+    <div class="lform">
+      <div class="field"><label>รหัสห้อง (Survey ID)</label><input id="lId" placeholder="เช่น TM-2569-001" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="field"><label>รหัสผ่านทีม (Passcode)</label><input id="lPass" type="text" placeholder="รหัสผ่านของห้อง"></div>
+      <div class="grid g2">
+        <div class="field"><label>ชื่อผู้สำรวจ</label><input id="lName" placeholder="เช่น นายแพทย์ ทดสอบ ระบบรายงาน"></div>
+        <div class="field"><label>บทบาท</label>
+          <select id="lRole"><option>แพทย์อาชีวเวชศาสตร์</option><option>แพทย์</option><option>เจ้าหน้าที่ความปลอดภัยในการทำงาน (จป.)</option><option>พยาบาลอาชีวอนามัย</option><option>ฝ่ายทรัพยากรบุคคล (HR)</option><option>ผู้สังเกตการณ์</option></select>
+        </div>
+      </div>
+      <div class="btnrow" style="margin-top:4px">
+        <button class="btn pri" style="flex:1" onclick="enterFromLanding(false)">เข้าห้อง</button>
+        <button class="btn gold" style="flex:1" onclick="enterFromLanding(true)">สร้างห้องใหม่</button>
+      </div>
+    </div>
+    <div id="lRooms"></div>
+    <div class="ldiv">หรือ</div>
+    <button class="btn ghost block" onclick="workSolo()">ทำงานคนเดียว (ไม่ต่อห้อง)</button>
+    <button class="lsettings" onclick="landingSettings()">ตั้งค่า Supabase (จำเป็นก่อนใช้ห้อง)</button>
+    <p class="lnote">การเข้า/สร้างห้องต้องตั้งค่า Supabase ก่อน · ข้อมูลแต่ละห้องเก็บแยกและเข้ารหัสรหัสผ่านทีม (สอดคล้อง PDPA)</p>
+  </div>
+</div>
+
 <div class="topbar">
-  <div class="brand">
+  <div class="brand" style="cursor:pointer" onclick="showLanding()" title="หน้าแรก / เปลี่ยนห้อง">
     <div class="t">
       <b>ระบบเดินสำรวจสถานประกอบการ</b>
       <span>OCCMED · Walk-through Survey</span>
@@ -336,8 +380,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <div id="presence"></div>
   <div id="collabChip" onclick="openCollab()" title="การทำงานร่วมกัน"><span class="cdot"></span><span class="clbl">ทำงานคนเดียว</span></div>
   <span class="savedot hide-sm" id="saveDot"><i></i>บันทึกอัตโนมัติ</span>
-  <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">⬇<span class="lbl"> ส่งออก</span></button>
-  <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">⬆<span class="lbl"> นำเข้า</span></button>
+  <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">↓<span class="lbl"> ส่งออก</span></button>
+  <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
   <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
   <input type="file" id="impFile" accept="application/json" style="display:none" onchange="doImport(event)">
 </div>
@@ -381,8 +425,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="mhd">
       <h3>รายงานผลการเดินสำรวจสถานประกอบการ</h3>
       <button class="btn gold sm" onclick="copyReport()">⧉ คัดลอกโค้ด (Deploy)</button>
-      <button class="btn ghost sm" onclick="downloadReport()">⬇ บันทึก .html</button>
-      <button class="btn ghost sm" onclick="window.print()">🖨 พิมพ์ / PDF</button>
+      <button class="btn ghost sm" onclick="downloadReport()">↓ บันทึก .html</button>
+      <button class="btn ghost sm" onclick="window.print()">พิมพ์ / PDF</button>
       <button class="close" onclick="closeReport()">✕</button>
     </div>
     <div class="mbd"><div id="reportDoc"></div></div>
@@ -395,8 +439,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="mhd">
       <h3>สไลด์นำเสนอผลการเดินสำรวจ</h3>
       <button class="btn gold sm" onclick="copySlides()">⧉ คัดลอกโค้ด (Deploy)</button>
-      <button class="btn ghost sm" onclick="downloadSlides()">⬇ บันทึก .html</button>
-      <button class="btn ghost sm" onclick="printSlides()">🖨 พิมพ์ / PDF</button>
+      <button class="btn ghost sm" onclick="downloadSlides()">↓ บันทึก .html</button>
+      <button class="btn ghost sm" onclick="printSlides()">พิมพ์ / PDF</button>
       <button class="close" onclick="closeSlides()">✕</button>
     </div>
     <div class="mbd" style="padding:0;background:#0a1a30"><iframe id="slideFrame" title="สไลด์นำเสนอ" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
@@ -627,7 +671,7 @@ function newBlankReport(){
     if(!confirm('ขณะนี้อยู่ในห้อง '+CB.id+'\nการเริ่มรายงานใหม่จะออกจากห้องนี้ก่อน (ข้อมูลของห้องยังคงอยู่ใน Supabase สามารถกลับเข้าห้องเดิมได้ทุกเมื่อ)\n\nต้องการดำเนินการต่อหรือไม่?')) return;
     leaveRoom();
   } else if((S.general&&S.general.company)||(S.depts&&S.depts.length)){
-    if(!confirm('ต้องการล้างฟอร์มปัจจุบันเพื่อเริ่มรายงานเปล่าใหม่หรือไม่?\n⚠️ หากยังไม่ได้บันทึกเข้าห้อง ข้อมูลนี้จะสูญหาย')) return;
+    if(!confirm('ต้องการล้างฟอร์มปัจจุบันเพื่อเริ่มรายงานเปล่าใหม่หรือไม่?\nข้อควรระวัง: หากยังไม่ได้บันทึกเข้าห้อง ข้อมูลนี้จะสูญหาย')) return;
   }
   S=blankState(); save(); renderAll(); setTab(0); bxFull(); toast('เริ่มรายงานใหม่ (ฟอร์มเปล่า) เรียบร้อยแล้ว');
 }
@@ -797,7 +841,7 @@ function renderDepts(){
         <div class="btnrow addrow">
           <button class="btn ghost sm" onclick="addHaz('${d.id}')">＋ เพิ่มสิ่งคุกคาม</button>
           <div class="sp" style="flex:1"></div>
-          <button class="btn danger sm" onclick="delDept('${d.id}')">🗑 ลบแผนกนี้</button>
+          <button class="btn danger sm" onclick="delDept('${d.id}')">ลบแผนกนี้</button>
         </div>
       </div>
     </div>`;
@@ -910,7 +954,7 @@ function renderHealth(){
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; return; }
 
   html+=`<div class="card"><div class="bd" style="padding:12px">
-    <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">✨ แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
+    <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
     <div class="hcwrap"><table class="hcgrid">
     <thead><tr><th class="dept-name">แผนก</th>${EXAMS.map(e=>`<th>${e}</th>`).join('')}</tr></thead><tbody>`;
   S.depts.forEach(d=>{
@@ -976,14 +1020,14 @@ function renderSummary(){
 
   <div class="card"><div class="hd"><span class="eyebrow">พบความเสี่ยงสูง</span></div><div class="bd">
     <div class="grid g3">
-      <div><h4 style="font-size:13px;color:var(--high)">🌡 ความร้อน</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.heat).join(', ')||'— ไม่พบระดับสูง'}</p></div>
-      <div><h4 style="font-size:13px;color:var(--high)">🔊 เสียงดัง</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.noise).join(', ')||'— ไม่พบระดับสูง'}</p></div>
-      <div><h4 style="font-size:13px;color:var(--high)">⚗ ฝุ่นซิลิกา</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.silica).join(', ')||'— ไม่พบระดับสูง'}</p></div>
+      <div><h4 style="font-size:13px;color:var(--high)">ความร้อน</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.heat).join(', ')||'— ไม่พบระดับสูง'}</p></div>
+      <div><h4 style="font-size:13px;color:var(--high)">เสียงดัง</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.noise).join(', ')||'— ไม่พบระดับสูง'}</p></div>
+      <div><h4 style="font-size:13px;color:var(--high)">ฝุ่นซิลิกา</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.silica).join(', ')||'— ไม่พบระดับสูง'}</p></div>
     </div>
     ${f.chemOver.length?`<div class="warn" style="margin-top:14px"><b>เกินค่ามาตรฐาน:</b> ${uniq(f.chemOver.map(x=>x.h+' ('+x.d+')')).join(', ')}</div>`:''}
   </div></div>
 
-  <div class="card"><div class="hd"><span class="eyebrow">ข้อเสนอแนะ</span><div class="sp"></div><button class="btn ghost sm" onclick="autoConclusion()">✨ ร่างอัตโนมัติ</button></div><div class="bd">
+  <div class="card"><div class="hd"><span class="eyebrow">ข้อเสนอแนะ</span><div class="sp"></div><button class="btn ghost sm" onclick="autoConclusion()">ร่างอัตโนมัติ</button></div><div class="bd">
     <div class="field"><label>1. ความร้อน (Heat)</label><textarea data-sync="c:heat" oninput="setC('heat',this.value)" placeholder="เช่น ควบคุมตามหลัก Hierarchy of control, ตรวจ Fit for work ...">${esc(c.heat)}</textarea></div>
     <div class="field" style="margin-top:11px"><label>2. เสียงดัง (Noise)</label><textarea data-sync="c:noise" oninput="setC('noise',this.value)" placeholder="เช่น จัดทำโครงการอนุรักษ์การได้ยิน, ใช้ปลั๊กอุดหู NRR ≥ 19 ...">${esc(c.noise)}</textarea></div>
     <div class="field" style="margin-top:11px"><label>3. สารเคมีอันตราย (Chemical)</label><textarea data-sync="c:chem" oninput="setC('chem',this.value)" placeholder="เช่น ตรวจวัดปริมาณ silica dust ในอากาศ ...">${esc(c.chem)}</textarea></div>
@@ -993,7 +1037,7 @@ function renderSummary(){
   <div class="card"><div class="bd" style="text-align:center;padding:22px">
     <div class="btnrow" style="justify-content:center;gap:10px;flex-wrap:wrap">
       <button class="btn gold" style="padding:13px 28px;font-size:15px" onclick="openReport()">▤ สร้างรายงานฉบับสมบูรณ์</button>
-      <button class="btn pri" style="padding:13px 28px;font-size:15px" onclick="openSlides()">🖥 สร้างสไลด์นำเสนอ</button>
+      <button class="btn pri" style="padding:13px 28px;font-size:15px" onclick="openSlides()">สร้างสไลด์นำเสนอ</button>
     </div>
     <div class="hint" style="margin-top:8px">รายงาน/สไลด์จัดรูปแบบตามธีม CI · พิมพ์ PDF / คัดลอกโค้ด / บันทึกไฟล์ได้</div>
   </div></div>`;
@@ -1654,7 +1698,7 @@ function renderCollabStatus(){
   if(!CB.active){ el.innerHTML='<div class="cnote">ยังไม่ได้เข้าห้อง — ไปที่แท็บ “เข้าร่วม / สร้าง” เพื่อเริ่มทำงานร่วมกับทีม (ต้องตั้งค่า Supabase ก่อนครั้งแรก)</div>'+roomsListHTML(); return; }
   const peers=peerList();
   el.innerHTML='<div class="member" style="border-color:var(--gold)"><div class="av" style="background:var(--navy)">'+initials(CB.me.name)+'</div><div class="mi"><b>'+esc(CB.me.name)+' (คุณ)</b><small>'+esc(CB.me.role)+'</small></div><span class="peerbadge" style="background:var(--gold);color:var(--navy)">ห้อง '+esc(CB.id)+'</span></div>'
-    + (peers.filter(p=>p.id!==CB.me.id).map(p=>'<div class="member"><div class="av" style="background:'+chColor(p.name||p.id)+'">'+initials(p.name)+'</div><div class="mi"><b>'+esc(p.name)+'</b><small>'+esc(p.role)+'</small></div><span class="mtab">📍 '+(TABNAMES[p.tab]||'-')+'</span></div>').join('') || '<div class="cnote">ยังไม่มีสมาชิกคนอื่นออนไลน์ในขณะนี้</div>')
+    + (peers.filter(p=>p.id!==CB.me.id).map(p=>'<div class="member"><div class="av" style="background:'+chColor(p.name||p.id)+'">'+initials(p.name)+'</div><div class="mi"><b>'+esc(p.name)+'</b><small>'+esc(p.role)+'</small></div><span class="mtab">อยู่ที่ '+(TABNAMES[p.tab]||'-')+'</span></div>').join('') || '<div class="cnote">ยังไม่มีสมาชิกคนอื่นออนไลน์ในขณะนี้</div>')
     + '<div class="btnrow" style="margin-top:12px"><button class="btn danger sm" onclick="leaveRoom()">ออกจากห้อง</button><div class="sp" style="flex:1"></div><span class="cnote" style="margin:0">ข้อมูลซิงก์อัตโนมัติ</span></div>'
     + roomsListHTML();
 }
@@ -1701,27 +1745,63 @@ function leaveRoom(){
 }
 document.getElementById('collabModal').addEventListener('click',e=>{ if(e.target.id==='collabModal') closeCollab(); });
 
+/* ============================================================
+   LANDING PAGE  (หน้าแรก: เข้าห้อง / สร้างห้อง / ทำงานคนเดียว)
+   ============================================================ */
+function lval(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
+function showLanding(){ const el=document.getElementById('landing'); if(!el) return; renderLandingRooms(); prefillLanding(); el.classList.add('show'); document.body.style.overflow='hidden'; }
+function hideLanding(){ const el=document.getElementById('landing'); if(!el) return; el.classList.remove('show'); document.body.style.overflow=''; }
+function prefillLanding(){
+  const lr=lastRoom(); if(!lr) return;
+  const id=document.getElementById('lId'), nm=document.getElementById('lName'), rl=document.getElementById('lRole');
+  if(id&&!id.value) id.value=lr.id||'';
+  if(nm&&!nm.value) nm.value=lr.name||'';
+  if(rl&&lr.role) rl.value=lr.role;
+}
+function renderLandingRooms(){
+  const el=document.getElementById('lRooms'); if(!el) return;
+  const list=recentRooms();
+  if(!list.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div class="subhd" style="margin:18px 0 8px">ห้องล่าสุด</div>'
+    + list.map(r=>{
+        const id=String(r.id).replace(/'/g,"\\'");
+        return '<div class="roomrow" onclick="enterRecent(\''+id+'\')" title="เข้าห้องนี้">'
+          +'<div class="mi"><b>'+esc(r.title||r.id)+'</b><small>รหัส '+esc(r.id)+(r.name?(' · '+esc(r.name)):'')+'</small></div>'
+          +'<span class="roomgo">เข้า →</span>'
+          +'<button class="roomx" title="ลบออกจากรายการ" onclick="forgetRoomLanding(\''+id+'\',event)">✕</button></div>';
+      }).join('');
+}
+function forgetRoomLanding(id,ev){ if(ev) ev.stopPropagation(); localStorage.setItem('occumed_rooms',JSON.stringify(recentRooms().filter(x=>x.id!==id))); renderLandingRooms(); }
+async function enterFromLanding(create){
+  if(!lval('lId')||!lval('lPass')||!lval('lName')){ toast('กรุณากรอกรหัสห้อง รหัสผ่านทีม และชื่อผู้สำรวจให้ครบถ้วน'); return; }
+  if(!cfgGet()){ toast('กรุณาตั้งค่า Supabase ก่อนใช้ห้อง'); landingSettings(); return; }
+  document.getElementById('jId').value=lval('lId');
+  document.getElementById('jPass').value=lval('lPass');
+  document.getElementById('jName').value=lval('lName');
+  document.getElementById('jRole').value=document.getElementById('lRole').value;
+  await doJoin(create);
+  if(CB.active) hideLanding();
+}
+async function enterRecent(id){
+  const r=recentRooms().find(x=>x.id===id); if(!r) return;
+  if(!cfgGet()){ toast('กรุณาตั้งค่า Supabase ก่อนใช้ห้อง'); landingSettings(); return; }
+  document.getElementById('jId').value=r.id;
+  document.getElementById('jPass').value=r.pass||'';
+  if(r.name) document.getElementById('jName').value=r.name;
+  if(r.role) document.getElementById('jRole').value=r.role;
+  await doJoin(false);
+  if(CB.active) hideLanding();
+}
+function workSolo(){ hideLanding(); toast('เริ่มทำงานคนเดียว (ไม่ต่อห้อง)'); }
+function landingSettings(){ openCollab(); csTab(2); }
+
 (function init(){
   load();
   if(!S.depts.length && !S.general.company){ S=newState(); }
   CB.me.id=meId();
   renderAll(); setTab(0); save();
   updateCollabUI();
-  /* auto-rejoin last room */
-  (async()=>{
-    const lr=lastRoom(), c=cfgGet();
-    if(lr&&c&&window.supabase){
-      CB.sb=sbClient(); if(!CB.sb) return;
-      CB.id=lr.id; CB.pass=lr.pass; CB.me.name=lr.name; CB.me.role=lr.role||'';
-      try{
-        const {data,error}=await CB.sb.rpc('survey_join',{p_id:lr.id,p_pass:lr.pass});
-        if(!error&&data&&data.ok!==false){
-          if(data.state&&Object.keys(data.state).length){ S=data.state; syncHealth(S); save(); renderAll(); setTab(curTab); }
-          CB.ver=data.ver||1; CB.active=true; subscribeChannel(); updateCollabUI(); toast('กลับเข้าห้อง '+lr.id+' เรียบร้อยแล้ว');
-        }
-      }catch(e){}
-    }
-  })();
+  showLanding();
 })();
 
 </script>
