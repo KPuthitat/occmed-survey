@@ -418,6 +418,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <span class="tbacts">
     <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">↓<span class="lbl"> ส่งออก</span></button>
     <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
+    <button class="tbtn" onclick="openRef()" title="ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)">◈<span class="lbl"> ค่าอ้างอิง</span></button>
     <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
     <button class="tbtn" onclick="openSlides()" title="สร้างไฟล์นำเสนอ">▦<span class="lbl"> นำเสนอ</span></button>
   </span>
@@ -426,6 +427,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="tbmenu-panel" id="tbMenuPanel">
       <button onclick="tbGo(openReport)"><span class="mi-ic">▤</span> สร้างรายงาน</button>
       <button onclick="tbGo(openSlides)"><span class="mi-ic">▦</span> สร้างไฟล์นำเสนอ</button>
+      <button onclick="tbGo(openRef)"><span class="mi-ic">◈</span> ค่าอ้างอิง OEL/BEI (โลหะ)</button>
       <button onclick="tbGo(doExport)"><span class="mi-ic">↓</span> ส่งออกข้อมูล (JSON)</button>
       <button onclick="tbImport()"><span class="mi-ic">↑</span> นำเข้าข้อมูล</button>
     </div>
@@ -1105,6 +1107,7 @@ function buildKBInner(){
     h+='<div class="kbsub">4 · ระดับหลักฐาน &amp; แหล่งอ้างอิง (Evidence &amp; References)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>ระดับหลักฐาน</th><th>หน่วยงาน/มาตรฐาน (Authority)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),kbBadge(e.ev),H(e.auth)])).join('')+'</tbody></table></div>';
     h+='<div class="kbnote" style="margin-top:8px">ระดับหลักฐาน: <b>A</b>=หลักฐานคุณภาพสูง/ชัดเจน · <b>B</b>=ปานกลาง · <b>C</b>=จำกัด ควรพิจารณาบริบท</div>';
     h+='<div class="kbref"><b>อ้างอิงรวม:</b> '+H(KB_REF)+'</div>';
+    h+='<div class="kbref" style="margin-top:6px">ตารางค่าอ้างอิงละเอียด (โลหะ Cr/Ni/Mo/Al · ACGIH 2025): <a href="'+REF_URL+'" target="_blank" rel="noopener" style="color:#8a6d1e;font-weight:700;text-decoration:underline">เปิดหน้าค่าอ้างอิง OEL/BEI →</a></div>';
   }
   if(unmatched.length){
     h+='<div class="kbsub">สิ่งคุกคามที่ยังไม่มีในฐานความรู้ v1 (ประเมินเพิ่มเติมโดยแพทย์)</div><div class="kbnote">'+unmatched.map(H).join(' · ')+'</div>';
@@ -1622,6 +1625,8 @@ function toggleTbMenu(e){ if(e) e.stopPropagation(); const p=document.getElement
 function closeTbMenu(){ const p=document.getElementById('tbMenuPanel'); if(p) p.classList.remove('show'); }
 function tbGo(fn){ closeTbMenu(); if(typeof fn==='function') fn(); }
 function tbImport(){ closeTbMenu(); document.getElementById('impFile').click(); }
+const REF_URL='https://occmed.ikigaimedihealth.com/reference/metals/';
+function openRef(){ window.open(REF_URL,'_blank','noopener'); }
 document.addEventListener('click',e=>{ const p=document.getElementById('tbMenuPanel'); if(p&&p.classList.contains('show')&&!e.target.closest('.tbmenu')) p.classList.remove('show'); });
 
 /* ============================================================
