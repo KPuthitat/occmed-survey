@@ -263,14 +263,29 @@ input,select,textarea{font-family:inherit;font-size:14px}
 }
 @media(max-width:520px){
   .rp{padding:24px 18px}
-  .brand .t b{max-width:130px}
+  .brand .t b{max-width:150px}
   .topbar .hide-sm{display:none}
   #presence{max-width:84px}
   #collabChip .clbl{display:none}
   #collabChip{padding:6px}
   .tbtn .lbl{display:none}
   .tbtn{padding:7px 9px}
-  .navfoot .btn.ghost.sm{display:none}
+  /* navfoot: คงปุ่มไว้ครบ — ปุ่มรอง (รายงานใหม่) เหลือไอคอน */
+  .navfoot{padding:8px 10px}
+  .navfoot .inner{gap:7px}
+  .navfoot .nflbl{display:none}
+  /* พื้นที่แตะใหญ่ขึ้น */
+  .btn{min-height:44px}
+  .btn.sm{padding:10px 12px;font-size:13px}
+  /* กัน iOS zoom ตอนโฟกัส input (ต้อง ≥16px) */
+  .field input,.field select,.field textarea{font-size:16px}
+  .htbl input,.htbl select{font-size:15px}
+  /* ติ๊กช่องตรวจสุขภาพง่ายขึ้น */
+  .hcgrid input[type=checkbox]{width:22px;height:22px}
+  .hcgrid th,.hcgrid td{padding:9px 8px}
+  /* modal เต็มจอขึ้น + ปุ่มหัว modal ตัดบรรทัดได้ */
+  .modal{padding:10px}
+  .modal .mhd{flex-wrap:wrap;gap:8px}
 }
 /* ---- Collaboration ---- */
 #collabChip{display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;transition:.15s}
@@ -352,7 +367,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <div class="inner">
     <button class="btn ghost" id="btnPrev" onclick="go(-1)">‹ ก่อนหน้า</button>
     <div class="sp"></div>
-    <button class="btn ghost sm" onclick="newBlankReport()" title="เริ่มรายงานใหม่ (ฟอร์มเปล่า)">＋ รายงานใหม่</button>
+    <button class="btn ghost sm" onclick="newBlankReport()" title="เริ่มรายงานใหม่ (ฟอร์มเปล่า)">＋<span class="nflbl"> รายงานใหม่</span></button>
     <button class="btn ghost" onclick="loadTemplate(true)" title="โหลดข้อมูลโรงงานตัวอย่าง" style="font-size:22px;font-weight:800;line-height:1;padding:8px 15px">↻</button>
     <button class="btn pri" id="btnNext" onclick="go(1)">ถัดไป ›</button>
   </div>
@@ -644,6 +659,8 @@ function setTab(i){
   if(i===3) renderHealth();
   if(i===4) renderSummary();
   trackPresence();
+  const tabsBar=document.getElementById('tabs'), at=tabsBar&&tabsBar.querySelector('.tab.active');
+  if(at) tabsBar.scrollLeft=Math.max(0,at.offsetLeft-(tabsBar.clientWidth-at.offsetWidth)/2);
 }
 function go(dir){
   if(dir>0 && curTab===4){ openReport(); return; }
