@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบเดินสำรวจสถานประกอบการ | IKIGAI OS · OCCMED</title>
+<title>ระบบเดินสำรวจสถานประกอบการ | OCCMED</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -509,7 +509,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 <script>
 /* ============================================================
-   IKIGAI OS · OCCMED — Walk-through Survey
+   OCCMED — Walk-through Survey
    Single-file · Navy×Gold · LINE Seed Sans TH · พ.ศ.
    ============================================================ */
 const LS_KEY='occumed_survey_v1';
@@ -1083,7 +1083,7 @@ function buildReport(){
     <h1 style="font-size:22px;margin-top:6px">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</h1>
     <p class="muted" style="margin-top:26px">จัดทำโดย คณะผู้เดินสำรวจอาชีวเวชศาสตร์</p>
     <p class="muted">ฝึกสำรวจวันที่ ${beDate(g.surveyDate)||'—'}</p>
-    <p class="muted" style="margin-top:22px;font-size:11px">เอกสารนี้จัดทำโดยระบบ IKIGAI OS · OCCMED — Walk-through Survey</p>
+    <p class="muted" style="margin-top:22px;font-size:11px">เอกสารนี้จัดทำโดยระบบ OCCMED — Walk-through Survey</p>
   </div>`;
 
   // --- บทสรุป ---
@@ -1315,7 +1315,7 @@ function buildSlides(){
     <h1 class="s-h1">รายงานการเดินสำรวจ<br>สถานประกอบการ</h1>
     <div class="s-company">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</div>
     <div class="s-sub">วันที่เดินสำรวจ ${beDate(g.surveyDate)||'—'}${g.surveyTime?(' เวลา '+esc(g.surveyTime)):''}</div>
-    <div class="s-foot">กลุ่มงานอาชีวเวชศาสตร์ · IKIGAI OS</div>`});
+    <div class="s-foot">กลุ่มงานอาชีวเวชศาสตร์</div>`});
 
   // 2) ข้อมูลทั่วไป
   slides.push({html:`
@@ -1389,7 +1389,7 @@ function buildSlides(){
   slides.push({cls:'cover end',html:`
     <h1 class="s-h1">ขอบคุณครับ</h1>
     <div class="s-sub">คณะผู้เดินสำรวจอาชีวเวชศาสตร์</div>
-    <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · IKIGAI OS · OCCMED</div>`});
+    <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · OCCMED</div>`});
 
   const dots=slides.map((s,k)=>`<button class="dot${k===0?' a':''}" onclick="__to(${k})" aria-label="สไลด์ ${k+1}"></button>`).join('');
   return `<div class="deck">`
