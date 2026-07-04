@@ -693,7 +693,8 @@ function load(){
 function blankState(){
   return {
     general:{company:'',address:'',type:'',area:'',contact:'',founded:'',prodStart:'',mgmt:'',history:'',
-      workers:'',workersFull:'',workersSub:'',days:'',shifts:'',shiftDetail:'',
+      workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
+      safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
     depts:[], health:{}, conclusion:{heat:'',noise:'',chem:'',extra:''}
   };
@@ -808,11 +809,28 @@ function renderGeneral(){
         ${fld('พนักงานประจำ (คน)','workersFull',g.workersFull,'','number')}
         ${fld('ผู้รับเหมาช่วง (คน)','workersSub',g.workersSub,'','number')}
       </div>
-      <div class="grid g2" style="margin-top:13px">
+      <div class="grid g3" style="margin-top:13px">
+        ${fld('อัตราการลาออก/หมุนเวียนต่อปี (Turnover rate)','turnover',g.turnover,'เช่น 12% ต่อปี')}
         ${fld('วันทำงาน','days',g.days,'')}
         ${fld('ระบบกะ','shifts',g.shifts,'')}
       </div>
       ${area('รายละเอียดเวลาทำงาน / การทำงานล่วงเวลา (OT)','shiftDetail',g.shiftDetail,'')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><span class="eyebrow">ความปลอดภัย & อาชีวอนามัย</span><div class="sp"></div><h3>Safety &amp; Occupational Health</h3></div>
+    <div class="bd">
+      <div class="grid g2">
+        ${fld('เจ้าหน้าที่ความปลอดภัย (จป.) / คปอ.','safetyOfficer',g.safetyOfficer,'เช่น จป.วิชาชีพ 2 คน · มี คปอ.')}
+        ${fld('การตรวจสุขภาพตามปัจจัยเสี่ยง','healthCheckup',g.healthCheckup,'เช่น มี ประจำปี ครอบคลุมทุกแผนก')}
+      </div>
+      <div class="grid g2" style="margin-top:13px">
+        ${fld('ห้องพยาบาล / พยาบาลประจำ','clinic',g.clinic,'เช่น มีห้องพยาบาล · พยาบาล 1 คน')}
+        ${fld('การอบรม/ซ้อมแผนความปลอดภัย','emergency',g.emergency,'เช่น อบรมดับเพลิง · ซ้อมอพยพประจำปี')}
+      </div>
+      ${area('สถิติอุบัติเหตุ / การบาดเจ็บ (ปีที่ผ่านมา)','accidentStats',g.accidentStats,'เช่น อุบัติเหตุ ... ครั้ง · หยุดงาน (lost-time injury) ... ราย · ไม่มีเสียชีวิต')}
+      ${area('อุปกรณ์ป้องกันส่วนบุคคล (PPE) ที่จัดให้','ppe',g.ppe,'เช่น ปลั๊กอุดหู, แว่นตานิรภัย, respirator, ถุงมือ, รองเท้านิรภัย ...')}
     </div>
   </div>
 
@@ -1256,11 +1274,21 @@ function buildReport(){
     <dt>การบริหารงาน</dt><dd>${esc(g.mgmt)||'—'}</dd>
     <dt>ขนาดพื้นที่</dt><dd>${esc(g.area)||'—'} ตารางเมตร</dd>
     <dt>บุคลากร</dt><dd>${esc(g.workers)||'—'} คน (ประจำ ${esc(g.workersFull)||'—'} · ผู้รับเหมาช่วง ${esc(g.workersSub)||'—'})</dd>
+    <dt>อัตราการลาออก/หมุนเวียน</dt><dd>${esc(g.turnover)||'—'}</dd>
     <dt>วันทำงาน</dt><dd>${esc(g.days)||'—'}</dd>
     <dt>ระบบกะ</dt><dd>${esc(g.shifts)||'—'}</dd>
     <dt>เวลาทำงาน</dt><dd>${esc(g.shiftDetail)||'—'}</dd>
   </dl>
-  ${g.history?`<h3>ประวัติ / ผลิตภัณฑ์</h3><p>${esc(g.history)}</p>`:''}`;
+  ${g.history?`<h3>ประวัติ / ผลิตภัณฑ์</h3><p>${esc(g.history)}</p>`:''}
+  ${(g.safetyOfficer||g.healthCheckup||g.clinic||g.emergency||g.accidentStats||g.ppe)?`<h3>ความปลอดภัยและอาชีวอนามัย</h3>
+  <dl class="kv">
+    ${g.safetyOfficer?`<dt>จป. / คปอ.</dt><dd>${esc(g.safetyOfficer)}</dd>`:''}
+    ${g.healthCheckup?`<dt>การตรวจสุขภาพตามปัจจัยเสี่ยง</dt><dd>${esc(g.healthCheckup)}</dd>`:''}
+    ${g.clinic?`<dt>ห้องพยาบาล / พยาบาลประจำ</dt><dd>${esc(g.clinic)}</dd>`:''}
+    ${g.emergency?`<dt>การอบรม/ซ้อมแผนความปลอดภัย</dt><dd>${esc(g.emergency)}</dd>`:''}
+    ${g.accidentStats?`<dt>สถิติอุบัติเหตุ (ปีที่ผ่านมา)</dt><dd>${esc(g.accidentStats)}</dd>`:''}
+    ${g.ppe?`<dt>อุปกรณ์ป้องกันส่วนบุคคล (PPE)</dt><dd>${esc(g.ppe)}</dd>`:''}
+  </dl>`:''}`;
 
   // --- สิ่งคุกคามจากกระบวนการผลิต (measurement tables) ---
   h+=`<h2>◆ สิ่งคุกคามสุขภาพจากกระบวนการผลิต</h2><p class="muted">การตรวจหาสิ่งคุกคามตามแผนก</p>`;
