@@ -468,7 +468,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <span class="tbacts">
     <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">↓<span class="lbl"> ส่งออก</span></button>
     <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
-    <button class="tbtn" onclick="openRss()" title="ผลตรวจวัดสภาพแวดล้อม รสส.1/2/3">▧<span class="lbl"> รสส</span></button>
+    <button class="tbtn" onclick="openRss()" title="แบบฟอร์ม รสส. (ผลตรวจวัดสภาพแวดล้อม รสส.1/2/3)">▧<span class="lbl"> แบบฟอร์ม รสส.</span></button>
     <button class="tbtn" onclick="openRef()" title="ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)">◈<span class="lbl"> ค่าอ้างอิง</span></button>
     <button class="tbtn" onclick="openRefMachines()" title="เครื่องจักรในโรงงาน และปัจจัยเสี่ยง">◱<span class="lbl"> เครื่องจักร</span></button>
     <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
@@ -479,7 +479,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="tbmenu-panel" id="tbMenuPanel">
       <button onclick="tbGo(openReport)"><span class="mi-ic">▤</span> สร้างรายงาน</button>
       <button onclick="tbGo(openSlides)"><span class="mi-ic">▦</span> สร้างไฟล์นำเสนอ</button>
-      <button onclick="tbGo(openRss)"><span class="mi-ic">▧</span> ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</button>
+      <button onclick="tbGo(openRss)"><span class="mi-ic">▧</span> แบบฟอร์ม รสส. (ผลตรวจวัดสภาพแวดล้อม)</button>
       <button onclick="tbGo(openRef)"><span class="mi-ic">◈</span> ค่าอ้างอิง OEL/BEI (โลหะ)</button>
       <button onclick="tbGo(openRefMachines)"><span class="mi-ic">◱</span> เครื่องจักรในโรงงาน และปัจจัยเสี่ยง</button>
       <button onclick="tbGo(doExport)"><span class="mi-ic">↓</span> ส่งออกข้อมูล (JSON)</button>
@@ -564,7 +564,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 <div class="modal" id="rssModal">
   <div class="sheet" style="max-width:1000px">
     <div class="mhd">
-      <h3>ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</h3>
+      <h3>แบบฟอร์ม รสส. (ผลตรวจวัดสภาพแวดล้อม)</h3>
       <button class="close" onclick="closeRss()">✕</button>
     </div>
     <div class="mbd" style="padding:14px 16px;background:#fff">
