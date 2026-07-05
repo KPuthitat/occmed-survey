@@ -470,7 +470,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
     <button class="tbtn" onclick="openRss()" title="ผลตรวจวัดสภาพแวดล้อม รสส.1/2/3">▧<span class="lbl"> รสส</span></button>
     <button class="tbtn" onclick="openRef()" title="ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)">◈<span class="lbl"> ค่าอ้างอิง</span></button>
-    <button class="tbtn" onclick="openRefMachines()" title="ไดอะแกรมเครื่องจักร & อันตราย">◱<span class="lbl"> เครื่องจักร</span></button>
+    <button class="tbtn" onclick="openRefMachines()" title="เครื่องจักรในโรงงาน และปัจจัยเสี่ยง">◱<span class="lbl"> เครื่องจักร</span></button>
     <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
     <button class="tbtn" onclick="openSlides()" title="สร้างไฟล์นำเสนอ">▦<span class="lbl"> นำเสนอ</span></button>
   </span>
@@ -481,7 +481,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <button onclick="tbGo(openSlides)"><span class="mi-ic">▦</span> สร้างไฟล์นำเสนอ</button>
       <button onclick="tbGo(openRss)"><span class="mi-ic">▧</span> ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</button>
       <button onclick="tbGo(openRef)"><span class="mi-ic">◈</span> ค่าอ้างอิง OEL/BEI (โลหะ)</button>
-      <button onclick="tbGo(openRefMachines)"><span class="mi-ic">◱</span> ไดอะแกรมเครื่องจักร &amp; อันตราย</button>
+      <button onclick="tbGo(openRefMachines)"><span class="mi-ic">◱</span> เครื่องจักรในโรงงาน และปัจจัยเสี่ยง</button>
       <button onclick="tbGo(doExport)"><span class="mi-ic">↓</span> ส่งออกข้อมูล (JSON)</button>
       <button onclick="tbImport()"><span class="mi-ic">↑</span> นำเข้าข้อมูล</button>
     </div>
@@ -554,7 +554,6 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <div class="sheet" style="max-width:1160px">
     <div class="mhd">
       <h3 id="refTitle">ค่าอ้างอิง</h3>
-      <a class="btn ghost sm" id="refNewTab" href="#" target="_blank" rel="noopener">↗ เปิดแท็บใหม่</a>
       <button class="close" onclick="closeRef()">✕</button>
     </div>
     <div class="mbd" style="padding:0;background:#F6F4EE"><iframe id="refFrame" title="ค่าอ้างอิง" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
@@ -1322,7 +1321,7 @@ function buildKBInner(){
     h+='<div class="kbsub">4 · ระดับหลักฐาน &amp; แหล่งอ้างอิง (Evidence &amp; References)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>ระดับหลักฐาน</th><th>หน่วยงาน/มาตรฐาน (Authority)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),kbBadge(e.ev),H(e.auth)])).join('')+'</tbody></table></div>';
     h+='<div class="kbnote" style="margin-top:8px"><b>เกณฑ์ระดับหลักฐาน:</b> <b>A</b>=มาตรฐาน/หลักฐานชัดเจน หนักแน่น · <b>B</b>=ปานกลาง · <b>C</b>=จำกัด ควรพิจารณาบริบท<br><span style="color:#7a6a3e">เป็นการประเมินภายในของทีม (จัดระดับตามความชัดเจน/ความหนักแน่นของค่ามาตรฐานแต่ละสาร) <b>ไม่ใช่ระบบจัดเกรดหลักฐานอย่างเป็นทางการของ ACGIH</b> (ACGIH ใช้เพียง notation การก่อมะเร็ง A1–A5 ซึ่งเป็นคนละระบบ)</span></div>';
     h+='<div class="kbref"><b>อ้างอิงรวม:</b> '+H(KB_REF)+'</div>';
-    h+='<div class="kbref" style="margin-top:6px">อ้างอิงเพิ่มเติม: <a href="'+REF_URL+'" target="_blank" rel="noopener" style="color:#8a6d1e;font-weight:700;text-decoration:underline">ค่าอ้างอิง OEL/BEI (โลหะ) →</a> · <a href="'+REF_MACHINES+'" target="_blank" rel="noopener" style="color:#8a6d1e;font-weight:700;text-decoration:underline">ไดอะแกรมเครื่องจักร &amp; อันตราย →</a></div>';
+    h+='<div class="kbref" style="margin-top:6px">อ้างอิงเพิ่มเติม: <a href="'+REF_URL+'" target="_blank" rel="noopener" style="color:#8a6d1e;font-weight:700;text-decoration:underline">ค่าอ้างอิง OEL/BEI (โลหะ) →</a> · <a href="'+REF_MACHINES+'" target="_blank" rel="noopener" style="color:#8a6d1e;font-weight:700;text-decoration:underline">เครื่องจักรในโรงงาน และปัจจัยเสี่ยง →</a></div>';
   }
   if(unmatched.length){
     h+='<div class="kbsub">สิ่งคุกคามที่ยังไม่มีในฐานความรู้ v1 (ประเมินเพิ่มเติมโดยแพทย์)</div><div class="kbnote">'+unmatched.map(H).join(' · ')+'</div>';
@@ -1905,14 +1904,13 @@ function showRef(url,title){
   const f=document.getElementById('refFrame');
   f.src=url;
   document.getElementById('refTitle').textContent=title;
-  document.getElementById('refNewTab').href=url;
   document.getElementById('refModal').classList.add('show');
   document.body.style.overflow='hidden';
   closeTbMenu();
 }
 function closeRef(){ document.getElementById('refFrame').src='about:blank'; document.getElementById('refModal').classList.remove('show'); document.body.style.overflow=''; }
 function openRef(){ showRef(REF_URL,'ค่าอ้างอิง OEL/BEI (โลหะ) · ACGIH 2025'); }
-function openRefMachines(){ showRef(REF_MACHINES,'ไดอะแกรมเครื่องจักร & อันตราย'); }
+function openRefMachines(){ showRef(REF_MACHINES,'เครื่องจักรในโรงงาน และปัจจัยเสี่ยง'); }
 
 /* ---------- รสส.1/2/3 : ผลตรวจวัดสภาพแวดล้อม ---------- */
 function openRss(){ rssEnsure(); document.getElementById('rssModal').classList.add('show'); document.body.style.overflow='hidden'; closeTbMenu(); rssTab('heat'); }
