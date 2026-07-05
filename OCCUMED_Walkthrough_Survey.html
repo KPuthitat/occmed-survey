@@ -1209,7 +1209,7 @@ function buildKBInner(){
     h+='<div class="kbsub">2 · ข้อเสนอแนะการควบคุม &amp; ค่ามาตรฐาน (Control &amp; OEL/TLV)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>ค่ามาตรฐาน (OEL/TLV)</th><th>มาตรการควบคุม (Hierarchy of Control)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),H(e.oel),H(e.hoc)])).join('')+'</tbody></table></div>';
     h+='<div class="kbsub">3 · การปฏิบัติตามกฎหมาย (Legal Compliance)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>กฎหมายที่เกี่ยวข้อง (ไทย)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),H(e.law)])).join('')+'</tbody></table></div>';
     h+='<div class="kbsub">4 · ระดับหลักฐาน &amp; แหล่งอ้างอิง (Evidence &amp; References)</div><div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม</th><th>ระดับหลักฐาน</th><th>หน่วยงาน/มาตรฐาน (Authority)</th></tr></thead><tbody>'+entries.map(e=>row([hz(e),kbBadge(e.ev),H(e.auth)])).join('')+'</tbody></table></div>';
-    h+='<div class="kbnote" style="margin-top:8px">ระดับหลักฐาน: <b>A</b>=หลักฐานคุณภาพสูง/ชัดเจน · <b>B</b>=ปานกลาง · <b>C</b>=จำกัด ควรพิจารณาบริบท</div>';
+    h+='<div class="kbnote" style="margin-top:8px"><b>เกณฑ์ระดับหลักฐาน:</b> <b>A</b>=มาตรฐาน/หลักฐานชัดเจน หนักแน่น · <b>B</b>=ปานกลาง · <b>C</b>=จำกัด ควรพิจารณาบริบท<br><span style="color:#7a6a3e">เป็นการประเมินภายในของทีม (จัดระดับตามความชัดเจน/ความหนักแน่นของค่ามาตรฐานแต่ละสาร) <b>ไม่ใช่ระบบจัดเกรดหลักฐานอย่างเป็นทางการของ ACGIH</b> (ACGIH ใช้เพียง notation การก่อมะเร็ง A1–A5 ซึ่งเป็นคนละระบบ)</span></div>';
     h+='<div class="kbref"><b>อ้างอิงรวม:</b> '+H(KB_REF)+'</div>';
     h+='<div class="kbref" style="margin-top:6px">อ้างอิงเพิ่มเติม: <a href="'+REF_URL+'" target="_blank" rel="noopener" style="color:#8a6d1e;font-weight:700;text-decoration:underline">ค่าอ้างอิง OEL/BEI (โลหะ) →</a> · <a href="'+REF_MACHINES+'" target="_blank" rel="noopener" style="color:#8a6d1e;font-weight:700;text-decoration:underline">ไดอะแกรมเครื่องจักร &amp; อันตราย →</a></div>';
   }
@@ -1484,7 +1484,25 @@ function reportCSS(){
   .rp .rp-photo{width:31%;margin:0}
   .rp .rp-photo img{width:100%;border-radius:6px;border:1px solid #ccc;display:block}
   .rp .rp-photo figcaption{font-size:10px;color:#555;margin-top:3px;line-height:1.4}
-  @media print{body{background:#fff}#reportDoc{box-shadow:none}.rp{padding:0}.rp .rp-photo{width:31%}}`;
+  @media print{
+    @page{size:A4;margin:12mm 10mm}
+    body{background:#fff}
+    #reportDoc{box-shadow:none}
+    .rp{padding:0;font-size:11px;max-width:100%}
+    .rp h1{font-size:17px}.rp h2{font-size:14px;margin:18px 0 9px}.rp h3{font-size:12.5px}
+    /* บังคับทุกตารางในรายงานให้อยู่ในความกว้าง A4 — จัดคอลัมน์เท่ากันแล้วตัดคำขึ้นบรรทัดใหม่ ไม่ล้นขอบ */
+    .rp table{table-layout:fixed;width:100%;font-size:9.5px}
+    .rp th,.rp td{overflow-wrap:anywhere;word-break:break-word;white-space:normal!important;padding:3px 4px}
+    .rp .kbtbl{font-size:8.5px}
+    .rp .heat{font-size:8px}
+    .rp [style*="overflow-x"]{overflow:visible!important}
+    .rp .kv{grid-template-columns:150px 1fr;font-size:10.5px}
+    .rp img{max-width:100%;height:auto}
+    .rp .rp-photo{width:31%}
+    .rp h2,.rp h3{break-after:avoid}
+    .rp table,.rp figure,.rp .kbnote{break-inside:avoid}
+    .rp tr{break-inside:avoid}
+  }`;
 }
 function standaloneReport(){
   return `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
