@@ -233,6 +233,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .rssdel{background:none;border:none;color:#c0392b;font-size:15px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1}
 .rssdel:hover{background:var(--over-bg)}
 .rssadd{margin-top:10px}
+.rssactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rssimp{margin-top:12px;border:1px dashed var(--gold);background:#fffdf6;border-radius:12px;padding:12px}
+.rssimp-h{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.rssimp-ta{width:100%;min-height:110px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:inherit;font-size:12.5px;resize:vertical}
+.rssimp-ta:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
+.rssimp-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:9px}
+.rssfile{cursor:pointer}
+.rssmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.rssmap-i label{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:3px}
+.rssmap-i select{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:#fff}
 
 /* ---------- callouts ---------- */
 .note{border-left:3px solid var(--gold);background:#fdf8ec;padding:11px 14px;border-radius:0 10px 10px 0;font-size:13px;color:#5a4d2a;margin:12px 0}
@@ -1923,7 +1933,7 @@ function renderRss(type){
       <td>${inp(r.std,'heat',i,'std',(WBGT_STD[r.load]||32),'num')}</td>
       <td id="rssres-heat-${i}">${rssBadge(ev)}</td>
       <td><button class="rssdel" title="ลบแถว" onclick="delRss('heat',${i})">✕</button></td></tr>`;});
-    h+='</tbody></table></div><button class="btn ghost sm rssadd" onclick="addRss(\'heat\')">＋ เพิ่มแถว</button>';
+    h+='</tbody></table></div>';
   } else if(type==='light'){
     h+='<div class="rssnote">รสส.2 · แสงสว่าง — <b>ผ่านเมื่อค่าที่วัดได้ ≥ มาตรฐาน</b> (แสงยิ่งมากยิ่งดี) · มาตรฐานขึ้นกับลักษณะงาน เช่น '+LIGHT_HINTS.join(' · ')+' lux</div>';
     h+='<div class="rsswrap"><table class="rsstbl"><thead><tr><th>รูปแบบ</th><th>จุด / บริเวณตรวจวัด</th><th>วัดได้ (lux)</th><th>มาตรฐาน (lux)</th><th>ผล</th><th></th></tr></thead><tbody>';
@@ -1934,7 +1944,7 @@ function renderRss(type){
       <td>${inp(r.std,'light',i,'std','','num')}</td>
       <td id="rssres-light-${i}">${rssBadge(ev)}</td>
       <td><button class="rssdel" title="ลบแถว" onclick="delRss('light',${i})">✕</button></td></tr>`;});
-    h+='</tbody></table></div><button class="btn ghost sm rssadd" onclick="addRss(\'light\')">＋ เพิ่มแถว</button>';
+    h+='</tbody></table></div>';
   } else {
     h+='<div class="rssnote">รสส.3 · เสียง — <b>ผ่านเมื่อ TWA ≤ 85 dBA</b> และ <b>Dose ≤ 100%</b> · กรอก TWA สำหรับ SLM หรือ TWA/Dose สำหรับ Dosimeter</div>';
     h+='<div class="rsswrap"><table class="rsstbl"><thead><tr><th>วิธีวัด</th><th>SEG / พื้นที่</th><th>TWA (dBA)</th><th>Dose (%)</th><th>มาตรฐาน (dBA)</th><th>ผล</th><th></th></tr></thead><tbody>';
@@ -1946,8 +1956,10 @@ function renderRss(type){
       <td>${inp(r.std,'noise',i,'std','85','num')}</td>
       <td id="rssres-noise-${i}">${rssBadge(ev)}</td>
       <td><button class="rssdel" title="ลบแถว" onclick="delRss('noise',${i})">✕</button></td></tr>`;});
-    h+='</tbody></table></div><button class="btn ghost sm rssadd" onclick="addRss(\'noise\')">＋ เพิ่มแถว</button>';
+    h+='</tbody></table></div>';
   }
+  h+=`<div class="rssactions"><button class="btn ghost sm" onclick="addRss('${type}')">＋ เพิ่มแถว</button>`+`<button class="btn ghost sm" onclick="rssImportOpen('${type}')">⇪ นำเข้า CSV</button>`+`<button class="btn ghost sm" onclick="rssTemplate('${type}')">↓ เทมเพลต CSV</button></div>`;
+  h+=rssImportPanel(type);
   body.innerHTML=h;
 }
 function setRss(type,i,field,val,rerender){
@@ -1961,6 +1973,88 @@ function addRss(type){
   R[type].push(Object.assign({},base[type])); renderRss(type); touch(); bxFull();
 }
 function delRss(type,i){ const R=rssEnsure(); R[type].splice(i,1); renderRss(type); touch(); bxFull(); }
+
+/* ---------- นำเข้า CSV → จับคู่คอลัมน์ → เติมตาราง รสส ---------- */
+let rssImp=null;
+// เป้าหมายคอลัมน์ต่อชนิด + คำใบ้สำหรับเดาคอลัมน์อัตโนมัติ
+const RSS_TARGETS={
+  heat:[['seg','SEG / พื้นที่',/seg|พื้นที่|บริเวณ|จุด|แผนก|group|location|area/i],['load','ระดับภาระงาน',/ภาระงาน|load|งาน|metabolic/i],['wbgt','WBGT (°C)',/wbgt|ความร้อน|อุณหภูมิ|temp/i],['std','มาตรฐาน (°C)',/มาตรฐาน|standard|เกณฑ์|limit|criteria/i]],
+  light:[['mode','รูปแบบ (พื้นที่/จุด)',/รูปแบบ|area|spot|โหมด|mode|ประเภท|ชนิด|\btype\b|วิธี/i],['point','จุด / บริเวณ',/จุด|บริเวณ|point|location|พื้นที่|ตำแหน่ง|station|แผนก/i],['lux','ค่าที่วัดได้ (lux)',/lux|แสง|ค่าที่วัด|วัดได้|result|value|measured|illumin/i],['std','มาตรฐาน (lux)',/มาตรฐาน|standard|เกณฑ์|limit|criteria/i]],
+  noise:[['method','วิธีวัด',/วิธี|method|slm|dosimeter|เครื่อง|type/i],['seg','SEG / พื้นที่',/seg|พื้นที่|บริเวณ|แผนก|จุด|group|location|area/i],['twa','TWA (dBA)',/twa|leq|dba|เสียง|ค่าที่วัด|วัดได้|result|measured|level/i],['dose','Dose (%)',/dose|d%|ปริมาณ|สะสม|percent/i],['std','มาตรฐาน (dBA)',/มาตรฐาน|standard|เกณฑ์|limit|criteria/i]]
+};
+function parseCSV(text){
+  text=String(text||'').replace(/^﻿/,'').replace(/\r\n?/g,'\n').replace(/\n+$/,'');
+  if(!text.trim()) return {headers:[],rows:[]};
+  const first=text.split('\n')[0];
+  const cand={',':(first.split(',').length),'\t':(first.split('\t').length),';':(first.split(';').length)};
+  const delim=Object.keys(cand).sort((a,b)=>cand[b]-cand[a])[0];
+  const rows=[]; let cur=[],val='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){val+='"';i++;} else q=false; } else val+=c; }
+    else { if(c==='"') q=true; else if(c===delim){cur.push(val);val='';} else if(c==='\n'){cur.push(val);rows.push(cur);cur=[];val='';} else val+=c; }
+  }
+  cur.push(val); rows.push(cur);
+  const headers=(rows.shift()||[]).map(s=>String(s).trim());
+  return {headers, rows: rows.filter(r=>r.some(c=>String(c).trim()!==''))};
+}
+function rssImportOpen(type){ rssImp={type,step:'input',text:'',headers:[],rows:[],map:{}}; renderRss(type); setTimeout(()=>{const ta=document.getElementById('rssCsvText');if(ta)ta.focus();},30); }
+function rssImportCancel(){ const t=rssImp&&rssImp.type; rssImp=null; if(t)renderRss(t); }
+function rssCsvFile(ev){ const f=ev.target.files&&ev.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ if(rssImp){ rssImp.text=String(rd.result||''); rssParseNow(); } }; rd.readAsText(f,'utf-8'); }
+function rssParseNow(){ if(!rssImp) return; const {headers,rows}=parseCSV(rssImp.text); if(!headers.length||!rows.length){ toast('อ่านข้อมูลไม่ได้ — ตรวจสอบว่าเป็น CSV มีหัวตารางและอย่างน้อย 1 แถว'); return; }
+  rssImp.headers=headers; rssImp.rows=rows; rssImp.map={};
+  // เดาคอลัมน์อัตโนมัติ
+  RSS_TARGETS[rssImp.type].forEach(([f,,re])=>{ const idx=headers.findIndex(h=>re.test(h)); rssImp.map[f]= idx>=0? String(idx):''; });
+  rssImp.step='map'; renderRss(rssImp.type);
+}
+function rssSetMap(f,v){ if(rssImp){ rssImp.map[f]=v; renderRss(rssImp.type); } }
+function rssNorm(field,v){ v=String(v==null?'':v).trim();
+  if(field==='load'){ if(/หนัก|heavy/i.test(v))return'หนัก'; if(/เบา|light/i.test(v))return'เบา'; if(v)return'ปานกลาง'; return'ปานกลาง'; }
+  if(field==='mode'){ return /spot|จุด/i.test(v)?'จุด (Spot)':'พื้นที่ (Area)'; }
+  if(field==='method'){ return /dosi|โดสิ|dose/i.test(v)?'Dosimeter':'SLM'; }
+  return v;
+}
+function rssDoImport(){ if(!rssImp) return; const type=rssImp.type; const R=rssEnsure();
+  const base={heat:{seg:'',load:'ปานกลาง',wbgt:'',std:''},light:{mode:'พื้นที่ (Area)',point:'',lux:'',std:''},noise:{method:'SLM',seg:'',twa:'',dose:'',std:''}};
+  let count=0;
+  rssImp.rows.forEach(r=>{ const obj=Object.assign({},base[type]); let any=false;
+    RSS_TARGETS[type].forEach(([f])=>{ const mi=rssImp.map[f]; if(mi!==''&&mi!=null){ const raw=r[+mi]; const v=rssNorm(f,raw); if(String(raw||'').trim()!=='') any=true; if(v!=='') obj[f]=v; } });
+    if(any){ R[type].push(obj); count++; }
+  });
+  rssImp=null; renderRss(type); touch(); bxFull(); toast('นำเข้า '+count+' แถวเรียบร้อยแล้ว');
+}
+function rssImportPanel(type){
+  if(!rssImp||rssImp.type!==type) return '';
+  if(rssImp.step==='input'){
+    return `<div class="rssimp"><div class="rssimp-h">นำเข้า CSV — วางข้อมูล หรือเลือกไฟล์ (.csv)</div>
+      <textarea id="rssCsvText" class="rssimp-ta" placeholder="วางข้อมูล CSV ที่นี่ (บรรทัดแรกเป็นหัวตาราง)&#10;หรือกดเลือกไฟล์ด้านล่าง" oninput="if(rssImp)rssImp.text=this.value"></textarea>
+      <div class="rssimp-row"><label class="btn ghost sm rssfile">เลือกไฟล์ CSV<input type="file" accept=".csv,text/csv,text/plain" onchange="rssCsvFile(event)" hidden></label>
+      <button class="btn gold sm" onclick="rssParseNow()">อ่านข้อมูล →</button>
+      <button class="btn ghost sm" onclick="rssImportCancel()">ยกเลิก</button></div>
+      <div class="hint">ถ้าไฟล์เป็น Excel: เปิดใน Excel แล้ว “บันทึกเป็น (Save As) → CSV UTF-8” ก่อนอัปโหลด · หรือกด “เทมเพลต CSV” เพื่อดูรูปแบบคอลัมน์</div></div>`;
+  }
+  // step map
+  const heads=rssImp.headers, opts=extra=>`<option value="">${extra||'— ไม่ใช้ —'}</option>`+heads.map((h,i)=>`<option value="${i}" ${''}>${esc(h||('คอลัมน์ '+(i+1)))}</option>`).join('');
+  const sel=f=>{const cur=rssImp.map[f]; return `<select onchange="rssSetMap('${f}',this.value)"><option value="">— ไม่ใช้ —</option>${heads.map((h,i)=>`<option value="${i}" ${String(cur)===String(i)?'selected':''}>${esc(h||('คอลัมน์ '+(i+1)))}</option>`).join('')}</select>`;};
+  let h=`<div class="rssimp"><div class="rssimp-h">จับคู่คอลัมน์ (พบ ${rssImp.rows.length} แถว) — ระบบเดาให้แล้ว ปรับได้</div><div class="rssmap">`;
+  RSS_TARGETS[type].forEach(([f,lbl])=>{ h+=`<div class="rssmap-i"><label>${lbl}</label>${sel(f)}</div>`; });
+  h+='</div>';
+  // preview 3 rows
+  h+='<div class="rssimp-h" style="margin-top:8px">ตัวอย่าง 3 แถวแรก</div><div class="rsswrap"><table class="rsstbl"><thead><tr>'+RSS_TARGETS[type].map(([f,lbl])=>`<th>${lbl}</th>`).join('')+'</tr></thead><tbody>';
+  rssImp.rows.slice(0,3).forEach(r=>{ h+='<tr>'+RSS_TARGETS[type].map(([f])=>{const mi=rssImp.map[f]; const v=(mi!==''&&mi!=null)?rssNorm(f,r[+mi]):''; return `<td>${esc(v)||'<span class=muted>—</span>'}</td>`;}).join('')+'</tr>'; });
+  h+='</tbody></table></div>';
+  h+=`<div class="rssimp-row"><button class="btn gold sm" onclick="rssDoImport()">＋ นำเข้า ${rssImp.rows.length} แถว</button><button class="btn ghost sm" onclick="rssImp.step='input';renderRss('${type}')">← กลับ</button><button class="btn ghost sm" onclick="rssImportCancel()">ยกเลิก</button></div></div>`;
+  return h;
+}
+function rssTemplate(type){
+  const tpl={
+    heat:'SEG/พื้นที่,ระดับภาระงาน,WBGT (°C),มาตรฐาน (°C)\nแผนกหลอมโลหะ,หนัก,31.5,30\nแผนกประกอบ,เบา,28.0,34\n',
+    light:'รูปแบบ,จุด/บริเวณ,ค่าที่วัดได้ (lux),มาตรฐาน (lux)\nจุด,โต๊ะประกอบชิ้นงานละเอียด,380,600\nพื้นที่,ทางเดินกลางโรงงาน,320,100\n',
+    noise:'วิธีวัด,SEG/พื้นที่,TWA (dBA),Dose (%),มาตรฐาน (dBA)\nSLM,แผนกปั๊มขึ้นรูป,88,,85\nDosimeter,แผนกเชื่อม,84,92,85\n'
+  }[type];
+  const blob=new Blob(['﻿'+tpl],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='เทมเพลต_รสส_'+type+'.csv'; a.click(); URL.revokeObjectURL(a.href);
+  toast('ดาวน์โหลดเทมเพลต CSV แล้ว');
+}
 function buildRssReport(){
   const R=(S&&S.rss)||{}; const H=esc;
   const nH=(R.heat||[]).length,nL=(R.light||[]).length,nN=(R.noise||[]).length;
