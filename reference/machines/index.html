@@ -13,9 +13,9 @@
 --phys:#2C4E86;--phys-bg:#E7EEFA;--chem:#B0353A;--chem-bg:#F3E2E2;--ergo:#6A4A86;--ergo-bg:#F0E9F5;--safe:#8A6D1F;--safe-bg:#FBF0DA;}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Segoe UI',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Segoe UI',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1000px;margin:0 auto;padding:0 16px 80px}
-header{background:radial-gradient(120% 140% at 90% -20%,rgba(201,162,39,.22),transparent 55%),linear-gradient(160deg,var(--navy-900),var(--navy-700));color:#fff;padding:34px 20px 30px;margin:0 -16px 22px;border-bottom:3px solid var(--gold)}
+header{background:radial-gradient(120% 140% at 90% -20%,rgba(201,162,39,.22),transparent 55%),linear-gradient(160deg,var(--navy-900),var(--navy-700));color:#fff;padding:34px 20px 30px;margin:0 0 22px;border-bottom:3px solid var(--gold)}
 header .inner{max-width:1000px;margin:0 auto}
 .eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:12px;font-weight:700}
 h1{font-size:24px;font-weight:700;line-height:1.25}
@@ -55,7 +55,7 @@ header p{color:#C6CFDD;font-size:14px;margin-top:10px;max-width:64ch}
 .note{display:flex;gap:12px;padding:13px 14px;border-radius:10px;margin-top:16px;font-size:13px;background:#FBF6E7;border:1px solid #EBDCA6}
 .note b{color:var(--navy-900)}
 footer{margin-top:30px;text-align:center;font-size:11.5px;color:var(--ink-soft)}
-.deploybar{position:sticky;bottom:0;z-index:20;margin:0 -16px;padding:12px 16px;background:linear-gradient(0deg,var(--navy-900),var(--navy-800));border-top:2px solid var(--gold);display:flex;gap:10px;align-items:center;justify-content:space-between}
+.deploybar{position:sticky;bottom:0;z-index:20;margin:0;padding:12px 16px;background:linear-gradient(0deg,var(--navy-900),var(--navy-800));border-top:2px solid var(--gold);display:flex;gap:10px;align-items:center;justify-content:space-between}
 .deploybar span{font-size:12px;color:#C6CFDD}
 .btn-copy{font-weight:700;font-size:13px;cursor:pointer;background:var(--gold);color:var(--navy-900);border:none;padding:11px 20px;border-radius:9px;display:inline-flex;gap:8px;align-items:center;transition:.15s}
 .btn-copy:hover{background:var(--gold-soft)}.btn-copy.done{background:#3A6B4E;color:#fff}
