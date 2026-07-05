@@ -216,6 +216,23 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .exadd{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .exadd input{flex:1;min-width:180px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13.5px}
 .exadd input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,160,70,.15)}
+/* ---------- รสส.1/2/3 tables ---------- */
+.rssnote{font-size:12px;color:#5a4d2a;background:#fdf8ec;border-left:3px solid var(--gold);padding:8px 11px;border-radius:0 8px 8px 0;margin:0 0 12px;line-height:1.6}
+.rssnote b{color:var(--gold-dk)}
+.rsswrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.rsstbl{border-collapse:collapse;font-size:12.5px;width:100%;min-width:560px}
+.rsstbl th,.rsstbl td{border-bottom:1px solid var(--line2);padding:6px 8px;text-align:left;vertical-align:middle}
+.rsstbl thead th{background:var(--navy);color:#fff;font-weight:600;font-size:11.5px;white-space:nowrap}
+.rsstbl input,.rsstbl select{width:100%;min-width:64px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px;background:#fff}
+.rsstbl input.num{max-width:90px;text-align:center}
+.rsstbl input:focus,.rsstbl select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
+.rbadge{display:inline-block;font-weight:700;font-size:11px;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.rbadge.ok{background:var(--ok-bg,#e7f3ec);color:#2e7d54}
+.rbadge.over{background:var(--over-bg);color:#c0392b}
+.rbadge.na{background:#eef1f6;color:#7a889c}
+.rssdel{background:none;border:none;color:#c0392b;font-size:15px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1}
+.rssdel:hover{background:var(--over-bg)}
+.rssadd{margin-top:10px}
 
 /* ---------- callouts ---------- */
 .note{border-left:3px solid var(--gold);background:#fdf8ec;padding:11px 14px;border-radius:0 10px 10px 0;font-size:13px;color:#5a4d2a;margin:12px 0}
@@ -441,6 +458,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
   <span class="tbacts">
     <button class="tbtn" onclick="doExport()" title="ส่งออกข้อมูล (JSON)">↓<span class="lbl"> ส่งออก</span></button>
     <button class="tbtn" onclick="document.getElementById('impFile').click()" title="นำเข้าข้อมูล">↑<span class="lbl"> นำเข้า</span></button>
+    <button class="tbtn" onclick="openRss()" title="ผลตรวจวัดสภาพแวดล้อม รสส.1/2/3">▧<span class="lbl"> รสส</span></button>
     <button class="tbtn" onclick="openRef()" title="ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)">◈<span class="lbl"> ค่าอ้างอิง</span></button>
     <button class="tbtn" onclick="openRefMachines()" title="ไดอะแกรมเครื่องจักร & อันตราย">◱<span class="lbl"> เครื่องจักร</span></button>
     <button class="tbtn gold" onclick="openReport()">▤<span class="lbl"> สร้างรายงาน</span></button>
@@ -451,6 +469,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="tbmenu-panel" id="tbMenuPanel">
       <button onclick="tbGo(openReport)"><span class="mi-ic">▤</span> สร้างรายงาน</button>
       <button onclick="tbGo(openSlides)"><span class="mi-ic">▦</span> สร้างไฟล์นำเสนอ</button>
+      <button onclick="tbGo(openRss)"><span class="mi-ic">▧</span> ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</button>
       <button onclick="tbGo(openRef)"><span class="mi-ic">◈</span> ค่าอ้างอิง OEL/BEI (โลหะ)</button>
       <button onclick="tbGo(openRefMachines)"><span class="mi-ic">◱</span> ไดอะแกรมเครื่องจักร &amp; อันตราย</button>
       <button onclick="tbGo(doExport)"><span class="mi-ic">↓</span> ส่งออกข้อมูล (JSON)</button>
@@ -529,6 +548,25 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <button class="close" onclick="closeRef()">✕</button>
     </div>
     <div class="mbd" style="padding:0;background:#F6F4EE"><iframe id="refFrame" title="ค่าอ้างอิง" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
+  </div>
+</div>
+
+<!-- รสส MODAL (นำเข้าผลตรวจวัดสภาพแวดล้อม รสส.1/2/3) -->
+<div class="modal" id="rssModal">
+  <div class="sheet" style="max-width:1000px">
+    <div class="mhd">
+      <h3>ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</h3>
+      <button class="close" onclick="closeRss()">✕</button>
+    </div>
+    <div class="mbd" style="padding:14px 16px;background:#fff">
+      <div class="cseg rssseg">
+        <button data-rs="heat" class="active" onclick="rssTab('heat')">รสส.1 ความร้อน</button>
+        <button data-rs="light" onclick="rssTab('light')">รสส.2 แสงสว่าง</button>
+        <button data-rs="noise" onclick="rssTab('noise')">รสส.3 เสียง</button>
+      </div>
+      <div id="rssBody"></div>
+      <div class="hint" style="margin-top:12px">ค่ามาตรฐานอ้างอิงกฎกระทรวงกำหนดมาตรฐานฯ ความร้อน แสงสว่าง เสียง พ.ศ. 2559 · ข้อมูลนี้จะแสดงในรายงาน (สร้างรายงาน) เป็นหัวข้อ “ผลการตรวจวัดสภาพแวดล้อมในการทำงาน”</div>
+    </div>
   </div>
 </div>
 
@@ -618,12 +656,16 @@ function maxNum(str){
   if(!m) return null;
   return Math.max(...m.map(Number));
 }
-function evalStd(measured,standard){
+// แสงสว่าง (illuminance) เป็นแบบ "ยิ่งมากยิ่งดี" — วัดได้ต้อง ≥ มาตรฐาน ถึงจะผ่าน (ตรงข้ามกับเสียง/สารเคมี/ความร้อน)
+// ยกเว้น UV/IR/รังสี/แสงจ้าจากการเชื่อม ซึ่งยิ่งมากยิ่งอันตราย
+function isLightHz(name){ const s=(name||'').toLowerCase(); return /แสงสว่าง|lighting|illumin|\blux\b/.test(s) && !/uv|ir|รังสี|เชื่อม|arc|weld|จ้า/.test(s); }
+function evalStd(measured,standard,name){
   const t=String(measured==null?'':measured).trim();
   const notMeasured=!t || /^[-–]$/.test(t) || /not\s*measure|ไม่ได้วัด|^n\/?a$|^na$/i.test(t) || !/\d/.test(t);
   if(notMeasured||!standard||!/\d/.test(String(standard))) return {t:'-',c:'na'};
   const mv=maxNum(measured), sv=maxNum(standard);
   if(mv===null||sv===null) return {t:'-',c:'na'};
+  if(isLightHz(name)) return mv<sv ? {t:'ต่ำกว่าเกณฑ์ (แสงสว่างไม่พอ)',c:'over'} : {t:'อยู่ในเกณฑ์ที่กฎหมายกำหนด',c:'ok'};
   return mv>sv ? {t:'เกินเกณฑ์ที่กฎหมายกำหนด',c:'over'} : {t:'อยู่ในเกณฑ์ที่กฎหมายกำหนด',c:'ok'};
 }
 
@@ -733,10 +775,26 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, customExams:[], conclusion:{heat:'',noise:'',chem:'',extra:''}
+    depts:[], health:{}, customExams:[],
+    rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[] },
+    conclusion:{heat:'',noise:'',chem:'',extra:''}
   };
 }
 function allExams(){ return EXAMS.concat((S&&S.customExams)||[]); }
+/* ---- รสส: มาตรฐานตามกฎกระทรวงกำหนดมาตรฐานฯ ความร้อน แสงสว่าง เสียง พ.ศ. 2559 ---- */
+const WBGT_STD={'เบา':34,'ปานกลาง':32,'หนัก':30};   // °C WBGT ตามระดับภาระงาน
+const NOISE_TWA_STD=85;   // dBA เฉลี่ย 8 ชม.
+const DOSE_STD=100;       // % ปริมาณเสียงสะสม
+const LIGHT_HINTS=['ทางเดิน/บริเวณทั่วไป ~100','บริเวณงานหยาบ ~200','งานปานกลาง ~300–400','งานละเอียด ~600','งานละเอียดมาก ~800–1000'];
+function rssEnsure(){ if(!S.rss) S.rss={meta:{company:'',date:'',by:'',instrument:'',serial:''},heat:[],light:[],noise:[]}; S.rss.heat=S.rss.heat||[];S.rss.light=S.rss.light||[];S.rss.noise=S.rss.noise||[];S.rss.meta=S.rss.meta||{}; return S.rss; }
+function rssEval(type,r){
+  if(type==='heat'){ const sv=+r.std||WBGT_STD[r.load]||32, mv=maxNum(r.wbgt); if(mv===null) return {t:'—',c:'na'}; return mv>sv?{t:'เกินมาตรฐาน',c:'over'}:{t:'ผ่าน',c:'ok'}; }
+  if(type==='light'){ const sv=maxNum(r.std), mv=maxNum(r.lux); if(mv===null||sv===null) return {t:'—',c:'na'}; return mv<sv?{t:'แสงไม่พอ',c:'over'}:{t:'ผ่าน',c:'ok'}; }
+  if(type==='noise'){ const mv=maxNum(r.twa), dv=maxNum(r.dose), sv=+r.std||NOISE_TWA_STD;
+    let over=false; if(mv!==null&&mv>sv) over=true; if(dv!==null&&dv>DOSE_STD) over=true;
+    if(mv===null&&dv===null) return {t:'—',c:'na'}; return over?{t:'เกินมาตรฐาน',c:'over'}:{t:'ผ่าน',c:'ok'}; }
+  return {t:'—',c:'na'};
+}
 function syncHealth(st){
   st.health=st.health||{};
   (st.depts||[]).forEach(d=>{ if(!st.health[d.id]) st.health[d.id]={}; });
@@ -915,7 +973,7 @@ function renderDepts(){
   }
 
   S.depts.forEach((d,i)=>{
-    const overCount=d.hazards.filter(h=>evalStd(h.measured,h.std).c==='over').length;
+    const overCount=d.hazards.filter(h=>evalStd(h.measured,h.std,h.name).c==='over').length;
     html+=`
     <div class="dept ${d.open?'open':''}" data-d="${d.id}">
       <div class="dhd" onclick="toggleDept('${d.id}')">
@@ -957,7 +1015,7 @@ function renderDepts(){
   el.innerHTML=html;
 }
 function hazRow(did,h){
-  const ev=evalStd(h.measured,h.std);
+  const ev=evalStd(h.measured,h.std,h.name);
   return `<tr data-h="${h.id}">
     <td><select class="catcell" data-sync="h:${did}:${h.id}:cat" onchange="setH('${did}','${h.id}','cat',this.value)">${CATS.map(c=>`<option ${c===h.cat?'selected':''}>${c}</option>`).join('')}</select></td>
     <td><input data-sync="h:${did}:${h.id}:name" value="${esc(h.name)}" oninput="setH('${did}','${h.id}','name',this.value)"></td>
@@ -969,7 +1027,7 @@ function hazRow(did,h){
   </tr>`;
 }
 function refreshEval(did,hid){
-  const d=findDept(did),h=findHaz(d,hid); const ev=evalStd(h.measured,h.std);
+  const d=findDept(did),h=findHaz(d,hid); const ev=evalStd(h.measured,h.std,h.name);
   const row=document.querySelector(`.dept[data-d="${did}"] tr[data-h="${hid}"] .evalcell`);
   if(row) row.innerHTML=`<span class="evaltag ${ev.c}">${ev.t}</span>`;
 }
@@ -1163,7 +1221,7 @@ function highRiskFindings(){
         else if(/เสียง|noise/.test(nm)) out.noise.push(d.name);
         else if(/ซิลิกา|silica/.test(nm)) out.silica.push(d.name);
       }
-      if(evalStd(h.measured,h.std).c==='over') out.chemOver.push({d:d.name,h:h.name});
+      if(evalStd(h.measured,h.std,h.name).c==='over') out.chemOver.push({d:d.name,h:h.name});
     });
   });
   return out;
@@ -1401,7 +1459,7 @@ function buildReport(){
     // group by category preserving order
     let lastCat='';
     d.hazards.forEach(hz=>{
-      const ev=evalStd(hz.measured,hz.std);
+      const ev=evalStd(hz.measured,hz.std,hz.name);
       const mv=(hz.measured?esc(hz.measured)+(hz.unit&&hz.unit!=='-'?' '+esc(hz.unit):''):'<span class="muted">ไม่ได้วัด</span>');
       const sv=(hz.std?esc(hz.std)+(hz.unit&&hz.unit!=='-'?' '+esc(hz.unit):''):'—');
       h+=`<tr><td>${hz.cat!==lastCat?esc(hz.cat):''}</td><td>${esc(hz.name)}</td><td>${mv}</td><td>${sv}</td><td class="${ev.c==='over'?'r-over':ev.c==='ok'?'r-ok':'muted'}">${ev.t}</td></tr>`;
@@ -1438,6 +1496,9 @@ function buildReport(){
 
   // --- ตารางรวมสิ่งคุกคาม ---
   h+=buildCombinedTable();
+
+  // --- ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3) ---
+  h+=buildRssReport();
 
   // --- การตรวจสุขภาพ ---
   h+=`<h2>◆ การตรวจสุขภาพและการสร้างเสริมสุขภาพ</h2><p class="muted">ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง</p>`;
@@ -1481,7 +1542,7 @@ function buildCombinedTable(){
     S.depts.forEach(d=>{
       const hz=d.hazards.find(x=>x.name.trim()===nm);
       if(!hz){h+=`<td style="text-align:center;color:#bbb">–</td>`;return;}
-      const ev=evalStd(hz.measured,hz.std);
+      const ev=evalStd(hz.measured,hz.std,hz.name);
       const val=(hz.measured?esc(hz.measured):'–')+(hz.std?'/'+esc(hz.std):'');
       const cls=ev.c==='over'?'hi':(ev.c==='ok'?'':'');
       h+=`<td class="${cls}" style="text-align:center">${val==='–'?'–':val}</td>`;
@@ -1842,6 +1903,81 @@ function showRef(url,title){
 function closeRef(){ document.getElementById('refFrame').src='about:blank'; document.getElementById('refModal').classList.remove('show'); document.body.style.overflow=''; }
 function openRef(){ showRef(REF_URL,'ค่าอ้างอิง OEL/BEI (โลหะ) · ACGIH 2025'); }
 function openRefMachines(){ showRef(REF_MACHINES,'ไดอะแกรมเครื่องจักร & อันตราย'); }
+
+/* ---------- รสส.1/2/3 : ผลตรวจวัดสภาพแวดล้อม ---------- */
+function openRss(){ rssEnsure(); document.getElementById('rssModal').classList.add('show'); document.body.style.overflow='hidden'; closeTbMenu(); rssTab('heat'); }
+function closeRss(){ document.getElementById('rssModal').classList.remove('show'); document.body.style.overflow=''; }
+function rssTab(t){ document.querySelectorAll('.rssseg button').forEach(b=>b.classList.toggle('active',b.dataset.rs===t)); renderRss(t); }
+function rssBadge(ev){ return '<span class="rbadge '+ev.c+'">'+ev.t+'</span>'; }
+function renderRss(type){
+  const R=rssEnsure(); const body=document.getElementById('rssBody'); if(!body) return;
+  const inp=(v,type2,i,f,ph,cls)=>`<input class="${cls||''}" value="${esc(v||'')}" placeholder="${ph||''}" oninput="setRss('${type2}',${i},'${f}',this.value)">`;
+  let h='';
+  if(type==='heat'){
+    h+='<div class="rssnote">รสส.1 · ความร้อน — <b>ผ่านเมื่อ WBGT ที่วัดได้ ≤ มาตรฐาน</b> ตามระดับภาระงาน (เบา 34 · ปานกลาง 32 · หนัก 30 °C)</div>';
+    h+='<div class="rsswrap"><table class="rsstbl"><thead><tr><th>SEG / พื้นที่ / ลักษณะงาน</th><th>ระดับภาระงาน</th><th>WBGT วัดได้ (°C)</th><th>มาตรฐาน (°C)</th><th>ผล</th><th></th></tr></thead><tbody>';
+    R.heat.forEach((r,i)=>{const ev=rssEval('heat',r);
+      h+=`<tr><td>${inp(r.seg,'heat',i,'seg','เช่น แผนกหลอมโลหะ')}</td>
+      <td><select onchange="setRss('heat',${i},'load',this.value,1);renderRss('heat')">${['เบา','ปานกลาง','หนัก'].map(l=>`<option ${r.load===l?'selected':''}>${l}</option>`).join('')}</select></td>
+      <td>${inp(r.wbgt,'heat',i,'wbgt','','num')}</td>
+      <td>${inp(r.std,'heat',i,'std',(WBGT_STD[r.load]||32),'num')}</td>
+      <td id="rssres-heat-${i}">${rssBadge(ev)}</td>
+      <td><button class="rssdel" title="ลบแถว" onclick="delRss('heat',${i})">✕</button></td></tr>`;});
+    h+='</tbody></table></div><button class="btn ghost sm rssadd" onclick="addRss(\'heat\')">＋ เพิ่มแถว</button>';
+  } else if(type==='light'){
+    h+='<div class="rssnote">รสส.2 · แสงสว่าง — <b>ผ่านเมื่อค่าที่วัดได้ ≥ มาตรฐาน</b> (แสงยิ่งมากยิ่งดี) · มาตรฐานขึ้นกับลักษณะงาน เช่น '+LIGHT_HINTS.join(' · ')+' lux</div>';
+    h+='<div class="rsswrap"><table class="rsstbl"><thead><tr><th>รูปแบบ</th><th>จุด / บริเวณตรวจวัด</th><th>วัดได้ (lux)</th><th>มาตรฐาน (lux)</th><th>ผล</th><th></th></tr></thead><tbody>';
+    R.light.forEach((r,i)=>{const ev=rssEval('light',r);
+      h+=`<tr><td><select onchange="setRss('light',${i},'mode',this.value,1)">${['พื้นที่ (Area)','จุด (Spot)'].map(m=>`<option ${r.mode===m?'selected':''}>${m}</option>`).join('')}</select></td>
+      <td>${inp(r.point,'light',i,'point','เช่น โต๊ะประกอบ / ทางเดิน')}</td>
+      <td>${inp(r.lux,'light',i,'lux','','num')}</td>
+      <td>${inp(r.std,'light',i,'std','','num')}</td>
+      <td id="rssres-light-${i}">${rssBadge(ev)}</td>
+      <td><button class="rssdel" title="ลบแถว" onclick="delRss('light',${i})">✕</button></td></tr>`;});
+    h+='</tbody></table></div><button class="btn ghost sm rssadd" onclick="addRss(\'light\')">＋ เพิ่มแถว</button>';
+  } else {
+    h+='<div class="rssnote">รสส.3 · เสียง — <b>ผ่านเมื่อ TWA ≤ 85 dBA</b> และ <b>Dose ≤ 100%</b> · กรอก TWA สำหรับ SLM หรือ TWA/Dose สำหรับ Dosimeter</div>';
+    h+='<div class="rsswrap"><table class="rsstbl"><thead><tr><th>วิธีวัด</th><th>SEG / พื้นที่</th><th>TWA (dBA)</th><th>Dose (%)</th><th>มาตรฐาน (dBA)</th><th>ผล</th><th></th></tr></thead><tbody>';
+    R.noise.forEach((r,i)=>{const ev=rssEval('noise',r);
+      h+=`<tr><td><select onchange="setRss('noise',${i},'method',this.value,1)">${['SLM','Dosimeter'].map(m=>`<option ${r.method===m?'selected':''}>${m}</option>`).join('')}</select></td>
+      <td>${inp(r.seg,'noise',i,'seg','เช่น แผนกปั๊มขึ้นรูป')}</td>
+      <td>${inp(r.twa,'noise',i,'twa','','num')}</td>
+      <td>${inp(r.dose,'noise',i,'dose','','num')}</td>
+      <td>${inp(r.std,'noise',i,'std','85','num')}</td>
+      <td id="rssres-noise-${i}">${rssBadge(ev)}</td>
+      <td><button class="rssdel" title="ลบแถว" onclick="delRss('noise',${i})">✕</button></td></tr>`;});
+    h+='</tbody></table></div><button class="btn ghost sm rssadd" onclick="addRss(\'noise\')">＋ เพิ่มแถว</button>';
+  }
+  body.innerHTML=h;
+}
+function setRss(type,i,field,val,rerender){
+  const R=rssEnsure(); const row=R[type]&&R[type][i]; if(!row) return; row[field]=val; touch();
+  if(rerender){ bxFull(); return; }
+  const ev=rssEval(type,row); const cell=document.getElementById('rssres-'+type+'-'+i); if(cell) cell.innerHTML=rssBadge(ev);
+}
+function addRss(type){
+  const R=rssEnsure();
+  const base={heat:{seg:'',load:'ปานกลาง',wbgt:'',std:''},light:{mode:'พื้นที่ (Area)',point:'',lux:'',std:''},noise:{method:'SLM',seg:'',twa:'',dose:'',std:''}};
+  R[type].push(Object.assign({},base[type])); renderRss(type); touch(); bxFull();
+}
+function delRss(type,i){ const R=rssEnsure(); R[type].splice(i,1); renderRss(type); touch(); bxFull(); }
+function buildRssReport(){
+  const R=(S&&S.rss)||{}; const H=esc;
+  const nH=(R.heat||[]).length,nL=(R.light||[]).length,nN=(R.noise||[]).length;
+  if(!(nH||nL||nN)) return '';
+  const cls=ev=>ev.c==='over'?'r-over':ev.c==='ok'?'r-ok':'muted';
+  let h='<h2>◆ ผลการตรวจวัดสภาพแวดล้อมในการทำงาน (รสส.1/2/3)</h2>';
+  if(nH){ h+='<h3>รสส.1 · ความร้อน (WBGT)</h3><table><thead><tr><th>SEG/พื้นที่</th><th>ภาระงาน</th><th>WBGT (°C)</th><th>มาตรฐาน (°C)</th><th>ผล</th></tr></thead><tbody>';
+    R.heat.forEach(r=>{const ev=rssEval('heat',r);const sv=r.std||WBGT_STD[r.load]||'';h+=`<tr><td>${H(r.seg)}</td><td>${H(r.load)}</td><td>${H(r.wbgt)}</td><td>${H(sv)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
+    h+='</tbody></table>'; }
+  if(nL){ h+='<h3>รสส.2 · แสงสว่าง (lux)</h3><table><thead><tr><th>รูปแบบ</th><th>จุด/บริเวณ</th><th>วัดได้ (lux)</th><th>มาตรฐาน (lux)</th><th>ผล</th></tr></thead><tbody>';
+    R.light.forEach(r=>{const ev=rssEval('light',r);h+=`<tr><td>${H(r.mode)}</td><td>${H(r.point)}</td><td>${H(r.lux)}</td><td>${H(r.std)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
+    h+='</tbody></table>'; }
+  if(nN){ h+='<h3>รสส.3 · เสียง (dBA)</h3><table><thead><tr><th>วิธีวัด</th><th>SEG/พื้นที่</th><th>TWA (dBA)</th><th>Dose (%)</th><th>มาตรฐาน (dBA)</th><th>ผล</th></tr></thead><tbody>';
+    R.noise.forEach(r=>{const ev=rssEval('noise',r);h+=`<tr><td>${H(r.method)}</td><td>${H(r.seg)}</td><td>${H(r.twa)}</td><td>${H(r.dose)}</td><td>${H(r.std||85)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
+    h+='</tbody></table>'; }
+  return h;
+}
 document.addEventListener('click',e=>{ const p=document.getElementById('tbMenuPanel'); if(p&&p.classList.contains('show')&&!e.target.closest('.tbmenu')) p.classList.remove('show'); });
 
 /* ============================================================
