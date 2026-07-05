@@ -165,8 +165,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .dept>.dhd .dt{flex:1;min-width:0}
 .dept>.dhd .dt b{font-size:14.5px;color:var(--navy);display:block}
 .dept>.dhd .dt small{color:var(--muted);font-size:12px}
-.dept>.dhd .chev{color:var(--acc);transition:.2s;font-size:13px}
-.dept.open>.dhd .chev{transform:rotate(90deg)}
+.dept>.dhd .chev{flex:0 0 auto;width:8px;height:8px;margin-right:3px;border-top:2px solid var(--acc);border-right:2px solid var(--acc);transform:rotate(45deg);transition:.2s}
+.dept.open>.dhd .chev{transform:rotate(135deg)}
 .dept>.dbd{padding:14px 15px;display:none}
 .dept.open>.dbd{display:block}
 .pill{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;background:var(--line2);color:var(--muted)}
@@ -179,7 +179,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .htbl td{border-bottom:1px solid var(--line2);padding:5px 6px;vertical-align:middle}
 .htbl tr:last-child td{border-bottom:none}
 .htbl input,.htbl select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;width:100%;min-width:70px;background:#fff}
-.htbl .catcell{font-weight:700;color:var(--navy2);font-size:11.5px}
+.htbl .catcell{font-weight:700;color:var(--navy2);font-size:12px;min-width:104px;padding-right:4px}
 /* กันคำไทยตกบรรทัดกลางคำ (เช่น การยศาสตร์) ในป้าย/คอลัมน์สั้น */
 .catcell,td.catcell{white-space:nowrap}
 .htbl .del{color:var(--over);padding:6px 8px;border-radius:7px;font-size:15px;line-height:1}
@@ -989,7 +989,7 @@ function renderDepts(){
         <div class="idx">${i+1}</div>
         <div class="dt"><b>${esc(d.name)||'(ไม่มีชื่อแผนก)'}</b><small>${esc(d.en)} · ${d.hazards.length} สิ่งคุกคาม</small></div>
         ${overCount?`<span class="pill hi">เกินเกณฑ์ ${overCount}</span>`:''}
-        <span class="chev">▶</span>
+        <span class="chev" aria-hidden="true"></span>
       </div>
       <div class="dbd">
         <div class="grid g2">
@@ -1002,7 +1002,7 @@ function renderDepts(){
         <div class="subhd">สิ่งคุกคาม &amp; ผลการตรวจวัด</div>
         <div class="tbl-scroll">
           <table class="htbl">
-            <thead><tr><th style="width:78px">ประเภท</th><th>สิ่งคุกคาม</th><th style="width:96px">ค่าที่วัดได้</th><th style="width:70px">หน่วย</th><th style="width:96px">ค่ามาตรฐาน</th><th style="width:150px">ผลการประเมิน</th><th style="width:34px"></th></tr></thead>
+            <thead><tr><th style="width:116px">ประเภท</th><th>สิ่งคุกคาม</th><th style="width:96px">ค่าที่วัดได้</th><th style="width:70px">หน่วย</th><th style="width:96px">ค่ามาตรฐาน</th><th style="width:150px">ผลการประเมิน</th><th style="width:34px"></th></tr></thead>
             <tbody>${d.hazards.map(h=>hazRow(d.id,h)).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--acc);padding:14px">ยังไม่มีสิ่งคุกคาม</td></tr>`}</tbody>
           </table>
         </div>
