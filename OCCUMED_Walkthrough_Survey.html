@@ -129,12 +129,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .g2{grid-template-columns:1fr 1fr}
 .g3{grid-template-columns:1fr 1fr 1fr}
 @media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.field{min-width:0}
 .field label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
 .field label .req{color:var(--gold-dk)}
 .field input,.field select,.field textarea{
-  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
+  width:100%;max-width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
   transition:.15s;
 }
+/* วันที่/เวลา: คุมให้พอดีกรอบ ไม่ล้น/ไม่ซ้อนทับ (native picker บนมือถือชอบดันเกินช่อง) */
+.field input[type=date],.field input[type=time]{-webkit-appearance:none;appearance:none;min-width:0;height:44px}
+.field input[type=date]::-webkit-date-and-time-value{text-align:left}
+.field input[type=date]::-webkit-calendar-picker-indicator{margin:0;padding:0;cursor:pointer}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,160,70,.15)}
 .field textarea{resize:vertical;min-height:70px;line-height:1.5}
 .hint{font-size:11.5px;color:var(--acc);margin-top:4px}
@@ -175,6 +180,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .htbl tr:last-child td{border-bottom:none}
 .htbl input,.htbl select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;width:100%;min-width:70px;background:#fff}
 .htbl .catcell{font-weight:700;color:var(--navy2);font-size:11.5px}
+/* กันคำไทยตกบรรทัดกลางคำ (เช่น การยศาสตร์) ในป้าย/คอลัมน์สั้น */
+.catcell,td.catcell{white-space:nowrap}
 .htbl .del{color:var(--over);padding:6px 8px;border-radius:7px;font-size:15px;line-height:1}
 .htbl .del:hover{background:var(--over-bg)}
 .tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
@@ -200,6 +207,15 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .hcgrid td.dept-name{text-align:left;font-weight:700;color:var(--navy2);background:#fafbfd;position:sticky;left:0;z-index:1}
 .hcgrid th.dept-name{position:sticky;left:0;z-index:3;background:var(--navy)}
 .hcgrid input[type=checkbox]{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
+/* หัวคอลัมน์รายการตรวจแบบแนวตั้ง — คอลัมน์แคบ ช่องติ๊กตรงแนวกัน */
+.hcgrid th.exhead{padding:8px 3px;height:118px;vertical-align:bottom;font-size:11px;min-width:30px;max-width:34px}
+.hcgrid th.exhead span{writing-mode:vertical-rl;text-orientation:mixed;display:inline-block;white-space:nowrap;line-height:1.1}
+.hcgrid th.exhead .exdel{writing-mode:horizontal-tb;display:block;margin:0 auto 6px;background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:5px;width:18px;height:18px;font-size:11px;line-height:1;cursor:pointer;padding:0}
+.hcgrid th.exhead .exdel:hover{background:var(--over)}
+.hcgrid td{min-width:30px}
+.exadd{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.exadd input{flex:1;min-width:180px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13.5px}
+.exadd input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,160,70,.15)}
 
 /* ---------- callouts ---------- */
 .note{border-left:3px solid var(--gold);background:#fdf8ec;padding:11px 14px;border-radius:0 10px 10px 0;font-size:13px;color:#5a4d2a;margin:12px 0}
@@ -504,6 +520,18 @@ input,select,textarea{font-family:inherit;font-size:14px}
   </div>
 </div>
 
+<!-- REFERENCE MODAL (เปิดในแอป ไม่เปิดแท็บใหม่) -->
+<div class="modal" id="refModal">
+  <div class="sheet" style="max-width:1160px">
+    <div class="mhd">
+      <h3 id="refTitle">ค่าอ้างอิง</h3>
+      <a class="btn ghost sm" id="refNewTab" href="#" target="_blank" rel="noopener">↗ เปิดแท็บใหม่</a>
+      <button class="close" onclick="closeRef()">✕</button>
+    </div>
+    <div class="mbd" style="padding:0;background:#F6F4EE"><iframe id="refFrame" title="ค่าอ้างอิง" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
+  </div>
+</div>
+
 <!-- COLLAB MODAL -->
 <div class="modal" id="collabModal">
   <div class="sheet" style="max-width:560px">
@@ -705,9 +733,10 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, conclusion:{heat:'',noise:'',chem:'',extra:''}
+    depts:[], health:{}, customExams:[], conclusion:{heat:'',noise:'',chem:'',extra:''}
   };
 }
+function allExams(){ return EXAMS.concat((S&&S.customExams)||[]); }
 function syncHealth(st){
   st.health=st.health||{};
   (st.depts||[]).forEach(d=>{ if(!st.health[d.id]) st.health[d.id]={}; });
@@ -1072,24 +1101,38 @@ function renderHealth(){
   </div>`;
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; return; }
 
+  const exams=allExams(); const nBase=EXAMS.length;
   html+=`<div class="card"><div class="bd" style="padding:12px">
     <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
     <div class="hcwrap"><table class="hcgrid">
-    <thead><tr><th class="dept-name">แผนก</th>${EXAMS.map(e=>`<th>${e}</th>`).join('')}</tr></thead><tbody>`;
+    <thead><tr><th class="dept-name">แผนก</th>${exams.map((e,i)=>`<th class="exhead">${i>=nBase?`<button class="exdel" title="ลบรายการตรวจนี้" onclick="delExam('${esc(e).replace(/'/g,"\\'")}')">✕</button>`:''}<span>${esc(e)}</span></th>`).join('')}</tr></thead><tbody>`;
   S.depts.forEach(d=>{
     html+=`<tr><td class="dept-name">${esc(d.name)}</td>`;
-    EXAMS.forEach(ex=>{
+    exams.forEach(ex=>{
       const on=S.health[d.id] && S.health[d.id][ex];
-      html+=`<td><input type="checkbox" data-sync="hc:${d.id}:${ex}" ${on?'checked':''} onchange="setHC('${d.id}','${ex}',this.checked)"></td>`;
+      html+=`<td><input type="checkbox" data-sync="hc:${d.id}:${ex}" ${on?'checked':''} onchange="setHC('${d.id}','${ex.replace(/'/g,"\\'")}',this.checked)"></td>`;
     });
     html+=`</tr>`;
   });
   html+=`</tbody></table></div>
-  <div class="hint" style="margin-top:8px">เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · Spirometry, Audiometry, CXR ฯลฯ</div>
+  <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button></div>
+  <div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · รายการที่เพิ่มเองมีปุ่ม ✕ ให้ลบได้</div>
   </div></div>`;
   el.innerHTML=html;
 }
 function setHC(did,ex,on){ S.health[did]=S.health[did]||{}; if(on)S.health[did][ex]=true; else delete S.health[did][ex]; touch(); bx({k:'hc',did,ex,v:!!on}); }
+function addExam(){
+  const inp=document.getElementById('newExam'); if(!inp) return;
+  const name=inp.value.trim(); if(!name){ inp.focus(); return; }
+  S.customExams=S.customExams||[];
+  if(allExams().some(e=>e.toLowerCase()===name.toLowerCase())){ toast('มีรายการนี้อยู่แล้ว'); inp.value=''; return; }
+  S.customExams.push(name); inp.value=''; renderHealth(); touch(); bxFull(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
+}
+function delExam(name){
+  S.customExams=(S.customExams||[]).filter(e=>e!==name);
+  S.depts.forEach(d=>{ if(S.health[d.id]) delete S.health[d.id][name]; });
+  renderHealth(); touch(); bxFull();
+}
 function autoHealth(){
   S.depts.forEach(d=>{
     const hz=d.hazards.map(h=>(h.name+' '+h.cat).toLowerCase());
@@ -1398,9 +1441,9 @@ function buildReport(){
 
   // --- การตรวจสุขภาพ ---
   h+=`<h2>◆ การตรวจสุขภาพและการสร้างเสริมสุขภาพ</h2><p class="muted">ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง</p>`;
-  h+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${EXAMS.map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
+  h+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${allExams().map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
   S.depts.forEach(d=>{
-    h+=`<tr><td style="white-space:nowrap">${esc(d.name)}</td>${EXAMS.map(e=>`<td style="text-align:center">${(S.health[d.id]&&S.health[d.id][e])?'✕':''}</td>`).join('')}</tr>`;
+    h+=`<tr><td style="white-space:nowrap">${esc(d.name)}</td>${allExams().map(e=>`<td style="text-align:center">${(S.health[d.id]&&S.health[d.id][e])?'✕':''}</td>`).join('')}</tr>`;
   });
   h+=`</tbody></table>`;
 
@@ -1621,7 +1664,7 @@ function buildSlides(){
 
   // 5) การตรวจสุขภาพ
   const exSet=new Set();
-  S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) EXAMS.forEach(e=>{ if(hd[e]) exSet.add(e); });});
+  S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) allExams().forEach(e=>{ if(hd[e]) exSet.add(e); });});
   const exams=[...exSet];
   slides.push({html:`
     <div class="s-kick">04 · ตรวจสุขภาพ</div>
@@ -1787,8 +1830,18 @@ function tbGo(fn){ closeTbMenu(); if(typeof fn==='function') fn(); }
 function tbImport(){ closeTbMenu(); document.getElementById('impFile').click(); }
 const REF_URL='https://occmed.ikigaimedihealth.com/reference/metals/';
 const REF_MACHINES='https://occmed.ikigaimedihealth.com/reference/machines/';
-function openRef(){ window.open(REF_URL,'_blank','noopener'); }
-function openRefMachines(){ window.open(REF_MACHINES,'_blank','noopener'); }
+function showRef(url,title){
+  const f=document.getElementById('refFrame');
+  f.src=url;
+  document.getElementById('refTitle').textContent=title;
+  document.getElementById('refNewTab').href=url;
+  document.getElementById('refModal').classList.add('show');
+  document.body.style.overflow='hidden';
+  closeTbMenu();
+}
+function closeRef(){ document.getElementById('refFrame').src='about:blank'; document.getElementById('refModal').classList.remove('show'); document.body.style.overflow=''; }
+function openRef(){ showRef(REF_URL,'ค่าอ้างอิง OEL/BEI (โลหะ) · ACGIH 2025'); }
+function openRefMachines(){ showRef(REF_MACHINES,'ไดอะแกรมเครื่องจักร & อันตราย'); }
 document.addEventListener('click',e=>{ const p=document.getElementById('tbMenuPanel'); if(p&&p.classList.contains('show')&&!e.target.closest('.tbmenu')) p.classList.remove('show'); });
 
 /* ============================================================
