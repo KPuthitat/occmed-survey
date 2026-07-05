@@ -84,7 +84,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .tbmenu-panel button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;padding:12px;border-radius:9px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
 .tbmenu-panel button:hover,.tbmenu-panel button:active{background:var(--line2)}
 .tbmenu-panel .mi-ic{color:var(--gold-dk);font-weight:800;width:18px;text-align:center;flex:none}
-@media(max-width:520px){ .tbacts{display:none} .tbmenu{display:block} }
+/* iPad/แท็บเล็ต: ปุ่มแอ็กชัน 7 ปุ่มกว้างเกินจอ → สลับเป็นเมนูรวม (มีป้ายกำกับครบ) กันตกบรรทัด */
+@media(max-width:1180px){ .tbacts{display:none} .tbmenu{display:block} }
 
 /* ---------- Tabs ---------- */
 .tabs{
@@ -283,6 +284,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
 #toast .ic{color:var(--gold-lt)}
 
 /* ---------- Modal / report ---------- */
+.rpopts{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:11px 16px;background:#eef1f6;border-bottom:1px solid var(--line);font-size:13px;color:var(--navy);position:sticky;top:0;z-index:1}
+.rpopts-l{font-weight:700}
+.rpopts label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.rpopts input{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
 .modal{position:fixed;inset:0;background:rgba(11,37,69,.55);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;backdrop-filter:blur(3px)}
 .modal.show{display:flex}
 .modal .sheet{background:#fff;border-radius:16px;max-width:900px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;margin:auto}
@@ -325,7 +330,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
   body *{visibility:hidden}
   #reportModal,#reportModal *{visibility:visible}
   #reportModal{position:absolute;inset:0;background:#fff;padding:0;display:block}
-  .modal .mhd,.modal .close{display:none!important}
+  .modal .mhd,.modal .close,#rpOpts{display:none!important}
   .modal .mbd{max-height:none;overflow:visible;background:#fff}
   #reportDoc{box-shadow:none;margin:0;max-width:100%}
   .rp{padding:0}
@@ -531,7 +536,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <button class="btn ghost sm" onclick="printReport()">พิมพ์ / PDF</button>
       <button class="close" onclick="closeReport()">✕</button>
     </div>
-    <div class="mbd"><div id="reportDoc"></div></div>
+    <div class="mbd"><div class="rpopts" id="rpOpts"></div><div id="reportDoc"></div></div>
   </div>
 </div>
 
@@ -786,6 +791,7 @@ function blankState(){
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
     depts:[], health:{}, customExams:[],
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[] },
+    reportOpts:{ incMachines:false, incRef:false },
     conclusion:{heat:'',noise:'',chem:'',extra:''}
   };
 }
@@ -1529,8 +1535,65 @@ function buildReport(){
   if(c.extra) h+=`<h3>ข้อเสนอแนะเพิ่มเติม</h3><p>${esc(c.extra)}</p>`;
   if(!c.heat&&!c.noise&&!c.chem&&!c.extra) h+=`<p class="muted">— ยังไม่ได้กรอกข้อเสนอแนะ (กลับไปหน้า “สรุป” เพื่อร่างอัตโนมัติ) —</p>`;
 
+  // --- ภาคผนวก: เครื่องจักร / ค่าอ้างอิง (แสดงตามที่ผู้ใช้เลือก) ---
+  h+=buildAppendix();
+
   h+=`<hr><div class="sig"><p>คณะผู้จัดทำ</p><p class="muted">${THMON[new Date().getMonth()]} ${beYear()}</p></div>`;
   h+=`</div>`;
+  return h;
+}
+/* ---------- ภาคผนวกรายงาน: เครื่องจักร & ค่าอ้างอิง OEL/BEI (สรุปเฉพาะที่เกี่ยวข้อง) ---------- */
+// เครื่องจักร 13 ประเภท (ย่อจากหน้า /reference/machines) + คำค้นสำหรับจับคู่กับข้อมูลแผนก
+const MACHINE_REF=[
+ {th:'เครื่องเลื่อยสายพาน CNC',en:'CNC Band Saw',kw:['เลื่อยสายพาน','band saw','bandsaw'],haz:['เสียงดัง','เศษโลหะกระเด็น','ละอองน้ำมันหล่อเย็น','ฝุ่นโลหะ','ยก/จับเหล็กหนัก','ใบเลื่อยบาด·จุดหนีบ'],ctrl:['การ์ดครอบใบเลื่อย','ระบบดูดอากาศ/หล่อเย็น','LOTO ก่อนบำรุงรักษา','ตรวจก่อนใช้+SOP'],ppe:['แว่นตานิรภัย','ที่อุดหู','ถุงมือ','รองเท้านิรภัย']},
+ {th:'เครื่องเลื่อยวงเดือน / Cold Saw',en:'Circular / Cold Saw',kw:['เลื่อยวงเดือน','วงเดือน','cold saw','circular saw'],haz:['เสียงดังสูง','เศษ/สะเก็ดกระเด็น','ละอองน้ำมัน·ฝุ่น','ยกชิ้นงาน','ใบตัด·ดีดกลับ (kickback)','จุดหนีบ'],ctrl:['การ์ดใบเลื่อย+clamp ยึดชิ้นงาน','ดูดฝุ่น/ละออง','LOTO','SOP+ตรวจก่อนใช้'],ppe:['แว่น/กระบังหน้า','ที่อุดหู','ถุงมือ','รองเท้านิรภัย']},
+ {th:'เครื่องตัดเลเซอร์',en:'Laser Cutting',kw:['เลเซอร์','laser'],haz:['รังสีเลเซอร์/แสงจ้า (อันตรายต่อตา)','เสียง','ฟูม/ควันจากการตัด (metal fume)','ก๊าซ','ไฟไหม้','ไฟฟ้าแรงสูง'],ctrl:['ตู้ครอบกันลำเลเซอร์ (interlock)','ระบบดูดควัน (fume extraction)','LOTO','ป้ายเขตเลเซอร์+SOP'],ppe:['แว่นกันเลเซอร์ (ตรงความยาวคลื่น)','respirator','ถุงมือ','รองเท้านิรภัย']},
+ {th:'เครื่องตัดแก๊ส (Oxy-Fuel)',en:'Oxy-Fuel Flame Cutting',kw:['ตัดแก๊ส','oxy','เปลวไฟ','flame cut'],haz:['ความร้อน','แสงจ้า/UV-IR','เสียง','ควัน/ก๊าซ (CO, NOx, metal fume)','ฝุ่น','ไฟไหม้/ระเบิด (acetylene/LPG)','สะเก็ดไฟ·backfire'],ctrl:['flashback arrestor+ตรวจรอยรั่ว','ระบายอากาศ/ดูดควัน','เก็บถังก๊าซถูกวิธี·กันไฟ','SOP hot work+permit'],ppe:['แว่นตัดแก๊ส (shade)','ถุงมือหนัง·เอี๊ยมหนัง','respirator','รองเท้านิรภัย']},
+ {th:'เครื่องตีขึ้นรูป (Forging Press)',en:'Forging Press',kw:['ตีขึ้นรูป','forging','forge','ทุบขึ้นรูป'],haz:['เสียงกระแทกสูง','ความร้อน (โลหะร้อน)','สั่นสะเทือน','บดทับ/จุดหนีบ (ร้ายแรง)','สะเก็ดโลหะร้อน','จับชิ้นงานหนัก·ท่าทาง'],ctrl:['การ์ด/ม่านแสง (light curtain) two-hand','ฉนวน/กำบังความร้อน','LOTO+บำรุงรักษา','SOP+ตรวจก่อนใช้'],ppe:['ถุงมือ/ชุดทนความร้อน','กระบังหน้า','ที่อุดหู','รองเท้านิรภัย']},
+ {th:'เตาอบชุบ / คาร์บูไรซิ่ง',en:'Carburizing Furnace',kw:['เตาอบ','อบชุบ','คาร์บูไร','furnace','carburiz','ชุบแข็ง'],haz:['ความร้อนสูง (Heat stress)','แสงจ้า','ก๊าซคาร์บูไรซิ่ง (CO, แอมโมเนีย)','ควันน้ำมันชุบ','ไฟไหม้·ผิวร้อน/ไหม้','ก๊าซติดไฟ·ที่อับอากาศ'],ctrl:['ระบบระบาย/เผาก๊าซทิ้ง (flare)','เซนเซอร์ CO+สัญญาณเตือน','กำบังความร้อน·work-rest','SOP+permit ที่อับอากาศ'],ppe:['ชุด/ถุงมือทนความร้อน','face shield','respirator','รองเท้านิรภัย']},
+ {th:'แมชชีนนิ่งเซ็นเตอร์ (งานหนัก)',en:'Machining Center',kw:['แมชชีน','machining','กัด','milling'],haz:['เสียงดัง','เศษโลหะกระเด็น','ละอองน้ำมันตัด (oil mist)','จุลชีพในน้ำหล่อเย็น','ของหมุน/พันติด·จุดหนีบ','ยืนนาน·load/unload'],ctrl:['ตู้ครอบเครื่อง (interlock)','mist collector/ดูดละออง','ควบคุมจุลชีพน้ำหล่อเย็น','LOTO+SOP'],ppe:['แว่นตานิรภัย','ที่อุดหู','ถุงมือ (เลี่ยงจุดหมุน)','รองเท้านิรภัย']},
+ {th:'เครื่องกลึง CNC',en:'CNC Lathe',kw:['กลึง','lathe'],haz:['เสียงดัง','เศษโลหะพันยาว (chip)','ละอองน้ำมันตัด','ของหมุน (chuck) พันติด','จุดหนีบ','load/unload'],ctrl:['ตู้ครอบ+interlock','chip conveyor/ดูดละออง','LOTO','SOP: ไม่สวมถุงมือ/เครื่องประดับกับของหมุน'],ppe:['แว่นตา/กระบังหน้า','ที่อุดหู','รองเท้านิรภัย','(ไม่ใส่ถุงมือกับของหมุน)']},
+ {th:'เครื่องเชื่อม MIG/MAG',en:'MIG/MAG Welding',kw:['เชื่อม','weld','mig','mag','tig'],haz:['รังสี UV/IR (arc eye)','ความร้อน·เสียง','ฟูมเชื่อม (Fe, Mn, Cr(VI), Ni)','ก๊าซ (โอโซน, NOx, CO)','ไฟไหม้·สะเก็ดไฟ','ไฟฟ้าดูด·ก๊าซอัด'],ctrl:['LEV/ดูดฟูมที่แหล่งกำเนิด','ฉาก/ม่านกันแสงเชื่อม','ตรวจสายดิน/ฉนวน','SOP hot work+permit'],ppe:['หน้ากากเชื่อม auto-darkening','respirator (P100/PAPR)','ถุงมือหนัง·เอี๊ยม','รองเท้านิรภัย']},
+ {th:'เครื่องเจียระไน CNC',en:'CNC Grinding',kw:['เจียร','grind','เจียระไน'],haz:['เสียงดัง','สั่นสะเทือนมือ-แขน','สะเก็ดไฟ','ฝุ่นเจียร (ฝุ่นโลหะ/หินเจียร)','ล้อเจียรแตก (wheel burst)','เศษกระเด็น·จุดหนีบ'],ctrl:['การ์ดครอบล้อ+ตรวจสภาพล้อ (ring test)','ดูดฝุ่น/หล่อเย็น','LOTO','SOP+ตรวจก่อนใช้'],ppe:['แว่น/กระบังหน้า','respirator','ที่อุดหู','ถุงมือ']},
+ {th:'เครื่องพ่นทราย CNC',en:'CNC Sandblasting',kw:['พ่นทราย','sandblast','blast','พ่นเม็ด'],haz:['เสียงดังมาก','ฝุ่นซิลิกา (A2 สารก่อมะเร็ง)','ฝุ่นโลหะ','แรงดันสูง (injection injury)','ที่อับอากาศ'],ctrl:['ตู้/ห้องพ่นปิด+ดูดฝุ่น','ใช้เม็ดขัดไร้ซิลิกา (substitution)','ตรวจวัดฝุ่นซิลิกา','SOP+permit'],ppe:['blasting hood จ่ายอากาศ (supplied-air)','ที่อุดหู','ชุดคลุม·ถุงมือ','รองเท้านิรภัย']},
+ {th:'เครื่องล้างคราบน้ำมัน',en:'Cleaning & Degreasing',kw:['ล้างคราบ','degreas','ล้างน้ำมัน','ตัวทำละลาย','cleaning'],haz:['ไอตัวทำละลาย (Trichloroethylene · A2, VOC)','ระคายผิว/ตา','ความร้อน/อัลตราโซนิก','ไฟไหม้ (ตัวทำละลายไวไฟ)','สารเคมีกระเด็น·ที่อับอากาศ'],ctrl:['ระบบล้างปิด+LEV','เปลี่ยนตัวทำละลายพิษต่ำ (substitution)','ตรวจวัดไอสาร·SDS','SOP+permit ที่อับอากาศ'],ppe:['respirator (organic vapor)','ถุงมือเคมี (viton/nitrile)','แว่นครอบตา·เอี๊ยม','รองเท้านิรภัย']},
+ {th:'เครื่องอัดอากาศ',en:'Air Compressor',kw:['อัดอากาศ','compressor','ปั๊มลม','ลมอัด'],haz:['เสียงดังต่อเนื่อง','ละอองน้ำมัน (oil carryover)','แรงดันสูง (ถังรับแรงดัน·สายสะบัด)','ผิวร้อน·ไฟฟ้า','ลมอัดฉีดเข้าผิวหนัง'],ctrl:['ตู้ครอบลดเสียง (acoustic)','ตรวจถัง/วาล์วนิรภัยตามกำหนด','LOTO+บำรุงรักษา','SOP: ห้ามใช้ลมเป่าตัว'],ppe:['ที่อุดหู','แว่นตา (เมื่อใช้ลมเป่า)','รองเท้านิรภัย']}
+];
+// โลหะ Cr/Ni/Mo/Al (ค่าจาก /reference/metals · ACGIH 2025)
+const METAL_REF=[
+ {name:'Chromium / โครเมียม',kw:['chrom','โครเมียม','cr(vi)','cr(iii)','hexavalent','เชื่อม','weld','สแตนเลส','stainless','ชุบ'],rows:[['Cr(0) โลหะ','TWA 0.5 mg/m³','—'],['Cr(III) ละลายน้ำ','TWA 0.003 mg/m³','—'],['Cr(VI) ละลายน้ำ (A1 ก่อมะเร็ง)','TWA 0.0002 · STEL 0.0005 mg/m³','Cr ในปัสสาวะ']]},
+ {name:'Nickel / นิกเกิล',kw:['nickel','นิกเกิล','เชื่อม','weld','สแตนเลส','stainless','ชุบ','plating'],rows:[['Ni โลหะ','TWA 1.5 mg/m³','—'],['สารประกอบละลายน้ำ (A4)','TWA 0.1 mg/m³','Ni ในปัสสาวะ'],['ไม่ละลายน้ำ/subsulfide (A1)','TWA 0.2 mg/m³','—']]},
+ {name:'Molybdenum / โมลิบดีนัม',kw:['molybden','โมลิบดีนัม'],rows:[['สารประกอบละลายน้ำ','TWA 0.5 mg/m³ (R)','—'],['ไม่ละลายน้ำ','TWA 10 mg/m³ (I) · 3 (R)','—']]},
+ {name:'Aluminium / อะลูมิเนียม',kw:['alumin','อะลูมิเนียม'],rows:[['โลหะ & สารประกอบไม่ละลายน้ำ','TWA 1 mg/m³ (R)','—']]}
+];
+function rptDeptText(){ return S.depts.map(d=>((d.machines||'')+' '+(d.proc||'')+' '+(d.name||'')+' '+(d.en||'')+' '+(d.hazards||[]).map(z=>z.name||'').join(' ')).toLowerCase()).join(' \n '); }
+function buildMachinesRef(){
+  const txt=rptDeptText();
+  const matched=MACHINE_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
+  let h='<h2>◆ ภาคผนวก · เครื่องจักรและปัจจัยเสี่ยง (ที่เกี่ยวข้อง)</h2>';
+  if(!matched.length){ return h+'<p class="muted">ไม่พบเครื่องจักรที่ตรงกับข้อมูลแผนก/กระบวนการที่กรอก — ดูรายการเต็ม 13 เครื่องได้ที่หน้า “เครื่องจักรในโรงงาน และปัจจัยเสี่ยง”</p>'; }
+  matched.forEach(m=>{
+    h+=`<h3>${esc(m.th)} <span class="muted" style="font-weight:400">· ${esc(m.en)}</span></h3>`;
+    h+=`<table><thead><tr><th style="width:34%">อันตราย (Hazards)</th><th style="width:40%">มาตรการควบคุม (Control)</th><th>PPE</th></tr></thead><tbody><tr><td>${m.haz.map(esc).join(' · ')}</td><td>${m.ctrl.map(esc).join(' · ')}</td><td>${m.ppe.map(esc).join(' · ')}</td></tr></tbody></table>`;
+  });
+  return h;
+}
+function buildMetalsRef(){
+  const txt=rptDeptText();
+  const matched=METAL_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
+  let h='<h2>◆ ภาคผนวก · ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)</h2>';
+  if(!matched.length){ return h+'<p class="muted">ไม่พบโลหะเป้าหมาย (Cr/Ni/Mo/Al) ที่ตรงกับสิ่งคุกคามในการสำรวจ — ดูค่าอ้างอิงเต็มได้ที่หน้า “ค่าอ้างอิง OEL/BEI (โลหะ)”</p>'; }
+  matched.forEach(m=>{
+    h+=`<h3>${esc(m.name)}</h3><table><thead><tr><th>รูป/สารประกอบ</th><th>ค่ามาตรฐาน (TLV)</th><th>BEI</th></tr></thead><tbody>`;
+    m.rows.forEach(r=>{ h+=`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`; });
+    h+='</tbody></table>';
+  });
+  return h+'<p class="muted" style="font-size:10px">R=respirable · I=inhalable · ที่มา: ACGIH 2025 TLVs® and BEIs® · ดูรายละเอียดเต็มที่หน้า “ค่าอ้างอิง OEL/BEI (โลหะ)”</p>';
+}
+function buildAppendix(){
+  const o=(S&&S.reportOpts)||{}; let h='';
+  if(o.incMachines) h+=buildMachinesRef();
+  if(o.incRef) h+=buildMetalsRef();
   return h;
 }
 
@@ -1625,10 +1688,19 @@ function standaloneReport(){
 }
 
 function openReport(){
+  renderRpOpts();
   document.getElementById('reportDoc').innerHTML=buildReport();
   document.getElementById('reportModal').classList.add('show');
   document.body.style.overflow='hidden';
 }
+function renderRpOpts(){
+  const o=(S.reportOpts=S.reportOpts||{incMachines:false,incRef:false});
+  const el=document.getElementById('rpOpts'); if(!el) return;
+  el.innerHTML='<span class="rpopts-l">แสดงเพิ่มในรายงาน (เฉพาะที่เกี่ยวข้อง):</span>'+
+    `<label><input type="checkbox" ${o.incMachines?'checked':''} onchange="setRepOpt('incMachines',this.checked)"> เครื่องจักรที่เกี่ยวข้อง</label>`+
+    `<label><input type="checkbox" ${o.incRef?'checked':''} onchange="setRepOpt('incRef',this.checked)"> ค่าอ้างอิง OEL/BEI โลหะ</label>`;
+}
+function setRepOpt(k,v){ S.reportOpts=S.reportOpts||{}; S.reportOpts[k]=v; touch(); document.getElementById('reportDoc').innerHTML=buildReport(); }
 function closeReport(){document.getElementById('reportModal').classList.remove('show');document.body.style.overflow=''}
 function copyReport(){
   const txt=standaloneReport();
