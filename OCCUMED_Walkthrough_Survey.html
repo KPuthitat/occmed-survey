@@ -2329,6 +2329,27 @@ function buildSlides(){
     </tbody></table>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
     :`<div class="s-empty">ไม่พบรายการความเสี่ยงระดับสูง / ปานกลาง</div>`}`});
 
+  // 4a) รายละเอียดแต่ละแผนก (ดึงจากข้อมูลรายงาน)
+  S.depts.forEach((d,di)=>{
+    const hasContent=(d.hazards&&d.hazards.length)||(d.machineRefs&&d.machineRefs.length)||(d.proc||'').trim()||(d.machines||'').trim();
+    if(!hasContent) return;
+    const hz=(d.hazards||[]).slice(0,6);
+    const info=[]; if((d.machines||'').trim()) info.push('<b>เครื่องจักร:</b> '+esc(cut(d.machines,70))); if(d.staff) info.push('<b>พนักงาน</b> '+esc(d.staff)+' คน');
+    slides.push({html:`
+      <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}</div>
+      <h2 class="s-h2">${esc(d.name)||'แผนก'}${d.en?` <span style="font-size:.6em;color:#6b7a90;font-weight:400">(${esc(d.en)})</span>`:''}</h2>
+      ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
+      ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
+      ${hz.length?`<table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
+      ${hz.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td>${esc(h.cat)}</td><td><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
+      </tbody></table>${d.hazards.length>6?`<div class="s-more">และอีก ${d.hazards.length-6} สิ่งคุกคาม</div>`:''}`:'<div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>'}`});
+    // โปสเตอร์เครื่องจักรที่แนบในแผนก (ภาพเดียว)
+    (d.machineRefs||[]).forEach(mi=>{ if(!MACHINE_REF[mi]) return; slides.push({cls:'mch',html:`
+      <div class="s-kick">แผนก ${di+1} · ${esc(d.name)} · เครื่องจักร</div>
+      <h2 class="s-h2" style="margin-bottom:8px">${esc(MACHINE_REF[mi].th)} <span style="font-size:.55em;color:#6b7a90;font-weight:400">(${esc(MACHINE_REF[mi].en)})</span></h2>
+      <div class="s-poster">${machinePoster(mi)}</div>`}); });
+  });
+
   // 4b) ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)
   const RR=S.rss||{}, RP=RR.plan||{};
   const rssRows=[];
@@ -2490,6 +2511,8 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;backg
 .s-note,.s-body{color:#3a4657;font-size:clamp(13px,1.8vw,20px);line-height:1.6;margin-top:12px}
 .slide.rec .s-body{background:#f2f5fa;border-left:5px solid #C8A046;padding:18px 22px;border-radius:0 12px 12px 0;overflow:auto;max-height:62%}
 .s-empty{color:#8a97a8;font-size:clamp(14px,2vw,20px);font-style:italic}
+.s-poster{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;width:100%;margin-top:4px}
+.s-poster svg{height:100%;width:auto;max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 4px 18px rgba(11,37,69,.12)}
 .s-photos{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%}
 .s-photo{margin:0;background:#f2f5fa;border-radius:10px;overflow:hidden;border:1px solid #e3e8f0}
 .s-photo img{width:100%;height:clamp(90px,17vh,210px);object-fit:cover;display:block}
