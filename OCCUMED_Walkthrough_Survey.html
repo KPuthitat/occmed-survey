@@ -2200,24 +2200,64 @@ function buildSlides(){
     <div class="s-sub">วันที่เดินสำรวจ ${beDate(g.surveyDate)||'—'}${g.surveyTime?(' เวลา '+esc(g.surveyTime)):''}</div>
     <div class="s-foot">กลุ่มงานอาชีวเวชศาสตร์</div>`});
 
-  // 2) ข้อมูลทั่วไป
+  // 2) ข้อมูลทั่วไป — แตกเป็นหลายหัวข้อ
+  const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n-1)+'…':s;};
+  const nlines=v=>String(v||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  // 01 · ข้อมูลบริษัท
   slides.push({html:`
-    <div class="s-kick">01 · ข้อมูลทั่วไป</div>
+    <div class="s-kick">01 · ข้อมูลบริษัท</div>
     <h2 class="s-h2">ข้อมูลสถานประกอบการ</h2>
     <div class="s-kv">
-      <div><span>ประเภท / ชนิด</span><b>${esc(g.type)||'—'}</b></div>
-      <div><span>ที่อยู่</span><b>${esc(g.address)||'—'}</b></div>
-      <div><span>จำนวนบุคลากร</span><b>${esc(g.workers)||'—'} คน</b></div>
-      <div><span>ขนาดพื้นที่</span><b>${esc(g.area)||'—'} ตารางเมตร</b></div>
+      <div><span>ประเภท / ชนิดกิจการ</span><b>${esc(g.type)||'—'}</b></div>
+      <div><span>ที่อยู่</span><b>${esc(cut(g.address,90))||'—'}</b></div>
+      <div><span>ขนาดพื้นที่</span><b>${esc(g.area)||'—'} ตร.ม.</b></div>
+      <div><span>ก่อตั้ง</span><b>${esc(g.founded)||'—'}</b></div>
+      <div><span>เริ่มการผลิต</span><b>${esc(g.prodStart)||'—'}</b></div>
+      <div><span>ผู้ติดต่อ</span><b>${esc(g.contact)||'—'}</b></div>
+    </div>
+    ${g.mgmt?`<div class="s-note"><b>โครงสร้าง/ผู้บริหาร:</b> ${esc(cut(g.mgmt,170))}</div>`:''}`});
+  // 02 · กำลังคน & เวลาทำงาน
+  slides.push({html:`
+    <div class="s-kick">02 · กำลังคน & เวลาทำงาน</div>
+    <h2 class="s-h2">กำลังคนและเวลาทำงาน</h2>
+    <div class="s-kv">
+      <div><span>บุคลากรทั้งหมด</span><b>${esc(g.workers)||'—'} คน</b></div>
+      <div><span>พนักงานประจำ</span><b>${esc(g.workersFull)||'—'} คน</b></div>
+      <div><span>รับเหมาช่วง</span><b>${esc(g.workersSub)||'—'} คน</b></div>
+      <div><span>อัตราการลาออก (Turnover)</span><b>${esc(g.turnover)||'—'}</b></div>
       <div><span>วันทำงาน</span><b>${esc(g.days)||'—'}</b></div>
       <div><span>ระบบกะ</span><b>${esc(g.shifts)||'—'}</b></div>
-    </div>`});
+    </div>
+    ${g.shiftDetail?`<div class="s-note"><b>รายละเอียดกะ:</b> ${esc(cut(g.shiftDetail,170))}</div>`:''}`});
+  // 03 · ความปลอดภัย & อาชีวอนามัย
+  slides.push({html:`
+    <div class="s-kick">03 · ความปลอดภัย & อาชีวอนามัย</div>
+    <h2 class="s-h2">ความปลอดภัยและอาชีวอนามัย</h2>
+    <div class="s-kv">
+      <div><span>เจ้าหน้าที่ความปลอดภัย (จป.)</span><b>${esc(cut(g.safetyOfficer,70))||'—'}</b></div>
+      <div><span>การตรวจสุขภาพตามปัจจัยเสี่ยง</span><b>${esc(cut(g.healthCheckup,70))||'—'}</b></div>
+      <div><span>ห้องพยาบาล / คลินิก</span><b>${esc(cut(g.clinic,70))||'—'}</b></div>
+      <div><span>แผนฉุกเฉิน</span><b>${esc(cut(g.emergency,70))||'—'}</b></div>
+    </div>
+    ${g.accidentStats?`<div class="s-note"><b>สถิติอุบัติเหตุ/บาดเจ็บ:</b> ${esc(cut(g.accidentStats,150))}</div>`:''}
+    ${g.ppe?`<div class="s-note"><b>PPE ที่จัดให้:</b> ${esc(cut(g.ppe,150))}</div>`:''}`});
+  // 04 · การเดินสำรวจ
+  slides.push({html:`
+    <div class="s-kick">04 · การเดินสำรวจ</div>
+    <h2 class="s-h2">การเดินสำรวจสถานประกอบการ</h2>
+    <div class="s-kv">
+      <div><span>วันที่เดินสำรวจ</span><b>${beDate(g.surveyDate)||'—'}</b></div>
+      <div><span>เวลา</span><b>${esc(g.surveyTime)||'—'}</b></div>
+      <div><span>ผู้ควบคุมการสำรวจ</span><b>${esc(nlines(g.controllers).join(', '))||'—'}</b></div>
+      <div><span>ผู้สังเกตการณ์</span><b>${esc(nlines(g.observers).join(', '))||'—'}</b></div>
+    </div>
+    ${g.threats?`<div class="s-note"><b>สิ่งคุกคามสุขภาพ (ภาพรวม):</b> ${esc(cut(g.threats,170))}</div>`:''}`});
 
   // 3) ภาพรวมความเสี่ยง
   const deptN=S.depts.length;
   const hazN=S.depts.reduce((a,d)=>a+d.hazards.length,0);
   slides.push({html:`
-    <div class="s-kick">02 · ภาพรวม</div>
+    <div class="s-kick">05 · ภาพรวม</div>
     <h2 class="s-h2">ภาพรวมสิ่งคุกคาม &amp; ความเสี่ยง</h2>
     <div class="s-stats">
       <div class="stat"><b>${deptN}</b><span>แผนกที่สำรวจ</span></div>
@@ -2236,7 +2276,7 @@ function buildSlides(){
     const tm=meas.slice(0,8);
     const rbc=c=>c==='over'?'h':c==='ok'?'l':'a', rbt=c=>c==='over'?'เกิน':c==='ok'?'ผ่าน':'—';
     slides.push({html:`
-      <div class="s-kick">03 · ผลการตรวจวัด</div>
+      <div class="s-kick">06 · ผลการตรวจวัด</div>
       <h2 class="s-h2">ผลการตรวจวัดสิ่งคุกคาม (Hazard Monitoring)</h2>
       <table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>วัดได้</th><th>มาตรฐาน</th><th>ผล</th></tr></thead><tbody>
       ${tm.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td>${esc(x.m)} ${esc(x.u||'')}</td><td>${esc(x.s)||'—'}</td><td><span class="rb ${rbc(x.ev.c)}">${rbt(x.ev.c)}</span></td></tr>`).join('')}
@@ -2250,7 +2290,7 @@ function buildSlides(){
   risks.sort((a,b)=>rrank(a.r)-rrank(b.r));
   const top=risks.slice(0,7);
   slides.push({html:`
-    <div class="s-kick">04 · ประเมินความเสี่ยง</div>
+    <div class="s-kick">07 · ประเมินความเสี่ยง</div>
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>ระดับ</th></tr></thead><tbody>
     ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td><span class="rb ${x.r==='สูงมาก'?'vh':x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
@@ -2268,7 +2308,7 @@ function buildSlides(){
     const rbc=c=>c==='over'?'h':c==='ok'?'l':'a';
     const tr=rssRows.slice(0,7);
     slides.push({html:`
-      <div class="s-kick">05 · ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</div>
+      <div class="s-kick">08 · ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</div>
       <h2 class="s-h2">ผลตรวจวัดสภาพแวดล้อมในการทำงาน</h2>
       ${rssRows.length?`<table class="s-tbl"><thead><tr><th>ด้าน</th><th>จุด/พื้นที่</th><th>วัดได้</th><th>ผล</th></tr></thead><tbody>
       ${tr.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])||'—'}</td><td>${esc(x[2])}</td><td><span class="rb ${rbc(x[3].c)}">${esc(x[3].t)}</span></td></tr>`).join('')}
@@ -2281,7 +2321,7 @@ function buildSlides(){
   S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) allExams().forEach(e=>{ if(hd[e]) exSet.add(e); });});
   const exams=[...exSet];
   slides.push({html:`
-    <div class="s-kick">06 · ตรวจสุขภาพ</div>
+    <div class="s-kick">09 · ตรวจสุขภาพ</div>
     <h2 class="s-h2">การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
     ${exams.length?`<div class="s-chips">${exams.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div>
     <div class="s-note">แนะนำรายการตรวจข้างต้นตามปัจจัยเสี่ยงที่พบในแต่ละแผนก</div>`
@@ -2293,7 +2333,7 @@ function buildSlides(){
     const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n-1).replace(/[,\s·]+$/,'')+'…':s;};
     const ke=kbs.entries.slice(0,5);
     slides.push({html:`
-      <div class="s-kick">07 · สรุปเชิงคลินิก</div>
+      <div class="s-kick">10 · สรุปเชิงคลินิก</div>
       <h2 class="s-h2">สรุปเชิงคลินิก (อ้างอิงฐานความรู้)</h2>
       <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ผลต่อสุขภาพ</th><th>การตรวจเฝ้าระวัง</th></tr></thead><tbody>
       ${ke.map(e=>`<tr><td><b>${esc(e.hz)}</b></td><td>${esc(cut(e.eff,58))}</td><td>${esc(cut(e.med,58))}</td></tr>`).join('')}
@@ -2305,7 +2345,7 @@ function buildSlides(){
   const noteRows=['general','depts','risk','health','summary'].map(k=>[NOTE_LABELS[k],nt[k]]).filter(x=>x[1]&&x[1].trim());
   if(noteRows.length){
     slides.push({cls:'rec',html:`
-      <div class="s-kick">08 · บันทึกภาคสนาม</div>
+      <div class="s-kick">11 · บันทึกภาคสนาม</div>
       <h2 class="s-h2">บันทึกภาคสนาม (Field Notes)</h2>
       <div class="s-body">${noteRows.map(x=>`<div style="margin-bottom:10px"><b style="color:#0B2545">${esc(x[0])}:</b> ${esc(x[1])}</div>`).join('')}</div>`});
   }
@@ -2315,13 +2355,13 @@ function buildSlides(){
   if(recs.length){
     recs.forEach((r,idx)=>{
       slides.push({cls:'rec',html:`
-        <div class="s-kick">09 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}</div>
+        <div class="s-kick">12 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}</div>
         <h2 class="s-h2">${esc(r[0])}</h2>
         <div class="s-body">${esc(r[1])}</div>`});
     });
   } else {
     slides.push({html:`
-      <div class="s-kick">09 · ข้อเสนอแนะ</div>
+      <div class="s-kick">12 · ข้อเสนอแนะ</div>
       <h2 class="s-h2">ข้อเสนอแนะ</h2>
       <div class="s-empty">ยังไม่ได้กรอกข้อเสนอแนะ (กลับไปแท็บสรุปเพื่อร่างอัตโนมัติ)</div>`});
   }
@@ -2332,7 +2372,7 @@ function buildSlides(){
     const txt=rptDeptText();
     const mm=MACHINE_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
     if(mm.length) slides.push({cls:'rec',html:`
-      <div class="s-kick">10 · ภาคผนวก · เครื่องจักร</div>
+      <div class="s-kick">13 · ภาคผนวก · เครื่องจักร</div>
       <h2 class="s-h2">เครื่องจักรและปัจจัยเสี่ยง (ที่เกี่ยวข้อง)</h2>
       <div class="s-body">${mm.slice(0,6).map(m=>`<div style="margin-bottom:9px"><b style="color:#0B2545">${esc(m.th)}</b> — ${esc(m.haz.slice(0,4).join(' · '))}</div>`).join('')}</div>`});
   }
@@ -2340,7 +2380,7 @@ function buildSlides(){
     const txt=rptDeptText();
     const mt=METAL_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
     if(mt.length) slides.push({html:`
-      <div class="s-kick">10 · ภาคผนวก · ค่าอ้างอิง</div>
+      <div class="s-kick">13 · ภาคผนวก · ค่าอ้างอิง</div>
       <h2 class="s-h2">ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)</h2>
       <table class="s-tbl"><thead><tr><th>โลหะ</th><th>ค่ามาตรฐาน (TLV)</th></tr></thead><tbody>
       ${mt.map(m=>`<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.rows.map(r=>r[1]).join(' · '))}</td></tr>`).join('')}
@@ -2357,11 +2397,22 @@ function buildSlides(){
       <div class="s-photos">${grp.map(x=>`<figure class="s-photo"><img src="${x.p.d}" alt=""><figcaption>${esc(x.p.cap||x.dept)}</figcaption></figure>`).join('')}</div>`});
   }
 
+  // หัวข้อสุดท้าย · บทสรุปผู้บริหาร (Executive Summary)
+  const execTxt=(S.execSummary||'').trim();
+  slides.push({cls:'rec',html:`
+    <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary</div>
+    <h2 class="s-h2">บทสรุปสำหรับผู้บริหาร</h2>
+    ${execTxt?`<div class="s-body" style="white-space:pre-wrap">${esc(execTxt)}</div>`:`<div class="s-empty">ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”</div>`}`});
+
   // ปิดท้าย
   slides.push({cls:'cover end',html:`
     <h1 class="s-h1">ขอบคุณครับ</h1>
     <div class="s-sub">คณะผู้เดินสำรวจอาชีวเวชศาสตร์</div>
     <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · OCCMED</div>`});
+
+  // เลขหัวข้อไล่ต่อเนื่องอัตโนมัติ (กันเลขขาดช่วงเมื่อบางสไลด์ถูกข้ามเพราะไม่มีข้อมูล)
+  let __sn=0;
+  slides.forEach(s=>{ s.html=s.html.replace(/(class="s-kick">)(\d+) · /, function(m,p){ __sn++; return p+String(__sn).padStart(2,'0')+' · '; }); });
 
   const dots=slides.map((s,k)=>`<button class="dot${k===0?' a':''}" onclick="__to(${k})" aria-label="หน้า ${k+1}"></button>`).join('');
   return `<div class="deck">`
