@@ -224,7 +224,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .exrow.dragging{opacity:.6;border-color:var(--gold);box-shadow:0 6px 18px rgba(11,37,69,.15)}
 .exgrip{cursor:grab;touch-action:none;color:var(--gold-dk);font-weight:800;letter-spacing:-2px;user-select:none;padding:2px 4px}
 .exname{flex:1;min-width:0;color:var(--navy2);font-weight:600}
+.exsamp{flex:0 1 220px;min-width:120px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:12px;background:#fff}
+.exsamp:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
 .exmove{display:flex;gap:4px}
+@media(max-width:640px){.exrow{flex-wrap:wrap}.exsamp{flex:1 1 100%;order:3}.exmove{order:2}}
 .exmove button{width:30px;height:30px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--navy);font-size:12px;cursor:pointer;line-height:1}
 .exmove button:hover{background:var(--line2)}
 /* ---------- รสส.1/2/3 tables ---------- */
@@ -803,7 +806,7 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, customExams:[], examOrder:[],
+    depts:[], health:{}, customExams:[], examOrder:[], examSampling:{},
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     notes:{ general:'', depts:'', risk:'', health:'', summary:'' },
@@ -831,7 +834,10 @@ function allExams(){
   return out;
 }
 let exOrderOpen=false;
+// เวลาเก็บตัวอย่างมาตรฐานตาม ACGIH BEIs® (biomonitoring sampling time)
+const SAMPLING_OPTS=['สิ้นสุดกะ (End of shift)','สิ้นกะ วันสุดท้ายของสัปดาห์ (End of shift at end of workweek)','สิ้นสุดสัปดาห์ทำงาน (End of workweek)','ก่อนเข้ากะ (Prior to shift)','ระหว่างกะ (During shift)','ก่อนกะถัดไป (Prior to next shift)','เพิ่มขึ้นระหว่างกะ (Increase during shift)','ไม่วิกฤต (Not critical)','ตามดุลยพินิจ (Discretionary)'];
 function exToggleOrder(){ exOrderOpen=!exOrderOpen; renderHealth(); }
+function setExamSampling(name,v){ S.examSampling=S.examSampling||{}; v=(v||'').trim(); if(v) S.examSampling[name]=v; else delete S.examSampling[name]; touch(); bxFull(); renderHealth(); }
 function exMove(i,dir){ const arr=allExams(); const j=i+dir; if(j<0||j>=arr.length) return; const t=arr[i]; arr[i]=arr[j]; arr[j]=t; S.examOrder=arr; touch(); bxFull(); renderHealth(); }
 function exBindDrag(){
   const list=document.getElementById('exList'); if(!list) return;
@@ -1229,11 +1235,11 @@ function renderHealth(){
   </div>`;
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p3','health'); return; }
 
-  const exams=allExams(); const nBase=EXAMS.length;
+  const exams=allExams(); const nBase=EXAMS.length; const smp=S.examSampling||{};
   html+=`<div class="card"><div class="bd" style="padding:12px">
     <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
     <div class="hcwrap"><table class="hcgrid">
-    <thead><tr><th class="dept-name">แผนก</th>${exams.map((e,i)=>`<th class="exhead">${i>=nBase?`<button class="exdel" title="ลบรายการตรวจนี้" onclick="delExam('${esc(e).replace(/'/g,"\\'")}')">✕</button>`:''}<span>${esc(e)}</span></th>`).join('')}</tr></thead><tbody>`;
+    <thead><tr><th class="dept-name">แผนก</th>${exams.map((e,i)=>`<th class="exhead"${smp[e]?` title="เวลาเก็บตัวอย่าง: ${esc(smp[e])}"`:''}>${i>=nBase?`<button class="exdel" title="ลบรายการตรวจนี้" onclick="delExam('${esc(e).replace(/'/g,"\\'")}')">✕</button>`:''}<span>${esc(e)}${smp[e]?' ⏱':''}</span></th>`).join('')}</tr></thead><tbody>`;
   S.depts.forEach(d=>{
     html+=`<tr><td class="dept-name">${esc(d.name)}</td>`;
     exams.forEach(ex=>{
@@ -1245,8 +1251,15 @@ function renderHealth(){
   html+=`</tbody></table></div>
   <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ghost sm" onclick="exToggleOrder()">↕ จัดลำดับรายการตรวจ</button></div>`;
   if(exOrderOpen){
-    html+=`<div class="exorder"><div class="exorder-h">จัดลำดับรายการตรวจ — ลากที่ ⋮⋮ เพื่อย้าย หรือใช้ปุ่ม ▲▼ (มีผลกับตารางและรายงาน)</div><ul class="exlist" id="exList">`+
-      exams.map((e,i)=>`<li class="exrow" data-i="${i}"><span class="exgrip" title="ลากเพื่อย้าย">⋮⋮</span><span class="exname">${esc(e)}</span><span class="exmove"><button type="button" onclick="exMove(${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMove(${i},1)" title="ลง">▼</button></span></li>`).join('')+
+    const smap=S.examSampling||{};
+    html+=`<div class="exorder"><div class="exorder-h">จัดลำดับ &amp; เวลาเก็บตัวอย่าง — ลากที่ ⋮⋮ หรือ ▲▼ เพื่อจัดลำดับ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI (เช่น End of shift)</div>`+
+      `<datalist id="samplingList">${SAMPLING_OPTS.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`+
+      `<ul class="exlist" id="exList">`+
+      exams.map((e,i)=>{ const nm=esc(e).replace(/'/g,"\\'");
+        return `<li class="exrow" data-i="${i}"><span class="exgrip" title="ลากเพื่อย้าย">⋮⋮</span><span class="exname">${esc(e)}</span>`+
+        `<input class="exsamp" list="samplingList" placeholder="เวลาเก็บตัวอย่าง (BEI)…" value="${esc(smap[e]||'')}" onchange="setExamSampling('${nm}',this.value)">`+
+        `<span class="exmove"><button type="button" onclick="exMove(${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMove(${i},1)" title="ลง">▼</button></span></li>`;
+      }).join('')+
       `</ul></div>`;
   }
   html+=`<div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · รายการที่เพิ่มเองมีปุ่ม ✕ ให้ลบได้</div>
@@ -1586,6 +1599,9 @@ function buildReport(){
   });
   h+=`</tbody></table>`;
 
+  // --- เวลาเก็บตัวอย่างชีวภาพ (ACGIH BEI) ---
+  h+=buildSamplingReport();
+
   // --- สรุปเชิงคลินิก (Knowledge Base v1) ---
   h+=`<h2>◆ สรุปเชิงคลินิก (อ้างอิงฐานความรู้ v1)</h2>`+buildKBInner();
 
@@ -1660,6 +1676,16 @@ function buildAppendix(){
   const o=(S&&S.reportOpts)||{}; let h='';
   if(o.incMachines) h+=buildMachinesRef();
   if(o.incRef) h+=buildMetalsRef();
+  return h;
+}
+function buildSamplingReport(){
+  const m=(S&&S.examSampling)||{};
+  const rows=allExams().filter(e=>((m[e]||'').trim()));
+  if(!rows.length) return '';
+  let h='<h2>◆ การเก็บตัวอย่างชีวภาพ (Biomonitoring) — เวลาเก็บตัวอย่างอ้างอิง ACGIH BEI</h2>';
+  h+='<table><thead><tr><th>รายการตรวจ</th><th>เวลาเก็บตัวอย่าง (Sampling time)</th></tr></thead><tbody>';
+  rows.forEach(e=>{ h+=`<tr><td>${esc(e)}</td><td>${esc(m[e])}</td></tr>`; });
+  h+='</tbody></table><p class="muted" style="font-size:11px">อ้างอิงเวลาการเก็บตัวอย่างตาม ACGIH 2025 BEIs® — ตรวจสอบ determinant และค่าอ้างอิงก่อนใช้จริง</p>';
   return h;
 }
 function buildNotesReport(){
