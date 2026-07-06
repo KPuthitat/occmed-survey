@@ -235,6 +235,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .rssdel:hover{background:var(--over-bg)}
 .rssadd{margin-top:10px}
 .rssactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rssplan{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+.rssplan label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.rssplan textarea{width:100%;min-height:64px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:13px;resize:vertical;line-height:1.5}
+.rssplan textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
 .rssimp{margin-top:12px;border:1px dashed var(--gold);background:#fffdf6;border-radius:12px;padding:12px}
 .rssimp-h{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:8px}
 .rssimp-ta{width:100%;min-height:110px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:inherit;font-size:12.5px;resize:vertical}
@@ -790,7 +794,7 @@ function blankState(){
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
     depts:[], health:{}, customExams:[],
-    rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[] },
+    rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     notes:{ general:'', depts:'', risk:'', health:'', summary:'' },
     conclusion:{heat:'',noise:'',chem:'',extra:''}
@@ -813,7 +817,8 @@ const WBGT_STD={'เบา':34,'ปานกลาง':32,'หนัก':30};   
 const NOISE_TWA_STD=85;   // dBA เฉลี่ย 8 ชม.
 const DOSE_STD=100;       // % ปริมาณเสียงสะสม
 const LIGHT_HINTS=['ทางเดิน/บริเวณทั่วไป ~100','บริเวณงานหยาบ ~200','งานปานกลาง ~300–400','งานละเอียด ~600','งานละเอียดมาก ~800–1000'];
-function rssEnsure(){ if(!S.rss) S.rss={meta:{company:'',date:'',by:'',instrument:'',serial:''},heat:[],light:[],noise:[]}; S.rss.heat=S.rss.heat||[];S.rss.light=S.rss.light||[];S.rss.noise=S.rss.noise||[];S.rss.meta=S.rss.meta||{}; return S.rss; }
+function rssEnsure(){ if(!S.rss) S.rss={meta:{},heat:[],light:[],noise:[],plan:{}}; S.rss.heat=S.rss.heat||[];S.rss.light=S.rss.light||[];S.rss.noise=S.rss.noise||[];S.rss.meta=S.rss.meta||{};S.rss.plan=S.rss.plan||{heat:'',light:'',noise:''}; return S.rss; }
+function setRssPlan(type,v){ const R=rssEnsure(); R.plan[type]=v; touch(); bx({k:'rssplan',type,v}); }
 function rssEval(type,r){
   if(type==='heat'){ const sv=+r.std||WBGT_STD[r.load]||32, mv=maxNum(r.wbgt); if(mv===null) return {t:'—',c:'na'}; return mv>sv?{t:'เกินมาตรฐาน',c:'over'}:{t:'ผ่าน',c:'ok'}; }
   if(type==='light'){ const sv=maxNum(r.std), mv=maxNum(r.lux); if(mv===null||sv===null) return {t:'—',c:'na'}; return mv<sv?{t:'แสงไม่พอ',c:'over'}:{t:'ผ่าน',c:'ok'}; }
@@ -1682,6 +1687,8 @@ function reportCSS(){
   .rp .kbtbl td{border:1px solid #ccc;padding:5px 6px;vertical-align:top}
   .rp .kbtbl b{color:#0B2545}
   .rp .kbref{font-size:10px;color:#777;margin-top:8px}
+  .rp .rp-plan{background:#fdf8ec;border-left:3px solid #C8A046;padding:8px 11px;border-radius:0 8px 8px 0;margin:6px 0;font-size:12px;color:#5a4d2a;white-space:pre-wrap}
+  .rp .rp-plan b{color:#8a6d1e}
   .rp .evb{display:inline-block;font-weight:700;font-size:9.5px;padding:2px 7px;border-radius:20px;white-space:nowrap}
   .rp .evb-a{background:#e7f3ec;color:#2e7d54}.rp .evb-b{background:#fdf1dd;color:#c9820a}.rp .evb-c{background:#eef1f6;color:#516079}
   .rp .tbl-scroll{overflow-x:visible}
@@ -2059,6 +2066,9 @@ function renderRss(type){
   }
   h+=`<div class="rssactions"><button class="btn ghost sm" onclick="addRss('${type}')">＋ เพิ่มแถว</button>`+`<button class="btn ghost sm" onclick="rssImportOpen('${type}')">⇪ นำเข้า CSV</button>`+`<button class="btn ghost sm" onclick="rssTemplate('${type}')">↓ เทมเพลต CSV</button></div>`;
   h+=rssImportPanel(type);
+  const plan=(R.plan&&R.plan[type])||'';
+  h+=`<div class="rssplan"><label>แผนการตรวจวัด (กรณียังไม่มีผล รสส. — จะแสดงในรายงานว่า “มีแผนดำเนินการ”)</label>
+    <textarea data-sync="rssplan:${type}" placeholder="เช่น มีแผนตรวจวัดโดยบริษัทภายนอกภายในไตรมาส ... / เดือน ... ปี ... ครอบคลุมแผนก ..." oninput="setRssPlan('${type}',this.value)">${esc(plan)}</textarea></div>`;
   body.innerHTML=h;
 }
 function setRss(type,i,field,val,rerender){
@@ -2155,20 +2165,29 @@ function rssTemplate(type){
   toast('ดาวน์โหลดเทมเพลต CSV แล้ว');
 }
 function buildRssReport(){
-  const R=(S&&S.rss)||{}; const H=esc;
+  const R=(S&&S.rss)||{}; const H=esc; const P=(R.plan||{});
   const nH=(R.heat||[]).length,nL=(R.light||[]).length,nN=(R.noise||[]).length;
-  if(!(nH||nL||nN)) return '';
+  const pH=(P.heat||'').trim(),pL=(P.light||'').trim(),pN=(P.noise||'').trim();
+  if(!(nH||nL||nN||pH||pL||pN)) return '';
   const cls=ev=>ev.c==='over'?'r-over':ev.c==='ok'?'r-ok':'muted';
+  const planBox=t=>t?`<p class="rp-plan"><b>แผนการตรวจวัด:</b> ${H(t)}</p>`:'';
+  const noResult=t=>`<p class="muted">ยังไม่ได้ตรวจวัด${t?' — มีแผนดำเนินการ (ดูด้านล่าง)':''}</p>`;
   let h='<h2>◆ ผลการตรวจวัดสภาพแวดล้อมในการทำงาน (รสส.1/2/3)</h2>';
-  if(nH){ h+='<h3>รสส.1 · ความร้อน (WBGT)</h3><table><thead><tr><th>SEG/พื้นที่</th><th>ภาระงาน</th><th>WBGT (°C)</th><th>มาตรฐาน (°C)</th><th>ผล</th></tr></thead><tbody>';
-    R.heat.forEach(r=>{const ev=rssEval('heat',r);const sv=r.std||WBGT_STD[r.load]||'';h+=`<tr><td>${H(r.seg)}</td><td>${H(r.load)}</td><td>${H(r.wbgt)}</td><td>${H(sv)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
-    h+='</tbody></table>'; }
-  if(nL){ h+='<h3>รสส.2 · แสงสว่าง (lux)</h3><table><thead><tr><th>รูปแบบ</th><th>จุด/บริเวณ</th><th>วัดได้ (lux)</th><th>มาตรฐาน (lux)</th><th>ผล</th></tr></thead><tbody>';
-    R.light.forEach(r=>{const ev=rssEval('light',r);h+=`<tr><td>${H(r.mode)}</td><td>${H(r.point)}</td><td>${H(r.lux)}</td><td>${H(r.std)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
-    h+='</tbody></table>'; }
-  if(nN){ h+='<h3>รสส.3 · เสียง (dBA)</h3><table><thead><tr><th>วิธีวัด</th><th>SEG/พื้นที่</th><th>TWA (dBA)</th><th>Dose (%)</th><th>มาตรฐาน (dBA)</th><th>ผล</th></tr></thead><tbody>';
-    R.noise.forEach(r=>{const ev=rssEval('noise',r);h+=`<tr><td>${H(r.method)}</td><td>${H(r.seg)}</td><td>${H(r.twa)}</td><td>${H(r.dose)}</td><td>${H(r.std||85)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
-    h+='</tbody></table>'; }
+  if(nH||pH){ h+='<h3>รสส.1 · ความร้อน (WBGT)</h3>';
+    if(nH){ h+='<table><thead><tr><th>SEG/พื้นที่</th><th>ภาระงาน</th><th>WBGT (°C)</th><th>มาตรฐาน (°C)</th><th>ผล</th></tr></thead><tbody>';
+      R.heat.forEach(r=>{const ev=rssEval('heat',r);const sv=r.std||WBGT_STD[r.load]||'';h+=`<tr><td>${H(r.seg)}</td><td>${H(r.load)}</td><td>${H(r.wbgt)}</td><td>${H(sv)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
+      h+='</tbody></table>'; } else h+=noResult(pH);
+    h+=planBox(pH); }
+  if(nL||pL){ h+='<h3>รสส.2 · แสงสว่าง (lux)</h3>';
+    if(nL){ h+='<table><thead><tr><th>รูปแบบ</th><th>จุด/บริเวณ</th><th>วัดได้ (lux)</th><th>มาตรฐาน (lux)</th><th>ผล</th></tr></thead><tbody>';
+      R.light.forEach(r=>{const ev=rssEval('light',r);h+=`<tr><td>${H(r.mode)}</td><td>${H(r.point)}</td><td>${H(r.lux)}</td><td>${H(r.std)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
+      h+='</tbody></table>'; } else h+=noResult(pL);
+    h+=planBox(pL); }
+  if(nN||pN){ h+='<h3>รสส.3 · เสียง (dBA)</h3>';
+    if(nN){ h+='<table><thead><tr><th>วิธีวัด</th><th>SEG/พื้นที่</th><th>TWA (dBA)</th><th>Dose (%)</th><th>มาตรฐาน (dBA)</th><th>ผล</th></tr></thead><tbody>';
+      R.noise.forEach(r=>{const ev=rssEval('noise',r);h+=`<tr><td>${H(r.method)}</td><td>${H(r.seg)}</td><td>${H(r.twa)}</td><td>${H(r.dose)}</td><td>${H(r.std||85)}</td><td class="${cls(ev)}">${ev.t}</td></tr>`;});
+      h+='</tbody></table>'; } else h+=noResult(pN);
+    h+=planBox(pN); }
   return h;
 }
 document.addEventListener('click',e=>{ const p=document.getElementById('tbMenuPanel'); if(p&&p.classList.contains('show')&&!e.target.closest('.tbmenu')) p.classList.remove('show'); });
@@ -2343,6 +2362,7 @@ function applyRemote(p){
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
     else if(p.k==='note'){ S.notes=S.notes||{}; S.notes[p.sec]=p.v; setWidget('note:'+p.sec,p.v); save(); }
+    else if(p.k==='rssplan'){ const R=rssEnsure(); R.plan[p.type]=p.v; setWidget('rssplan:'+p.type,p.v); save(); }
   }catch(e){}
   CB.applying=false;
 }
