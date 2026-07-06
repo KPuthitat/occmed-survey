@@ -647,7 +647,7 @@ const LS_KEY='occumed_survey_v1';
 const uid=()=>Math.random().toString(36).slice(2,9);
 
 /* ---- Reference lists ---- */
-const CATS=['กายภาพ','เคมี','ชีวภาพ','การยศาสตร์'];
+const CATS=['กายภาพ','เคมี','ชีวภาพ','การยศาสตร์','จิตสังคม','ความปลอดภัย'];
 const CONC_BANDS=['< 10% OEL-TWA','10-50% OEL-TWA','50-75% OEL-TWA','75-100% OEL-TWA','100% OEL-TWA','> 100% OEL-TWA','ไม่ได้วัด (ให้ 100%)'];
 const RISK_LABELS=['ยอมรับได้','ต่ำ','ปานกลาง','สูง'];
 const EXAMS=['ผิวหนัง','ทางเดินหายใจ','การมองเห็น','ไหลเวียนโลหิต','กระดูกและกล้ามเนื้อ','การได้ยิน','VA','EKG','CXR','CBC','Cr','Spirometry','Audiometry'];
@@ -992,7 +992,7 @@ function renderDepts(){
   <div class="pagehead">
     <div class="kick">ส่วนที่ 2 · Hazard Identification</div>
     <h2>แผนก / กระบวนการ &amp; สิ่งคุกคามสุขภาพ</h2>
-    <p>แต่ละแผนกระบุกระบวนการ เครื่องจักร และสิ่งคุกคาม (กายภาพ/เคมี/ชีวภาพ/การยศาสตร์) พร้อมค่าที่วัดได้และค่ามาตรฐาน ระบบจะเทียบผลให้อัตโนมัติ</p>
+    <p>แต่ละแผนกระบุกระบวนการ เครื่องจักร และสิ่งคุกคาม (กายภาพ/เคมี/ชีวภาพ/การยศาสตร์/จิตสังคม/ความปลอดภัย) พร้อมค่าที่วัดได้และค่ามาตรฐาน ระบบจะเทียบผลให้อัตโนมัติ</p>
   </div>
   <div class="btnrow" style="margin-bottom:14px">
     <button class="btn gold sm" onclick="addDept()">＋ เพิ่มแผนก</button>
@@ -1637,7 +1637,7 @@ function buildCombinedTable(){
   S.depts.forEach(d=>d.hazards.forEach(hz=>{const k=hz.name.trim(); if(k&&!seen[k]){seen[k]=hz.cat;names.push(k);}}));
   if(!names.length) return '';
   // order by category
-  const order={'กายภาพ':0,'เคมี':1,'ชีวภาพ':2,'การยศาสตร์':3};
+  const order={'กายภาพ':0,'เคมี':1,'ชีวภาพ':2,'การยศาสตร์':3,'จิตสังคม':4,'ความปลอดภัย':5};
   names.sort((a,b)=>(order[seen[a]]??9)-(order[seen[b]]??9));
   let h=`<h2>◆ ตารางรวมสิ่งคุกคาม (Hazard Monitoring)</h2>
   <div style="overflow-x:auto"><table class="heat" style="font-size:10px"><thead><tr><th>ประเภท</th><th>สิ่งคุกคาม</th>${S.depts.map(d=>`<th>${esc(d.en||d.name)}</th>`).join('')}</tr></thead><tbody>`;
