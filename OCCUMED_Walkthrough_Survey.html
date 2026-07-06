@@ -1829,44 +1829,122 @@ function buildSlides(){
       <div class="stat warn"><b>${uniq(f.chemOver.map(x=>x.h+'|'+x.d)).length}</b><span>รายการเกินค่ามาตรฐาน</span></div>
     </div>`});
 
+  // 3b) ผลการตรวจวัดสิ่งคุกคาม (Hazard Monitoring)
+  const meas=[];
+  S.depts.forEach(d=>d.hazards.forEach(h=>{ if(h.measured&&/\d/.test(String(h.measured))){ const ev=evalStd(h.measured,h.std,h.name); meas.push({d:d.name,h:h.name,m:h.measured,u:h.unit,s:h.std,ev}); }}));
+  if(meas.length){
+    meas.sort((a,b)=>(a.ev.c==='over'?0:1)-(b.ev.c==='over'?0:1));
+    const tm=meas.slice(0,8);
+    const rbc=c=>c==='over'?'h':c==='ok'?'l':'a', rbt=c=>c==='over'?'เกิน':c==='ok'?'ผ่าน':'—';
+    slides.push({html:`
+      <div class="s-kick">03 · ผลการตรวจวัด</div>
+      <h2 class="s-h2">ผลการตรวจวัดสิ่งคุกคาม (Hazard Monitoring)</h2>
+      <table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>วัดได้</th><th>มาตรฐาน</th><th>ผล</th></tr></thead><tbody>
+      ${tm.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td>${esc(x.m)} ${esc(x.u||'')}</td><td>${esc(x.s)||'—'}</td><td><span class="rb ${rbc(x.ev.c)}">${rbt(x.ev.c)}</span></td></tr>`).join('')}
+      </tbody></table>${meas.length>8?`<div class="s-more">และอีก ${meas.length-8} รายการ</div>`:''}`});
+  }
+
   // 4) ผลประเมินความเสี่ยงตามแผนก
   const risks=[];
   S.depts.forEach(d=>d.hazards.forEach(h=>{const r=effRisk(h); if(r==='สูง'||r==='ปานกลาง') risks.push({d:d.name,h:h.name,r});}));
   risks.sort((a,b)=>(a.r==='สูง'?0:1)-(b.r==='สูง'?0:1));
   const top=risks.slice(0,7);
   slides.push({html:`
-    <div class="s-kick">03 · ประเมินความเสี่ยง</div>
+    <div class="s-kick">04 · ประเมินความเสี่ยง</div>
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>ระดับ</th></tr></thead><tbody>
     ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td><span class="rb ${x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
     </tbody></table>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
     :`<div class="s-empty">ไม่พบรายการความเสี่ยงระดับสูง / ปานกลาง</div>`}`});
 
-  // 5) การตรวจสุขภาพ
+  // 4b) ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)
+  const RR=S.rss||{}, RP=RR.plan||{};
+  const rssRows=[];
+  (RR.heat||[]).forEach(r=>{if((r.wbgt||'').trim())rssRows.push(['ความร้อน',r.seg,(r.wbgt||'')+' °C',rssEval('heat',r)]);});
+  (RR.light||[]).forEach(r=>{if((r.lux||'').trim())rssRows.push(['แสงสว่าง',r.point,(r.lux||'')+' lux',rssEval('light',r)]);});
+  (RR.noise||[]).forEach(r=>{if((r.twa||'').trim())rssRows.push(['เสียง',r.seg,(r.twa||'')+' dBA',rssEval('noise',r)]);});
+  const rssPlans=[['ความร้อน',RP.heat],['แสงสว่าง',RP.light],['เสียง',RP.noise]].filter(x=>x[1]&&x[1].trim());
+  if(rssRows.length||rssPlans.length){
+    const rbc=c=>c==='over'?'h':c==='ok'?'l':'a';
+    const tr=rssRows.slice(0,7);
+    slides.push({html:`
+      <div class="s-kick">05 · ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</div>
+      <h2 class="s-h2">ผลตรวจวัดสภาพแวดล้อมในการทำงาน</h2>
+      ${rssRows.length?`<table class="s-tbl"><thead><tr><th>ด้าน</th><th>จุด/พื้นที่</th><th>วัดได้</th><th>ผล</th></tr></thead><tbody>
+      ${tr.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])||'—'}</td><td>${esc(x[2])}</td><td><span class="rb ${rbc(x[3].c)}">${esc(x[3].t)}</span></td></tr>`).join('')}
+      </tbody></table>${rssRows.length>7?`<div class="s-more">และอีก ${rssRows.length-7} รายการ</div>`:''}`:''}
+      ${rssPlans.length?`<div class="s-note"><b>แผนการตรวจวัด (ยังไม่มีผล):</b> ${rssPlans.map(p=>esc(p[0])).join(' · ')} — มีแผนดำเนินการ</div>`:''}`});
+  }
+
+  // 6) การตรวจสุขภาพ
   const exSet=new Set();
   S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) allExams().forEach(e=>{ if(hd[e]) exSet.add(e); });});
   const exams=[...exSet];
   slides.push({html:`
-    <div class="s-kick">04 · ตรวจสุขภาพ</div>
+    <div class="s-kick">06 · ตรวจสุขภาพ</div>
     <h2 class="s-h2">การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
     ${exams.length?`<div class="s-chips">${exams.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div>
     <div class="s-note">แนะนำรายการตรวจข้างต้นตามปัจจัยเสี่ยงที่พบในแต่ละแผนก</div>`
     :`<div class="s-empty">ยังไม่ได้กำหนดรายการตรวจสุขภาพ</div>`}`});
 
-  // 6+) ข้อเสนอแนะ (สไลด์ละหัวข้อ)
+  // 7) สรุปเชิงคลินิก (Knowledge Base) — ตัดข้อความให้พอดีสไลด์ (ฉบับเต็มอยู่ในรายงาน)
+  const kbs=kbForSurvey();
+  if(kbs.entries.length){
+    const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n-1).replace(/[,\s·]+$/,'')+'…':s;};
+    const ke=kbs.entries.slice(0,5);
+    slides.push({html:`
+      <div class="s-kick">07 · สรุปเชิงคลินิก</div>
+      <h2 class="s-h2">สรุปเชิงคลินิก (อ้างอิงฐานความรู้)</h2>
+      <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ผลต่อสุขภาพ</th><th>การตรวจเฝ้าระวัง</th></tr></thead><tbody>
+      ${ke.map(e=>`<tr><td><b>${esc(e.hz)}</b></td><td>${esc(cut(e.eff,58))}</td><td>${esc(cut(e.med,58))}</td></tr>`).join('')}
+      </tbody></table><div class="s-more">${kbs.entries.length>5?`และอีก ${kbs.entries.length-5} รายการ · `:''}ดูรายละเอียดฉบับเต็มในรายงาน</div>`});
+  }
+
+  // 8) บันทึกภาคสนาม
+  const nt=S.notes||{};
+  const noteRows=['general','depts','risk','health','summary'].map(k=>[NOTE_LABELS[k],nt[k]]).filter(x=>x[1]&&x[1].trim());
+  if(noteRows.length){
+    slides.push({cls:'rec',html:`
+      <div class="s-kick">08 · บันทึกภาคสนาม</div>
+      <h2 class="s-h2">บันทึกภาคสนาม (Field Notes)</h2>
+      <div class="s-body">${noteRows.map(x=>`<div style="margin-bottom:10px"><b style="color:#0B2545">${esc(x[0])}:</b> ${esc(x[1])}</div>`).join('')}</div>`});
+  }
+
+  // 9) ข้อเสนอแนะ (สไลด์ละหัวข้อ)
   const recs=[['ความร้อน (Heat)',c.heat],['เสียงดัง (Noise)',c.noise],['สารเคมีอันตราย (Chemical)',c.chem],['ข้อเสนอแนะเพิ่มเติม',c.extra]].filter(x=>x[1]&&x[1].trim());
   if(recs.length){
     recs.forEach((r,idx)=>{
       slides.push({cls:'rec',html:`
-        <div class="s-kick">05 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}</div>
+        <div class="s-kick">09 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}</div>
         <h2 class="s-h2">${esc(r[0])}</h2>
         <div class="s-body">${esc(r[1])}</div>`});
     });
   } else {
     slides.push({html:`
-      <div class="s-kick">05 · ข้อเสนอแนะ</div>
+      <div class="s-kick">09 · ข้อเสนอแนะ</div>
       <h2 class="s-h2">ข้อเสนอแนะ</h2>
       <div class="s-empty">ยังไม่ได้กรอกข้อเสนอแนะ (กลับไปแท็บสรุปเพื่อร่างอัตโนมัติ)</div>`});
+  }
+
+  // 10) ภาคผนวก — เครื่องจักร / ค่าอ้างอิง (ตามที่เลือกในรายงาน)
+  const ro=S.reportOpts||{};
+  if(ro.incMachines){
+    const txt=rptDeptText();
+    const mm=MACHINE_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
+    if(mm.length) slides.push({cls:'rec',html:`
+      <div class="s-kick">10 · ภาคผนวก · เครื่องจักร</div>
+      <h2 class="s-h2">เครื่องจักรและปัจจัยเสี่ยง (ที่เกี่ยวข้อง)</h2>
+      <div class="s-body">${mm.slice(0,6).map(m=>`<div style="margin-bottom:9px"><b style="color:#0B2545">${esc(m.th)}</b> — ${esc(m.haz.slice(0,4).join(' · '))}</div>`).join('')}</div>`});
+  }
+  if(ro.incRef){
+    const txt=rptDeptText();
+    const mt=METAL_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
+    if(mt.length) slides.push({html:`
+      <div class="s-kick">10 · ภาคผนวก · ค่าอ้างอิง</div>
+      <h2 class="s-h2">ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)</h2>
+      <table class="s-tbl"><thead><tr><th>โลหะ</th><th>ค่ามาตรฐาน (TLV)</th></tr></thead><tbody>
+      ${mt.map(m=>`<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.rows.map(r=>r[1]).join(' · '))}</td></tr>`).join('')}
+      </tbody></table>`});
   }
 
   // ภาพประกอบการเดินสำรวจ (4 รูป/สไลด์)
@@ -1922,7 +2000,7 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;backg
 .s-tbl th{background:#0B2545;color:#fff;text-align:left;padding:10px 14px}
 .s-tbl td{padding:9px 14px;border-bottom:1px solid #e3e8f0}
 .rb{font-weight:700;padding:3px 12px;border-radius:20px;font-size:.82em;white-space:nowrap}
-.rb.h{background:#fbe6e2;color:#c0392b}.rb.m{background:#fdf1dd;color:#c9820a}
+.rb.h{background:#fbe6e2;color:#c0392b}.rb.m{background:#fdf1dd;color:#c9820a}.rb.l{background:#e7f3ec;color:#2e7d54}.rb.a{background:#eef1f6;color:#516079}
 .s-more{color:#6b7a90;margin-top:14px;font-size:clamp(11px,1.4vw,15px)}
 .s-chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{background:#0B2545;color:#fff;padding:8px 16px;border-radius:24px;font-size:clamp(12px,1.6vw,17px);font-weight:600}
