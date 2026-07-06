@@ -198,6 +198,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .hrlist{display:flex;flex-direction:column;gap:7px}
 .hritem{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:7px 10px;background:#fafbfd;border:1px solid var(--line);border-radius:9px;flex-wrap:wrap}
 .hritem b{color:var(--navy2)}
+.machpick{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.machpick>summary{cursor:pointer;padding:11px 13px;font-weight:700;color:var(--navy);list-style:none;background:#fafbfd}
+.machpick>summary::-webkit-details-marker{display:none}
+.machpick>summary::before{content:"▸ ";color:var(--gold-dk)}
+.machpick[open]>summary::before{content:"▾ "}
+.mp-body{padding:8px 13px 13px}
+.mp-lbl{font-size:11px;letter-spacing:.04em;color:var(--muted);font-weight:700;margin:9px 0 5px}
+.mp-haz{display:flex;flex-direction:column;gap:5px}
+.mp-haz label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer}
+.mp-haz input{width:16px;height:16px;accent-color:var(--gold-dk);flex:none}
+.mp-note{font-size:12.5px;color:#4A566A;line-height:1.5}
 .ercell{text-align:center;font-weight:700;color:var(--navy2)}
 .risklegend{margin:0 0 14px;border:1px solid var(--line);border-radius:12px;background:#fafbfd;font-size:12.5px}
 .risklegend>summary{cursor:pointer;padding:11px 14px;font-weight:700;color:var(--navy);list-style:none}
@@ -600,6 +611,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <button class="close" onclick="closeSlides()">✕</button>
     </div>
     <div class="mbd" style="padding:0;background:#0a1a30"><iframe id="slideFrame" title="ไฟล์นำเสนอ" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
+  </div>
+</div>
+
+<!-- นำเข้าจากเครื่องจักร -->
+<div class="modal" id="machPickModal">
+  <div class="sheet" style="max-width:760px">
+    <div class="mhd">
+      <h3 id="machPickTitle">นำเข้าจากเครื่องจักรในโรงงาน</h3>
+      <button class="close" onclick="closeMachPick()">✕</button>
+    </div>
+    <div class="mbd" style="padding:14px 16px;background:#fff"><div id="machPickBody"></div></div>
   </div>
 </div>
 
@@ -1165,6 +1187,7 @@ function renderDepts(){
         </div>
         <div class="btnrow addrow">
           <button class="btn ghost sm" onclick="addHaz('${d.id}')">＋ เพิ่มสิ่งคุกคาม</button>
+          <button class="btn ghost sm" onclick="openMachPick('${d.id}')">⚙ นำเข้าจากเครื่องจักร</button>
           <div class="sp" style="flex:1"></div>
           <button class="btn danger sm" onclick="delDept('${d.id}')">ลบแผนกนี้</button>
         </div>
@@ -1206,6 +1229,41 @@ function addDept(){S.depts.push({id:uid(),name:'แผนกใหม่',en:'',
 function delDept(id){if(!confirm('ต้องการลบแผนกนี้และข้อมูลทั้งหมดหรือไม่?'))return;S.depts=S.depts.filter(d=>d.id!==id);delete S.health[id];renderDepts();touch();bxFull()}
 function addHaz(did){findDept(did).hazards.push(haz('กายภาพ','','',''));renderDepts();touch();bxFull()}
 function delHaz(did,hid){const d=findDept(did);d.hazards=d.hazards.filter(h=>h.id!==hid);renderDepts();touch();bxFull()}
+/* ---------- นำเข้าสิ่งคุกคามจากฐานเครื่องจักร (MACHINE_REF) ---------- */
+let machPickDept=null;
+function machGuessCat(t){ t=(t||'').toLowerCase();
+  if(/ใบ|บาด|เศษ|กระเด็น|จุดหนีบ|บดทับ|ดีดกลับ|kickback|ไฟไหม้|ระเบิด|ไฟฟ้า|สะเก็ด|backfire|แรงดัน|injection|ที่อับอากาศ|wheel burst|ล้อเจียรแตก|ของหมุน|พันติด|interlock/.test(t)) return 'ความปลอดภัย';
+  if(/ยก|จับชิ้นงาน|ท่าทาง|ยืนนาน|load|unload|manual|ergonom/.test(t)) return 'การยศาสตร์';
+  if(/ฟูม|ควัน|ก๊าซ|ละออง|ตัวทำละลาย|ซิลิกา|ฝุ่น|fume|nox|voc|ozone|solvent|oil|ไอ|acetylene|lpg|silica|จุลชีพ|\bco\b/.test(t)) return 'เคมี';
+  if(/ชีวภาพ|เชื้อ|bio/.test(t)) return 'ชีวภาพ';
+  return 'กายภาพ';
+}
+function openMachPick(did){ machPickDept=did; const d=findDept(did); document.getElementById('machPickTitle').textContent='นำเข้าจากเครื่องจักร — '+((d&&d.name)||'แผนก'); renderMachPick(); document.getElementById('machPickModal').classList.add('show'); document.body.style.overflow='hidden'; }
+function closeMachPick(){ document.getElementById('machPickModal').classList.remove('show'); document.body.style.overflow=''; machPickDept=null; }
+function renderMachPick(){
+  const body=document.getElementById('machPickBody'); if(!body) return;
+  body.innerHTML='<div class="hint" style="margin-bottom:10px">กดชื่อเครื่องเพื่อดูรายละเอียด · ติ๊กสิ่งคุกคามที่ต้องการ แล้วกด “นำเข้า” — ระบบจะเพิ่มชื่อเครื่องและสิ่งคุกคามที่ติ๊กเข้าแผนก (จัดหมวดให้อัตโนมัติ แก้ไขต่อได้)</div>'+
+    MACHINE_REF.map((m,i)=>`<details class="machpick"><summary>${esc(m.th)} <span class="muted" style="font-weight:400">· ${esc(m.en)}</span></summary>
+      <div class="mp-body">
+        <div class="mp-lbl">สิ่งคุกคาม (ติ๊กเพื่อนำเข้า)</div>
+        <div class="mp-haz">${m.haz.map((hz,j)=>`<label><input type="checkbox" checked data-mp="${i}:${j}"> ${esc(hz)}</label>`).join('')}</div>
+        <div class="mp-lbl">มาตรการควบคุม (อ้างอิง)</div><div class="mp-note">${m.ctrl.map(esc).join(' · ')}</div>
+        <div class="mp-lbl">PPE (อ้างอิง)</div><div class="mp-note">${m.ppe.map(esc).join(' · ')}</div>
+        <button class="btn gold sm" style="margin-top:10px" onclick="importMachine(${i})">＋ นำเข้าเครื่องนี้ + สิ่งคุกคามที่ติ๊ก</button>
+      </div></details>`).join('');
+}
+function importMachine(i){
+  const d=findDept(machPickDept); if(!d){ closeMachPick(); return; }
+  const m=MACHINE_REF[i]; if(!m) return;
+  const checked=[...document.querySelectorAll('#machPickBody input[data-mp^="'+i+':"]:checked')].map(cb=>+cb.dataset.mp.split(':')[1]);
+  const cur=(d.machines||'').trim();
+  if(!cur.includes(m.th)) d.machines = cur ? (cur+', '+m.th) : m.th;
+  let added=0;
+  checked.forEach(j=>{ const txt=m.haz[j]; if(!txt) return; if(d.hazards.some(h=>(h.name||'').trim()===txt.trim())) return; d.hazards.push(haz(machGuessCat(txt),txt,'','')); added++; });
+  renderDepts(); touch(); bxFull();
+  const dd=document.querySelector('.dept[data-d="'+d.id+'"]'); if(dd&&!dd.classList.contains('open')) toggleDept(d.id);
+  toast('นำเข้า '+m.th+' — เพิ่ม '+added+' สิ่งคุกคาม');
+}
 /* ---- รูปภาพประกอบ (ย่อ+เก็บใน state; เก็บถาวรผ่าน localStorage + survey_save · ไม่ broadcast รูปเพื่อไม่ให้เกินลิมิต realtime) ---- */
 function photoThumb(did,p){
   return `<div class="photo" data-p="${p.id}">
