@@ -224,10 +224,14 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .exrow.dragging{opacity:.6;border-color:var(--gold);box-shadow:0 6px 18px rgba(11,37,69,.15)}
 .exgrip{cursor:grab;touch-action:none;color:var(--gold-dk);font-weight:800;letter-spacing:-2px;user-select:none;padding:2px 4px}
 .exname{flex:1;min-width:0;color:var(--navy2);font-weight:600}
-.exsamp{flex:0 1 220px;min-width:120px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:12px;background:#fff}
+.exname-edit{flex:1 1 140px;min-width:100px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:13px;font-weight:600;color:var(--navy2);background:#fff}
+.exname-edit:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
+.exsamp{flex:0 1 210px;min-width:120px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:12px;background:#fff}
 .exsamp:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
 .exmove{display:flex;gap:4px}
-@media(max-width:640px){.exrow{flex-wrap:wrap}.exsamp{flex:1 1 100%;order:3}.exmove{order:2}}
+.exrowdel{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--over);font-size:13px;cursor:pointer;line-height:1}
+.exrowdel:hover{background:var(--over-bg);border-color:var(--over)}
+@media(max-width:640px){.exrow{flex-wrap:wrap}.exname-edit{flex:1 1 60%}.exsamp{flex:1 1 100%;order:4}.exmove{order:2}.exrowdel{order:3}}
 .exmove button{width:30px;height:30px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--navy);font-size:12px;cursor:pointer;line-height:1}
 .exmove button:hover{background:var(--line2)}
 /* ---------- รสส.1/2/3 tables ---------- */
@@ -824,14 +828,32 @@ function notesCard(sec){
   </div></div>`;
 }
 function mountNotes(panelId,sec){ const p=document.getElementById(panelId); if(!p) return; const old=p.querySelector('.notecard'); if(old) old.remove(); p.insertAdjacentHTML('beforeend',notesCard(sec)); }
+// รายการตรวจ: EXAMS เป็นค่าตั้งต้น · เมื่อผู้ใช้เริ่มจัดการ (เพิ่ม/ลบ/แก้/เรียง) จะ "materialize"
+// ลง S.examOrder ให้เป็นรายการจริงที่ผู้ใช้ควบคุมเต็มที่ (ลบ/แก้ได้ทุกตัว รวมค่าตั้งต้น)
 function allExams(){
-  const base=EXAMS.concat((S&&S.customExams)||[]);
   const ord=(S&&S.examOrder)||[];
-  if(!ord.length) return base;
-  const set=new Set(base);
-  const out=ord.filter(e=>set.has(e));          // ลำดับที่ผู้ใช้จัดไว้ (เฉพาะที่ยังมีอยู่)
-  base.forEach(e=>{ if(out.indexOf(e)<0) out.push(e); }); // รายการใหม่ที่ยังไม่อยู่ในลำดับ → ต่อท้าย
-  return out;
+  if(ord.length) return ord.slice();
+  return EXAMS.concat((S&&S.customExams)||[]);
+}
+function examMaterialize(){ if(!S.examOrder||!S.examOrder.length){ S.examOrder=EXAMS.concat((S.customExams)||[]); } return S.examOrder; }
+function deleteExam(name){
+  examMaterialize();
+  S.examOrder=S.examOrder.filter(e=>e!==name);
+  S.customExams=(S.customExams||[]).filter(e=>e!==name);
+  if(S.examSampling) delete S.examSampling[name];
+  S.depts.forEach(d=>{ if(S.health[d.id]) delete S.health[d.id][name]; });
+  renderHealth(); touch(); bxFull();
+}
+function renameExam(oldName,newName){
+  newName=(newName||'').trim();
+  if(!newName||newName===oldName){ renderHealth(); return; }
+  if(allExams().some(e=>e.toLowerCase()===newName.toLowerCase())){ toast('มีรายการชื่อนี้อยู่แล้ว'); renderHealth(); return; }
+  examMaterialize();
+  S.examOrder=S.examOrder.map(e=>e===oldName?newName:e);
+  S.customExams=(S.customExams||[]).map(e=>e===oldName?newName:e);
+  if(S.examSampling&&S.examSampling[oldName]!==undefined){ S.examSampling[newName]=S.examSampling[oldName]; delete S.examSampling[oldName]; }
+  S.depts.forEach(d=>{ const hd=S.health[d.id]; if(hd&&hd[oldName]){ hd[newName]=true; delete hd[oldName]; } });
+  renderHealth(); touch(); bxFull(); toast('เปลี่ยนชื่อเป็น "'+newName+'" แล้ว');
 }
 let exOrderOpen=false;
 // เวลาเก็บตัวอย่างมาตรฐานตาม ACGIH BEIs® (biomonitoring sampling time)
@@ -848,7 +870,7 @@ function exBindDrag(){
         for(const r of rows){ if(r===row) continue; const b=r.getBoundingClientRect(); if(y<b.top+b.height/2){ target=r; break; } }
         if(target) list.insertBefore(row,target); else list.appendChild(row); };
       const up=()=>{ row.classList.remove('dragging'); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up);
-        const order=[...list.querySelectorAll('.exname')].map(n=>n.textContent); S.examOrder=order; touch(); bxFull(); renderHealth(); };
+        const order=[...list.querySelectorAll('.exrow')].map(r=>r.dataset.ex); S.examOrder=order; touch(); bxFull(); renderHealth(); };
       document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
     });
   });
@@ -1235,11 +1257,11 @@ function renderHealth(){
   </div>`;
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p3','health'); return; }
 
-  const exams=allExams(); const nBase=EXAMS.length; const smp=S.examSampling||{};
+  const exams=allExams(); const smp=S.examSampling||{};
   html+=`<div class="card"><div class="bd" style="padding:12px">
     <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
     <div class="hcwrap"><table class="hcgrid">
-    <thead><tr><th class="dept-name">แผนก</th>${exams.map((e,i)=>`<th class="exhead"${smp[e]?` title="เวลาเก็บตัวอย่าง: ${esc(smp[e])}"`:''}>${i>=nBase?`<button class="exdel" title="ลบรายการตรวจนี้" onclick="delExam('${esc(e).replace(/'/g,"\\'")}')">✕</button>`:''}<span>${esc(e)}${smp[e]?' ⏱':''}</span></th>`).join('')}</tr></thead><tbody>`;
+    <thead><tr><th class="dept-name">แผนก</th>${exams.map((e,i)=>`<th class="exhead"${smp[e]?` title="เวลาเก็บตัวอย่าง: ${esc(smp[e])}"`:''}><span>${esc(e)}${smp[e]?' ⏱':''}</span></th>`).join('')}</tr></thead><tbody>`;
   S.depts.forEach(d=>{
     html+=`<tr><td class="dept-name">${esc(d.name)}</td>`;
     exams.forEach(ex=>{
@@ -1249,20 +1271,22 @@ function renderHealth(){
     html+=`</tr>`;
   });
   html+=`</tbody></table></div>
-  <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ghost sm" onclick="exToggleOrder()">↕ จัดลำดับรายการตรวจ</button></div>`;
+  <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ${exOrderOpen?'pri':'ghost'} sm" onclick="exToggleOrder()">⚙ จัดการคอลัมน์</button></div>`;
   if(exOrderOpen){
     const smap=S.examSampling||{};
-    html+=`<div class="exorder"><div class="exorder-h">จัดลำดับ &amp; เวลาเก็บตัวอย่าง — ลากที่ ⋮⋮ หรือ ▲▼ เพื่อจัดลำดับ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI (เช่น End of shift)</div>`+
+    html+=`<div class="exorder"><div class="exorder-h">จัดการคอลัมน์รายการตรวจ — แก้ชื่อในช่อง · ลากที่ ⋮⋮ หรือ ▲▼ เพื่อเรียงลำดับ · ✕ เพื่อลบ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI (เช่น End of shift) · ทำได้ทุกรายการ</div>`+
       `<datalist id="samplingList">${SAMPLING_OPTS.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`+
       `<ul class="exlist" id="exList">`+
       exams.map((e,i)=>{ const nm=esc(e).replace(/'/g,"\\'");
-        return `<li class="exrow" data-i="${i}"><span class="exgrip" title="ลากเพื่อย้าย">⋮⋮</span><span class="exname">${esc(e)}</span>`+
+        return `<li class="exrow" data-i="${i}" data-ex="${esc(e)}"><span class="exgrip" title="ลากเพื่อย้าย">⋮⋮</span>`+
+        `<input class="exname-edit" value="${esc(e)}" title="แก้ไขชื่อรายการตรวจ" onchange="renameExam('${nm}',this.value)">`+
         `<input class="exsamp" list="samplingList" placeholder="เวลาเก็บตัวอย่าง (BEI)…" value="${esc(smap[e]||'')}" onchange="setExamSampling('${nm}',this.value)">`+
-        `<span class="exmove"><button type="button" onclick="exMove(${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMove(${i},1)" title="ลง">▼</button></span></li>`;
+        `<span class="exmove"><button type="button" onclick="exMove(${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMove(${i},1)" title="ลง">▼</button></span>`+
+        `<button type="button" class="exrowdel" onclick="deleteExam('${nm}')" title="ลบรายการนี้">✕</button></li>`;
       }).join('')+
       `</ul></div>`;
   }
-  html+=`<div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · รายการที่เพิ่มเองมีปุ่ม ✕ ให้ลบได้</div>
+  html+=`<div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูทั้งหมด · กด "จัดการคอลัมน์" เพื่อเพิ่ม/ลบ/แก้ไข/เรียงลำดับได้ทุกรายการ</div>
   </div></div>`;
   el.innerHTML=html;
   if(exOrderOpen) exBindDrag();
@@ -1272,14 +1296,8 @@ function setHC(did,ex,on){ S.health[did]=S.health[did]||{}; if(on)S.health[did][
 function addExam(){
   const inp=document.getElementById('newExam'); if(!inp) return;
   const name=inp.value.trim(); if(!name){ inp.focus(); return; }
-  S.customExams=S.customExams||[];
   if(allExams().some(e=>e.toLowerCase()===name.toLowerCase())){ toast('มีรายการนี้อยู่แล้ว'); inp.value=''; return; }
-  S.customExams.push(name); inp.value=''; renderHealth(); touch(); bxFull(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
-}
-function delExam(name){
-  S.customExams=(S.customExams||[]).filter(e=>e!==name);
-  S.depts.forEach(d=>{ if(S.health[d.id]) delete S.health[d.id][name]; });
-  renderHealth(); touch(); bxFull();
+  examMaterialize(); S.examOrder.push(name); inp.value=''; renderHealth(); touch(); bxFull(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
 }
 function autoHealth(){
   S.depts.forEach(d=>{
