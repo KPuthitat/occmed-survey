@@ -180,6 +180,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .htbl td{border-bottom:1px solid var(--line2);padding:5px 6px;vertical-align:middle}
 .htbl tr:last-child td{border-bottom:none}
 .htbl input,.htbl select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;width:100%;min-width:70px;background:#fff}
+/* เผื่อพื้นที่ให้ลูกศร dropdown ไม่ทับข้อความ + ตัดข้อความยาวด้วย ... */
+.htbl select{padding-right:26px;text-overflow:ellipsis;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%230B2545' stroke-width='1.6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
 .htbl .catcell{font-weight:700;color:var(--navy2);font-size:12px;min-width:104px;padding-right:4px}
 /* กันคำไทยตกบรรทัดกลางคำ (เช่น การยศาสตร์) ในป้าย/คอลัมน์สั้น */
 .catcell,td.catcell{white-space:nowrap}
@@ -382,7 +384,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
   .rp{padding:0}
   .rp h2{page-break-after:avoid}
   .rp table{page-break-inside:auto}
-  .rp .cover{page-break-after:always}
+  .rp .cover{min-height:245mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;break-after:page}
 }
 @media(max-width:520px){
   .rp{padding:24px 18px}
@@ -1145,9 +1147,10 @@ function renderDepts(){
         <span class="chev" aria-hidden="true"></span>
       </div>
       <div class="dbd">
-        <div class="grid g2">
+        <div class="grid g3">
           <div class="field"><label>ชื่อแผนก (ไทย)</label><input data-sync="d:${d.id}:name" value="${esc(d.name)}" oninput="setD('${d.id}','name',this.value)"></div>
           <div class="field"><label>ชื่อกระบวนการ (EN)</label><input data-sync="d:${d.id}:en" value="${esc(d.en)}" oninput="setD('${d.id}','en',this.value)"></div>
+          <div class="field"><label>จำนวนพนักงาน (คน)</label><input type="number" min="0" inputmode="numeric" data-sync="d:${d.id}:staff" value="${esc(d.staff||'')}" oninput="setD('${d.id}','staff',this.value)"></div>
         </div>
         <div class="field" style="margin-top:11px"><label>รายละเอียดกระบวนการ</label><textarea data-sync="d:${d.id}:proc" oninput="setD('${d.id}','proc',this.value)">${esc(d.proc)}</textarea></div>
         <div class="field" style="margin-top:11px"><label>เครื่องจักร / อุปกรณ์</label><input data-sync="d:${d.id}:machines" value="${esc(d.machines)}" oninput="setD('${d.id}','machines',this.value)"></div>
@@ -1198,7 +1201,7 @@ function setD(id,k,v){findDept(id)[k]=v;touch(); bx({k:'d',did:id,key:k,v}); if(
 function setH(did,hid,k,v){findHaz(findDept(did),hid)[k]=v;touch(); bx({k:'h',did,hid,field:k,v})}
 function toggleDept(id){const d=findDept(id);d.open=!d.open;document.querySelector(`.dept[data-d="${id}"]`).classList.toggle('open',d.open);touch()}
 function expandAll(o){S.depts.forEach(d=>d.open=o);renderDepts();touch()}
-function addDept(){S.depts.push({id:uid(),name:'แผนกใหม่',en:'',proc:'',machines:'',hazards:[],open:true});syncHealth(S);renderDepts();touch();bxFull()}
+function addDept(){S.depts.push({id:uid(),name:'แผนกใหม่',en:'',proc:'',machines:'',staff:'',hazards:[],open:true});syncHealth(S);renderDepts();touch();bxFull()}
 function delDept(id){if(!confirm('ต้องการลบแผนกนี้และข้อมูลทั้งหมดหรือไม่?'))return;S.depts=S.depts.filter(d=>d.id!==id);delete S.health[id];renderDepts();touch();bxFull()}
 function addHaz(did){findDept(did).hazards.push(haz('กายภาพ','','',''));renderDepts();touch();bxFull()}
 function delHaz(did,hid){const d=findDept(did);d.hazards=d.hazards.filter(h=>h.id!==hid);renderDepts();touch();bxFull()}
@@ -1253,9 +1256,8 @@ function renderRisk(){
   <div class="pagehead">
     <div class="kick">ส่วนที่ 3 · Risk Assessment</div>
     <h2>ผลการประเมินความเสี่ยงตามแผนก</h2>
-    <p>วิธี HRA ทางการ: ระบุ <b>HR</b> (ความรุนแรง 1–5), <b>CR</b> (ความเข้มข้น 1–5), <b>EF</b> (ความถี่สัมผัส 1–5) → ระบบคำนวณ ER และระดับความเสี่ยงให้ ปรับผลเองได้ในช่อง “ระดับความเสี่ยง”</p>
-  </div>
-  <div class="note"><b>ER</b> = ระดับจาก CR×EF (≤5→1 · 6–8→2 · 9–15→3 · 16–20→4 · 21–25→5) · <b>ระดับความเสี่ยง</b> = ระดับจาก HR×ER (1–3 ยอมรับได้ · 4–9 ต่ำ · 10–16 ปานกลาง · 17–20 สูง · 21–25 สูงมาก) · <b>ถ้ายังไม่ได้วัด/เลือก CR → ผลขึ้น “ไม่ทราบความเสี่ยง”</b></div>`;
+    <p>วิธี HRA ทางการ: ระบุ <b>HR</b> (ความรุนแรง 1–5), <b>CR</b> (ความเข้มข้น 1–5), <b>EF</b> (ความถี่สัมผัส 1–5) → ระบบคำนวณ <b>ER</b> และระดับความเสี่ยงให้ · ถ้ายังไม่เลือก CR ผลจะขึ้น “ไม่ทราบความเสี่ยง” · เกณฑ์คะแนนดูได้ในตารางอ้างอิงด้านล่าง</p>
+  </div>`;
   html+=riskLegendHtml();
 
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p2','risk'); return; }
@@ -1675,7 +1677,7 @@ function buildReport(){
   h+=`<h2>◆ สิ่งคุกคามสุขภาพจากกระบวนการผลิต</h2><p class="muted">การตรวจหาสิ่งคุกคามตามแผนก</p>`;
   S.depts.forEach((d,i)=>{
     if(!d.hazards.length) return;
-    h+=`<h3>${i+1}. ${esc(d.name)} <span class="muted" style="font-weight:400">(${esc(d.en)})</span></h3>`;
+    h+=`<h3>${i+1}. ${esc(d.name)} <span class="muted" style="font-weight:400">(${esc(d.en)})${d.staff?' · '+esc(d.staff)+' คน':''}</span></h3>`;
     if(d.proc) h+=`<p class="muted" style="margin:2px 0">${esc(d.proc)}</p>`;
     h+=`<table><thead><tr><th>ประเภท</th><th>สิ่งคุกคาม</th><th>ค่าที่วัดได้</th><th>ค่ามาตรฐาน</th><th>ผลการประเมิน</th></tr></thead><tbody>`;
     // group by category preserving order
@@ -1704,7 +1706,7 @@ function buildReport(){
   h+=`<h2>◆ ผลการประเมินความเสี่ยงตามแผนก</h2>`;
   S.depts.forEach((d,i)=>{
     if(!d.hazards.length) return;
-    h+=`<h3>${i+1}. ${esc(d.name)} (${esc(d.en)})</h3>
+    h+=`<h3>${i+1}. ${esc(d.name)} (${esc(d.en)})${d.staff?' · '+esc(d.staff)+' คน':''}</h3>
     <table><thead><tr><th>ประเภท</th><th>Hazard</th><th>HR</th><th>CR</th><th>EF</th><th>ER</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>`;
     let lastCat='';
     d.hazards.forEach(hz=>{
@@ -1905,6 +1907,10 @@ function reportCSS(){
     /* TH Sarabun New · หัวข้อ 18pt · เนื้อหา 16pt (ตามมาตรฐานเอกสารราชการไทย) */
     .rp{padding:0;font-size:16pt;line-height:1.5;max-width:100%}
     .rp h1{font-size:20pt}.rp h2{font-size:18pt;margin:16px 0 8px}.rp h3{font-size:16pt}
+    /* หน้าปกเต็มหน้า A4 แล้วขึ้นเนื้อหาหน้าใหม่ */
+    .rp .cover{min-height:245mm;display:flex;flex-direction:column;justify-content:center;page-break-after:always;break-after:page}
+    /* แต่ละหัวข้อใหญ่ขึ้นหน้าใหม่ได้พอดี ไม่ตกค้างครึ่งหน้า */
+    .rp h2{break-inside:avoid}
     /* บังคับทุกตารางให้อยู่ในความกว้าง A4 — จัดคอลัมน์เท่ากันแล้วตัดคำขึ้นบรรทัด ไม่ล้นขอบ · ตารางหนาแน่นลดขนาดพอดีหน้า */
     .rp table{table-layout:fixed;width:100%;font-size:12.5pt}
     .rp th,.rp td{overflow-wrap:anywhere;word-break:break-word;white-space:normal!important;padding:4px 5px}
