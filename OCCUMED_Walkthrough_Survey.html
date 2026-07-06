@@ -303,17 +303,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 /* ---------- Report doc ---------- */
 #reportDoc{background:#fff;margin:18px auto;max-width:760px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
-.rp{padding:38px 44px;font-size:13.5px;color:#222}
-.rp h1{text-align:center;font-size:19px;color:#111;margin-bottom:4px}
-.rp h2{font-size:16px;color:#111;border-bottom:2px solid var(--gold);padding-bottom:5px;margin:26px 0 12px;display:flex;align-items:center;gap:8px}
-.rp h3{font-size:14px;color:var(--navy);margin:16px 0 7px}
+.rp{padding:38px 44px;font-size:16pt;line-height:1.5;color:#222;font-family:'TH Sarabun New','TH SarabunPSK','Sarabun','Noto Sans Thai',sans-serif}
+.rp h1{text-align:center;font-size:20pt;color:#111;margin-bottom:4px}
+.rp h2{font-size:18pt;color:#111;border-bottom:2px solid var(--gold);padding-bottom:5px;margin:22px 0 10px;display:flex;align-items:center;gap:8px}
+.rp h3{font-size:16pt;color:var(--navy);margin:14px 0 6px}
 .rp p{margin:7px 0}
 .rp .cover{text-align:center;padding:40px 0}
 .rp .cover .logo{width:64px;height:64px;border-radius:14px;margin:0 auto 18px;background:linear-gradient(135deg,var(--navy),var(--navy2));display:grid;place-items:center;color:var(--gold);font-weight:800;font-size:26px}
-.rp table{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0}
+.rp table{width:100%;border-collapse:collapse;font-size:13pt;margin:8px 0}
 .rp table th,.rp table td{border:1px solid #ccc;padding:5px 7px;text-align:left;vertical-align:top}
 .rp table th{background:#f0f3f8;font-weight:700;color:var(--navy)}
-.rp .kv{display:grid;grid-template-columns:190px 1fr;gap:2px 10px;font-size:13px}
+.rp .kv{display:grid;grid-template-columns:200px 1fr;gap:3px 10px;font-size:14pt}
 .rp .kv dt{color:#555;font-weight:600}
 .rp .kv dd{margin:0}
 .rp .r-ok{color:var(--ok)}.rp .r-over{color:var(--over);font-weight:700}
@@ -1422,8 +1422,8 @@ function buildReport(){
   // --- Cover ---
   let h=`<div class="rp">
   <div class="cover">
-    <h1 style="font-size:20px">รายงานผลการเดินสำรวจสถานประกอบการ</h1>
-    <h1 style="font-size:22px;margin-top:6px">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</h1>
+    <h1 style="font-size:20pt">รายงานผลการเดินสำรวจสถานประกอบการ</h1>
+    <h1 style="font-size:26pt;margin-top:6px">${esc(g.company)||'(ชื่อสถานประกอบการ)'}</h1>
     <p class="muted" style="margin-top:26px">จัดทำโดย คณะผู้เดินสำรวจอาชีวเวชศาสตร์</p>
     <p class="muted">ฝึกสำรวจวันที่ ${beDate(g.surveyDate)||'—'}</p>
     <p class="muted" style="margin-top:22px;font-size:11px">เอกสารนี้จัดทำโดยระบบ OCCMED — Walk-through Survey</p>
@@ -1660,18 +1660,18 @@ function buildCombinedTable(){
 }
 
 function reportCSS(){
-  return `body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;color:#222;margin:0;background:#e9edf3}
-  #reportDoc{background:#fff;max-width:760px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,.1)}
-  .rp{padding:38px 44px;font-size:13.5px}
-  .rp h1{text-align:center;font-size:19px;color:#111}
-  .rp h2{font-size:16px;color:#0B2545;border-bottom:2px solid #C8A046;padding-bottom:5px;margin:26px 0 12px}
-  .rp h3{font-size:14px;color:#0B2545;margin:16px 0 7px}.rp p{margin:7px 0}
+  return `body{font-family:'TH Sarabun New','TH SarabunPSK','Sarabun','Noto Sans Thai',sans-serif;color:#222;margin:0;background:#e9edf3}
+  #reportDoc{background:#fff;max-width:800px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+  .rp{padding:38px 44px;font-size:16pt;line-height:1.5}
+  .rp h1{text-align:center;font-size:20pt;color:#111}
+  .rp h2{font-size:18pt;color:#0B2545;border-bottom:2px solid #C8A046;padding-bottom:5px;margin:22px 0 10px}
+  .rp h3{font-size:16pt;color:#0B2545;margin:14px 0 6px}.rp p{margin:7px 0}
   .rp .cover{text-align:center;padding:40px 0}
   .rp .cover .logo{width:64px;height:64px;border-radius:14px;margin:0 auto 18px;background:linear-gradient(135deg,#0B2545,#13315C);display:grid;place-items:center;color:#C8A046;font-weight:800;font-size:26px}
-  .rp table{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0}
+  .rp table{width:100%;border-collapse:collapse;font-size:13pt;margin:8px 0}
   .rp th,.rp td{border:1px solid #ccc;padding:5px 7px;text-align:left;vertical-align:top}
   .rp th{background:#f0f3f8;font-weight:700;color:#0B2545}
-  .rp .kv{display:grid;grid-template-columns:190px 1fr;gap:2px 10px;font-size:13px}
+  .rp .kv{display:grid;grid-template-columns:200px 1fr;gap:3px 10px;font-size:14pt}
   .rp .kv dt{color:#555;font-weight:600}.rp .kv dd{margin:0}
   .rp .r-ok{color:#137a4b}.rp .r-over{color:#c0392b;font-weight:700}.rp .muted{color:#777;font-size:12px}
   .rp .rb{font-weight:700;padding:2px 7px;border-radius:5px;font-size:10.5px}
@@ -1697,18 +1697,20 @@ function reportCSS(){
   .rp .rp-photo img{width:100%;border-radius:6px;border:1px solid #ccc;display:block}
   .rp .rp-photo figcaption{font-size:10px;color:#555;margin-top:3px;line-height:1.4}
   @media print{
-    @page{size:A4;margin:12mm 10mm}
+    @page{size:A4;margin:14mm 12mm}
     body{background:#fff}
-    #reportDoc{box-shadow:none}
-    .rp{padding:0;font-size:11px;max-width:100%}
-    .rp h1{font-size:17px}.rp h2{font-size:14px;margin:18px 0 9px}.rp h3{font-size:12.5px}
-    /* บังคับทุกตารางในรายงานให้อยู่ในความกว้าง A4 — จัดคอลัมน์เท่ากันแล้วตัดคำขึ้นบรรทัดใหม่ ไม่ล้นขอบ */
-    .rp table{table-layout:fixed;width:100%;font-size:9.5px}
-    .rp th,.rp td{overflow-wrap:anywhere;word-break:break-word;white-space:normal!important;padding:3px 4px}
-    .rp .kbtbl{font-size:8.5px}
-    .rp .heat{font-size:8px}
+    #reportDoc{box-shadow:none;max-width:100%}
+    /* TH Sarabun New · หัวข้อ 18pt · เนื้อหา 16pt (ตามมาตรฐานเอกสารราชการไทย) */
+    .rp{padding:0;font-size:16pt;line-height:1.5;max-width:100%}
+    .rp h1{font-size:20pt}.rp h2{font-size:18pt;margin:16px 0 8px}.rp h3{font-size:16pt}
+    /* บังคับทุกตารางให้อยู่ในความกว้าง A4 — จัดคอลัมน์เท่ากันแล้วตัดคำขึ้นบรรทัด ไม่ล้นขอบ · ตารางหนาแน่นลดขนาดพอดีหน้า */
+    .rp table{table-layout:fixed;width:100%;font-size:12.5pt}
+    .rp th,.rp td{overflow-wrap:anywhere;word-break:break-word;white-space:normal!important;padding:4px 5px}
+    .rp .kbtbl{font-size:10pt}
+    .rp .heat{font-size:9pt}
+    .rp .kv{grid-template-columns:180px 1fr;font-size:14pt}
+    .rp .muted{font-size:13pt}
     .rp [style*="overflow-x"]{overflow:visible!important}
-    .rp .kv{grid-template-columns:150px 1fr;font-size:10.5px}
     .rp img{max-width:100%;height:auto}
     .rp .rp-photo{width:31%}
     .rp h2,.rp h3{break-after:avoid}
