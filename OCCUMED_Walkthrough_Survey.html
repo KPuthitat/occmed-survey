@@ -2024,27 +2024,58 @@ function downloadReport(){
   a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์รายงานเรียบร้อยแล้ว');
 }
 /* บันทึกเป็นไฟล์ Word (.doc) — HTML-as-Word เปิด/แก้ไขใน Microsoft Word ได้ (ไม่พึ่ง library) */
-function wordReport(){
+/* ---------- .docx จริง (OOXML) — ฝัง HTML รายงานผ่าน altChunk + เขียน ZIP เอง (ไม่พึ่ง library) ---------- */
+let _crcTable;
+function crc32(u8){
+  if(!_crcTable){ _crcTable=[]; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); _crcTable[n]=c>>>0; } }
+  let crc=0xFFFFFFFF;
+  for(let i=0;i<u8.length;i++) crc=(crc>>>8)^_crcTable[(crc^u8[i])&0xFF];
+  return (crc^0xFFFFFFFF)>>>0;
+}
+function makeZip(files){
+  const enc=new TextEncoder();
+  const u16=n=>[n&0xFF,(n>>>8)&0xFF];
+  const u32=n=>[n&0xFF,(n>>>8)&0xFF,(n>>>16)&0xFF,(n>>>24)&0xFF];
+  const local=[], central=[]; let offset=0;
+  files.forEach(fEntry=>{
+    const nameBytes=enc.encode(fEntry.name), data=fEntry.data, crc=crc32(data), size=data.length;
+    const lh=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(size),u32(size),u16(nameBytes.length),u16(0));
+    local.push(new Uint8Array(lh),nameBytes,data);
+    const cd=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(size),u32(size),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset));
+    central.push(new Uint8Array(cd),nameBytes);
+    offset+=30+nameBytes.length+size;
+  });
+  let cdSize=0; central.forEach(c=>cdSize+=c.length);
+  const eocd=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cdSize),u32(offset),u16(0)));
+  const parts=[...local,...central,eocd]; let total=0; parts.forEach(p=>total+=p.length);
+  const out=new Uint8Array(total); let p=0; parts.forEach(a=>{ out.set(a,p); p+=a.length; }); return out;
+}
+function docxChunkHtml(){
   const styles=reportCSS()
-    +'\nbody{background:#fff!important;margin:0}'
-    +'\n#reportDoc{max-width:100%!important;box-shadow:none!important;margin:0!important}'
-    +'\n.rp{padding:0!important}'
-    +'\n.rp .kv{display:block}.rp .kv dt{font-weight:700;margin-top:6px}.rp .kv dd{margin:0 0 2px 0}'  /* Word ไม่รองรับ grid → แสดงเป็นบล็อก */
-    +'\n@page WordSection1{size:210mm 297mm;mso-page-orientation:portrait;margin:14mm 12mm 14mm 12mm;}'
-    +'\ndiv.WordSection1{page:WordSection1;}';
-  return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
-    +'<head><meta charset="utf-8"><meta name="ProgId" content="Word.Document"><meta name="Originator" content="Microsoft Word 15">'
-    +'<title>รายงานผลการเดินสำรวจ · '+esc(S.general.company||'สถานประกอบการ')+'</title>'
-    +'<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->'
-    +'<style>'+styles+'</style></head>'
-    +'<body><div class="WordSection1"><div id="reportDoc">'+buildReport()+'</div></div></body></html>';
+    +'\nbody{background:#fff;margin:0}#reportDoc{max-width:100%;box-shadow:none;margin:0}.rp{padding:0}'
+    +'\n.rp .kv{display:block}.rp .kv dt{font-weight:700;margin-top:6px}.rp .kv dd{margin:0 0 2px}';
+  return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style>'+styles+'</style></head><body>'+buildReport()+'</body></html>';
+}
+function buildDocx(){
+  const enc=new TextEncoder();
+  const CT='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="htm" ContentType="text/html"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
+  const RELS='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+  const DOC='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body><w:altChunk r:id="htmlChunk"/><w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="794" w:right="680" w:bottom="794" w:left="680" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  const DOCRELS='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="htmlChunk" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/aFChunk" Target="afchunk.htm"/></Relationships>';
+  return makeZip([
+    {name:'[Content_Types].xml', data:enc.encode(CT)},
+    {name:'_rels/.rels', data:enc.encode(RELS)},
+    {name:'word/document.xml', data:enc.encode(DOC)},
+    {name:'word/_rels/document.xml.rels', data:enc.encode(DOCRELS)},
+    {name:'word/afchunk.htm', data:enc.encode('﻿'+docxChunkHtml())}
+  ]);
 }
 function downloadWord(){
-  const blob=new Blob(['﻿'+wordReport()],{type:'application/msword'});
+  const blob=new Blob([buildDocx()],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=`รายงานเดินสำรวจ_${(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)}_${beYear()}.doc`;
-  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์ Word (.doc) แล้ว — เปิด/แก้ไขใน Microsoft Word ได้ทันที');
+  a.download=`รายงานเดินสำรวจ_${(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)}_${beYear()}.docx`;
+  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์ Word (.docx) แล้ว — เปิด/แก้ไขใน Microsoft Word ได้ทันที');
 }
 
 /* ============================================================
