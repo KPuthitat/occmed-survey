@@ -227,8 +227,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .machthumb-nm{font-size:11px;color:var(--navy2);font-weight:600;margin-top:4px;line-height:1.2}
 .machthumb-del{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--over);font-size:12px;cursor:pointer;box-shadow:var(--shadow)}
 /* การ์ด infographic (ในรายงาน/พรีวิว) */
-.ig-wrap{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 4px}
-.ig-card{flex:1 1 300px;min-width:280px;border:1px solid #e1ddd1;border-radius:12px;padding:12px 14px;background:#fff}
+.ig-wrap{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0 4px}
+.ig-card{flex:1 1 440px;max-width:600px;border:1px solid #e1ddd1;border-radius:12px;padding:6px;background:#fff;overflow:hidden}
+.ig-card svg{width:100%;height:auto;display:block;border-radius:8px}
 .ig-head{display:flex;gap:12px;align-items:center;border-bottom:2px solid #0B2545;padding-bottom:8px;margin-bottom:6px}
 .ig-svg{flex:none;width:110px;background:#FBFAF6;border:1px solid #e1ddd1;border-radius:9px;padding:6px}
 .ig-svg svg{width:100%;height:auto;display:block}
@@ -1276,16 +1277,46 @@ function machGuessCat(t){ t=(t||'').toLowerCase();
   return 'กายภาพ';
 }
 /* การ์ด infographic เต็ม (ใช้ในรายงาน) */
-function machineInfographic(i){
-  const m=MACHINE_REF[i], svg=(typeof MACHINE_SVG!=='undefined'&&MACHINE_SVG[i])||''; if(!m) return '';
-  const tags=m.haz.map(hz=>`<span class="ig-tag ${MACH_CAT_CLS[machGuessCat(hz)]||'ig-phys'}">${esc(hz)}</span>`).join('');
-  return `<figure class="ig-card">
-    <div class="ig-head"><div class="ig-svg">${svg}</div><figcaption class="ig-title"><b>${esc(m.th)}</b><span>${esc(m.en)}</span></figcaption></div>
-    <div class="ig-lbl">อันตราย (Hazards)</div><div class="ig-tags">${tags}</div>
-    <div class="ig-grid"><div><div class="ig-lbl">มาตรการควบคุม (Control)</div><ul class="ig-list">${m.ctrl.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>
-    <div><div class="ig-lbl">PPE</div><div class="ig-ppe">${m.ppe.map(p=>`<span>${esc(p)}</span>`).join('')}</div></div></div>
-  </figure>`;
+const IG_SVGBG={'กายภาพ':'#E7EEFA','เคมี':'#F3E2E2','การยศาสตร์':'#F0E9F5','ความปลอดภัย':'#FBF0DA','ชีวภาพ':'#e7f3ec'};
+const IG_SVGFG={'กายภาพ':'#2C4E86','เคมี':'#B0353A','การยศาสตร์':'#6A4A86','ความปลอดภัย':'#8A6D1F','ชีวภาพ':'#2e7d54'};
+function svgEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function svgWrap(str,max){ const words=String(str||'').split(/\s+/).filter(Boolean); const lines=[]; let cur='';
+  for(let wd of words){ while(wd.length>max){ if(cur){lines.push(cur);cur='';} lines.push(wd.slice(0,max)); wd=wd.slice(max); }
+    if(!cur) cur=wd; else if((cur+' '+wd).length<=max) cur+=' '+wd; else { lines.push(cur); cur=wd; } }
+  if(cur) lines.push(cur); return lines; }
+/* โปสเตอร์ SVG ภาพเดียว: ไดอะแกรมเครื่อง + อันตราย (แยกสีตามหมวด) + มาตรการควบคุม + PPE */
+function machinePoster(i){
+  const m=MACHINE_REF[i], raw=(typeof MACHINE_SVG!=='undefined'&&MACHINE_SVG[i])||''; if(!m) return '';
+  const inner=raw.replace(/^<svg[^>]*>/,'').replace(/<\/svg>\s*$/,'');
+  const ct=(s,n)=>{s=String(s);return s.length>n?s.slice(0,n-1)+'…':s;};
+  const hz=m.haz.slice(0,7);
+  const ctrlLines=svgWrap(m.ctrl.join('   ·   '),80).slice(0,3);
+  const ppeLines=svgWrap(m.ppe.join('   ·   '),80).slice(0,2);
+  const ctrlY=368, ctrlBottom=386+ctrlLines.length*18, ppeLblY=ctrlBottom+14, ppeStartY=ppeLblY+18, H=Math.max(340, ppeStartY+ppeLines.length*18+2);
+  let s='<svg viewBox="0 0 760 '+H+'" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="\'LINE Seed Sans TH\',\'Noto Sans Thai\',\'Sarabun\',sans-serif">';
+  s+='<style>text{font-family:\'LINE Seed Sans TH\',\'Noto Sans Thai\',\'Sarabun\',sans-serif}</style>';
+  s+='<rect width="760" height="'+H+'" fill="#fff"/>';
+  // header
+  s+='<rect width="760" height="56" fill="#0B2545"/><rect y="56" width="760" height="3" fill="#C8A046"/>';
+  s+='<text x="24" y="27" fill="#fff" font-size="20" font-weight="700">'+svgEsc(m.th)+'</text>';
+  s+='<text x="24" y="47" fill="#C8A046" font-size="12.5">'+svgEsc(m.en)+'</text>';
+  // diagram box (left)
+  s+='<rect x="24" y="72" width="300" height="256" rx="14" fill="#FBFAF6" stroke="#e1ddd1"/>';
+  s+='<g transform="translate(44,90) scale(2.17)">'+inner+'</g>';
+  s+='<text x="174" y="318" text-anchor="middle" fill="#8a94a6" font-size="11">ไดอะแกรมเครื่องจักร</text>';
+  // hazards (right)
+  s+='<text x="344" y="88" fill="#8a6d1f" font-size="12.5" font-weight="700">อันตราย (Hazards)</text>';
+  hz.forEach((h,k)=>{ const y=100+k*33, cat=machGuessCat(h); s+='<rect x="344" y="'+y+'" width="392" height="27" rx="13.5" fill="'+IG_SVGBG[cat]+'"/><text x="359" y="'+(y+18)+'" fill="'+IG_SVGFG[cat]+'" font-size="12.5" font-weight="600">'+svgEsc(ct(h,48))+'</text>'; });
+  // control + ppe (bottom)
+  s+='<line x1="24" y1="346" x2="736" y2="346" stroke="#e1ddd1"/>';
+  s+='<text x="24" y="'+ctrlY+'" fill="#8a6d1f" font-size="12.5" font-weight="700">มาตรการควบคุม (Control)</text>';
+  ctrlLines.forEach((ln,k)=>{ s+='<text x="24" y="'+(386+k*18)+'" fill="#4A566A" font-size="12">'+svgEsc(ln)+'</text>'; });
+  s+='<text x="24" y="'+ppeLblY+'" fill="#8a6d1f" font-size="12.5" font-weight="700">PPE</text>';
+  ppeLines.forEach((ln,k)=>{ s+='<text x="24" y="'+(ppeStartY+k*18)+'" fill="#102647" font-size="12">'+svgEsc(ln)+'</text>'; });
+  s+='</svg>';
+  return s;
 }
+function machineInfographic(i){ if(!MACHINE_REF[i]) return ''; return `<figure class="ig-card">${machinePoster(i)}</figure>`; }
 function openMachPick(did){ machPickDept=did; const d=findDept(did); document.getElementById('machPickTitle').textContent='เลือกภาพเครื่องจักร (Infographic) — '+((d&&d.name)||'แผนก'); renderMachPick(); document.getElementById('machPickModal').classList.add('show'); document.body.style.overflow='hidden'; }
 function closeMachPick(){ document.getElementById('machPickModal').classList.remove('show'); document.body.style.overflow=''; machPickDept=null; }
 function renderMachPick(){
@@ -2023,8 +2054,9 @@ function reportCSS(){
   .rp .rp-photo{width:31%;margin:0}
   .rp .rp-photo img{width:100%;border-radius:6px;border:1px solid #ccc;display:block}
   .rp .rp-photo figcaption{font-size:10px;color:#555;margin-top:3px;line-height:1.4}
-  .ig-wrap{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 4px}
-  .ig-card{flex:1 1 300px;min-width:280px;border:1px solid #e1ddd1;border-radius:12px;padding:12px 14px;background:#fff;page-break-inside:avoid;break-inside:avoid}
+  .ig-wrap{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0 4px}
+  .ig-card{flex:1 1 440px;max-width:620px;border:1px solid #e1ddd1;border-radius:12px;padding:6px;background:#fff;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
+  .ig-card svg{width:100%;height:auto;display:block;border-radius:8px}
   .ig-head{display:flex;gap:12px;align-items:center;border-bottom:2px solid #0B2545;padding-bottom:8px;margin-bottom:6px}
   .ig-svg{flex:none;width:110px;background:#FBFAF6;border:1px solid #e1ddd1;border-radius:9px;padding:6px}
   .ig-svg svg{width:100%;height:auto;display:block}
