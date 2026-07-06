@@ -209,6 +209,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .risk-high{background:var(--high-bg);color:var(--high)}
 .risk-vhigh{background:#7a1420;color:#fff}
 .risk-acc{background:#eef1f6;color:#516079}
+.risk-unknown{background:#fdf3e0;color:#a06a12;border:1px dashed #d9a441;white-space:normal}
 
 .subhd{font-size:11px;letter-spacing:1.5px;color:var(--gold-dk);text-transform:uppercase;font-weight:700;margin:16px 0 8px}
 .addrow{margin-top:10px}
@@ -350,6 +351,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .rp .rb{font-weight:700;padding:2px 7px;border-radius:5px;font-size:10.5px}
 .rp .rb.h{background:var(--high-bg);color:var(--high)}
 .rp .rb.vh{background:#7a1420;color:#fff}
+.rp .rb.u{background:#fdf3e0;color:#a06a12;border:1px dashed #d9a441}
 .rp .rb.m{background:var(--med-bg);color:var(--med)}
 .rp .rb.l{background:var(--low-bg);color:var(--low)}
 .rp .rb.a{background:#eef1f6;color:#516079}
@@ -709,9 +711,10 @@ function erLevelFromScore(s){ s=Number(s)||0; if(s<=0) return 0; if(s<=5) return
 function erInfo(h){ const cr=Number(h.cr)||0, ef=Number(h.freq)||0; const cs=cr*ef; return {cr,ef,cs,lvl:erLevelFromScore(cs)}; }
 function riskFromScore(s){ s=Number(s)||0; if(s<=0) return ''; if(s<=3) return 'ยอมรับได้'; if(s<=9) return 'ต่ำ'; if(s<=16) return 'ปานกลาง'; if(s<=20) return 'สูง'; return 'สูงมาก'; }
 function riskInfo(h){ const hr=Number(h.hr)||0, er=erInfo(h); const rs=hr*er.lvl; return {hr,er,rs,label:riskFromScore(rs)}; }
-function autoRisk(h){ return riskInfo(h).label; }
-function riskClass(r){return {'สูงมาก':'risk-vhigh','สูง':'risk-high','ปานกลาง':'risk-med','ต่ำ':'risk-low','ยอมรับได้':'risk-acc'}[r]||''}
-function riskRB(r){return {'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a'}[r]||'l'}
+const RISK_UNKNOWN='ไม่ทราบความเสี่ยง';
+function autoRisk(h){ if(!(Number(h&&h.cr)||0)) return RISK_UNKNOWN; return riskInfo(h).label; }
+function riskClass(r){return {'สูงมาก':'risk-vhigh','สูง':'risk-high','ปานกลาง':'risk-med','ต่ำ':'risk-low','ยอมรับได้':'risk-acc','ไม่ทราบความเสี่ยง':'risk-unknown'}[r]||''}
+function riskRB(r){return {'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a','ไม่ทราบความเสี่ยง':'u'}[r]||'l'}
 
 /* ---- Compare measured vs standard ---- */
 function maxNum(str){
@@ -1218,7 +1221,7 @@ function renderRisk(){
     <h2>ผลการประเมินความเสี่ยงตามแผนก</h2>
     <p>วิธี HRA ทางการ: ระบุ <b>HR</b> (ความรุนแรง 1–5), <b>CR</b> (ความเข้มข้น 1–5), <b>EF</b> (ความถี่สัมผัส 1–5) → ระบบคำนวณ ER และระดับความเสี่ยงให้ ปรับผลเองได้ในช่อง “ระดับความเสี่ยง”</p>
   </div>
-  <div class="note"><b>ER</b> = ระดับจาก CR×EF (≤5→1 · 6–8→2 · 9–15→3 · 16–20→4 · 21–25→5) · <b>ระดับความเสี่ยง</b> = ระดับจาก HR×ER (1–3 ยอมรับได้ · 4–9 ต่ำ · 10–16 ปานกลาง · 17–20 สูง · 21–25 สูงมาก)</div>`;
+  <div class="note"><b>ER</b> = ระดับจาก CR×EF (≤5→1 · 6–8→2 · 9–15→3 · 16–20→4 · 21–25→5) · <b>ระดับความเสี่ยง</b> = ระดับจาก HR×ER (1–3 ยอมรับได้ · 4–9 ต่ำ · 10–16 ปานกลาง · 17–20 สูง · 21–25 สูงมาก) · <b>ถ้ายังไม่ได้วัด/เลือก CR → ผลขึ้น “ไม่ทราบความเสี่ยง”</b></div>`;
   html+=riskLegendHtml();
 
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p2','risk'); return; }
@@ -1522,7 +1525,7 @@ function renderAll(){ renderGeneral(); renderDepts(); renderRisk(); renderHealth
 function lines(str){return String(str||'').split(/\n/).filter(x=>x.trim())}
 function buildReport(){
   const g=S.general;
-  const rbCls=r=>({'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a'}[r]||'l');
+  const rbCls=r=>({'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a','ไม่ทราบความเสี่ยง':'u'}[r]||'l');
 
   // --- Cover ---
   let h=`<div class="rp">
@@ -1793,7 +1796,7 @@ function reportCSS(){
   .rp .kv dt{color:#555;font-weight:600}.rp .kv dd{margin:0}
   .rp .r-ok{color:#137a4b}.rp .r-over{color:#c0392b;font-weight:700}.rp .muted{color:#777;font-size:12px}
   .rp .rb{font-weight:700;padding:2px 7px;border-radius:5px;font-size:10.5px}
-  .rp .rb.h{background:#fbe6e2;color:#c0392b}.rp .rb.vh{background:#7a1420;color:#fff}.rp .rb.m{background:#fdf1dd;color:#c9820a}.rp .rb.l{background:#e7f3ec;color:#2e7d54}.rp .rb.a{background:#eef1f6;color:#516079}
+  .rp .rb.h{background:#fbe6e2;color:#c0392b}.rp .rb.vh{background:#7a1420;color:#fff}.rp .rb.u{background:#fdf3e0;color:#a06a12}.rp .rb.m{background:#fdf1dd;color:#c9820a}.rp .rb.l{background:#e7f3ec;color:#2e7d54}.rp .rb.a{background:#eef1f6;color:#516079}
   .rp .toc{list-style:none;padding:0}.rp .toc li{display:flex;justify-content:space-between;border-bottom:1px dotted #bbb;padding:6px 0}
   .rp .heat td.hi{background:#fbe6e2;color:#c0392b;font-weight:700}
   .rp .sig{margin-top:40px;text-align:right}.rp hr{border:none;border-top:1px solid #ddd;margin:26px 0}
@@ -2119,7 +2122,7 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;backg
 .s-tbl th{background:#0B2545;color:#fff;text-align:left;padding:10px 14px}
 .s-tbl td{padding:9px 14px;border-bottom:1px solid #e3e8f0}
 .rb{font-weight:700;padding:3px 12px;border-radius:20px;font-size:.82em;white-space:nowrap}
-.rb.h{background:#fbe6e2;color:#c0392b}.rb.vh{background:#7a1420;color:#fff}.rb.m{background:#fdf1dd;color:#c9820a}.rb.l{background:#e7f3ec;color:#2e7d54}.rb.a{background:#eef1f6;color:#516079}
+.rb.h{background:#fbe6e2;color:#c0392b}.rb.vh{background:#7a1420;color:#fff}.rb.u{background:#fdf3e0;color:#a06a12}.rb.m{background:#fdf1dd;color:#c9820a}.rb.l{background:#e7f3ec;color:#2e7d54}.rb.a{background:#eef1f6;color:#516079}
 .s-more{color:#6b7a90;margin-top:14px;font-size:clamp(11px,1.4vw,15px)}
 .s-chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{background:#0B2545;color:#fff;padding:8px 16px;border-radius:24px;font-size:clamp(12px,1.6vw,17px);font-weight:600}
