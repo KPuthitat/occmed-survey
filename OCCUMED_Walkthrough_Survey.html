@@ -217,6 +217,16 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .exadd{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .exadd input{flex:1;min-width:180px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13.5px}
 .exadd input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,160,70,.15)}
+.exorder{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfd}
+.exorder-h{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:9px}
+.exlist{list-style:none;display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.exrow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13.5px}
+.exrow.dragging{opacity:.6;border-color:var(--gold);box-shadow:0 6px 18px rgba(11,37,69,.15)}
+.exgrip{cursor:grab;touch-action:none;color:var(--gold-dk);font-weight:800;letter-spacing:-2px;user-select:none;padding:2px 4px}
+.exname{flex:1;min-width:0;color:var(--navy2);font-weight:600}
+.exmove{display:flex;gap:4px}
+.exmove button{width:30px;height:30px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--navy);font-size:12px;cursor:pointer;line-height:1}
+.exmove button:hover{background:var(--line2)}
 /* ---------- รสส.1/2/3 tables ---------- */
 .rssnote{font-size:12px;color:#5a4d2a;background:#fdf8ec;border-left:3px solid var(--gold);padding:8px 11px;border-radius:0 8px 8px 0;margin:0 0 12px;line-height:1.6}
 .rssnote b{color:var(--gold-dk)}
@@ -650,7 +660,7 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const CATS=['กายภาพ','เคมี','ชีวภาพ','การยศาสตร์','จิตสังคม','ความปลอดภัย'];
 const CONC_BANDS=['< 10% OEL-TWA','10-50% OEL-TWA','50-75% OEL-TWA','75-100% OEL-TWA','100% OEL-TWA','> 100% OEL-TWA','ไม่ได้วัด (ให้ 100%)'];
 const RISK_LABELS=['ยอมรับได้','ต่ำ','ปานกลาง','สูง'];
-const EXAMS=['ผิวหนัง','ทางเดินหายใจ','การมองเห็น','ไหลเวียนโลหิต','กระดูกและกล้ามเนื้อ','การได้ยิน','VA','EKG','CXR','CBC','Cr','Spirometry','Audiometry'];
+const EXAMS=['ผิวหนัง','ทางเดินหายใจ','การมองเห็น','ไหลเวียนโลหิต','กระดูกและกล้ามเนื้อ','การได้ยิน','VA','EKG','CXR','CBC','Cr','AST','ALT','GGT','Neuro','Spirometry','Audiometry'];
 
 /* ---- Auto risk from concentration band + frequency ---- */
 function autoRisk(band,freq){
@@ -793,7 +803,7 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, customExams:[],
+    depts:[], health:{}, customExams:[], examOrder:[],
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     notes:{ general:'', depts:'', risk:'', health:'', summary:'' },
@@ -811,7 +821,32 @@ function notesCard(sec){
   </div></div>`;
 }
 function mountNotes(panelId,sec){ const p=document.getElementById(panelId); if(!p) return; const old=p.querySelector('.notecard'); if(old) old.remove(); p.insertAdjacentHTML('beforeend',notesCard(sec)); }
-function allExams(){ return EXAMS.concat((S&&S.customExams)||[]); }
+function allExams(){
+  const base=EXAMS.concat((S&&S.customExams)||[]);
+  const ord=(S&&S.examOrder)||[];
+  if(!ord.length) return base;
+  const set=new Set(base);
+  const out=ord.filter(e=>set.has(e));          // ลำดับที่ผู้ใช้จัดไว้ (เฉพาะที่ยังมีอยู่)
+  base.forEach(e=>{ if(out.indexOf(e)<0) out.push(e); }); // รายการใหม่ที่ยังไม่อยู่ในลำดับ → ต่อท้าย
+  return out;
+}
+let exOrderOpen=false;
+function exToggleOrder(){ exOrderOpen=!exOrderOpen; renderHealth(); }
+function exMove(i,dir){ const arr=allExams(); const j=i+dir; if(j<0||j>=arr.length) return; const t=arr[i]; arr[i]=arr[j]; arr[j]=t; S.examOrder=arr; touch(); bxFull(); renderHealth(); }
+function exBindDrag(){
+  const list=document.getElementById('exList'); if(!list) return;
+  list.querySelectorAll('.exgrip').forEach(g=>{
+    g.addEventListener('pointerdown',ev=>{ ev.preventDefault(); const row=g.closest('.exrow'); if(!row) return;
+      row.classList.add('dragging');
+      const move=e=>{ const rows=[...list.querySelectorAll('.exrow')]; const y=e.clientY; let target=null;
+        for(const r of rows){ if(r===row) continue; const b=r.getBoundingClientRect(); if(y<b.top+b.height/2){ target=r; break; } }
+        if(target) list.insertBefore(row,target); else list.appendChild(row); };
+      const up=()=>{ row.classList.remove('dragging'); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up);
+        const order=[...list.querySelectorAll('.exname')].map(n=>n.textContent); S.examOrder=order; touch(); bxFull(); renderHealth(); };
+      document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
+    });
+  });
+}
 /* ---- รสส: มาตรฐานตามกฎกระทรวงกำหนดมาตรฐานฯ ความร้อน แสงสว่าง เสียง พ.ศ. 2559 ---- */
 const WBGT_STD={'เบา':34,'ปานกลาง':32,'หนัก':30};   // °C WBGT ตามระดับภาระงาน
 const NOISE_TWA_STD=85;   // dBA เฉลี่ย 8 ชม.
@@ -1208,10 +1243,16 @@ function renderHealth(){
     html+=`</tr>`;
   });
   html+=`</tbody></table></div>
-  <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button></div>
-  <div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · รายการที่เพิ่มเองมีปุ่ม ✕ ให้ลบได้</div>
+  <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ghost sm" onclick="exToggleOrder()">↕ จัดลำดับรายการตรวจ</button></div>`;
+  if(exOrderOpen){
+    html+=`<div class="exorder"><div class="exorder-h">จัดลำดับรายการตรวจ — ลากที่ ⋮⋮ เพื่อย้าย หรือใช้ปุ่ม ▲▼ (มีผลกับตารางและรายงาน)</div><ul class="exlist" id="exList">`+
+      exams.map((e,i)=>`<li class="exrow" data-i="${i}"><span class="exgrip" title="ลากเพื่อย้าย">⋮⋮</span><span class="exname">${esc(e)}</span><span class="exmove"><button type="button" onclick="exMove(${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMove(${i},1)" title="ลง">▼</button></span></li>`).join('')+
+      `</ul></div>`;
+  }
+  html+=`<div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · รายการที่เพิ่มเองมีปุ่ม ✕ ให้ลบได้</div>
   </div></div>`;
   el.innerHTML=html;
+  if(exOrderOpen) exBindDrag();
   mountNotes('p3','health');
 }
 function setHC(did,ex,on){ S.health[did]=S.health[did]||{}; if(on)S.health[did][ex]=true; else delete S.health[did][ex]; touch(); bx({k:'hc',did,ex,v:!!on}); }
