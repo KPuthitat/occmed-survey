@@ -193,6 +193,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 .riskbadge{font-weight:800;font-size:11.5px;padding:4px 10px;border-radius:7px;white-space:nowrap}
 .ersub{color:var(--muted);font-size:10.5px;font-weight:400;white-space:nowrap}
+.hrlist{display:flex;flex-direction:column;gap:7px}
+.hritem{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:7px 10px;background:#fafbfd;border:1px solid var(--line);border-radius:9px;flex-wrap:wrap}
+.hritem b{color:var(--navy2)}
 .ercell{text-align:center;font-weight:700;color:var(--navy2)}
 .risklegend{margin:0 0 14px;border:1px solid var(--line);border-radius:12px;background:#fafbfd;font-size:12.5px}
 .risklegend>summary{cursor:pointer;padding:11px 14px;font-weight:700;color:var(--navy);list-style:none}
@@ -215,7 +218,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .risk-high{background:var(--high-bg);color:var(--high)}
 .risk-vhigh{background:#7a1420;color:#fff}
 .risk-acc{background:#eef1f6;color:#516079}
-.risk-unknown{background:#fdf3e0;color:#a06a12;border:1px dashed #d9a441;white-space:normal}
+.risk-unknown{background:#efe9f5;color:#6a4a86}
 
 .subhd{font-size:11px;letter-spacing:1.5px;color:var(--gold-dk);text-transform:uppercase;font-weight:700;margin:16px 0 8px}
 .addrow{margin-top:10px}
@@ -357,7 +360,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .rp .rb{font-weight:700;padding:2px 7px;border-radius:5px;font-size:10.5px}
 .rp .rb.h{background:var(--high-bg);color:var(--high)}
 .rp .rb.vh{background:#7a1420;color:#fff}
-.rp .rb.u{background:#fdf3e0;color:#a06a12;border:1px dashed #d9a441}
+.rp .rb.u{background:#efe9f5;color:#6a4a86}
 .rp .rb.m{background:var(--med-bg);color:var(--med)}
 .rp .rb.l{background:var(--low-bg);color:var(--low)}
 .rp .rb.a{background:#eef1f6;color:#516079}
@@ -876,6 +879,7 @@ function blankState(){
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     notes:{ general:'', depts:'', risk:'', health:'', summary:'' },
+    execSummary:'',
     conclusion:{heat:'',noise:'',chem:'',extra:''}
   };
 }
@@ -1269,7 +1273,7 @@ function renderRisk(){
         <td class="catcell">${esc(h.cat)}</td>
         <td>${esc(h.name)||'—'}</td>
         <td><select onchange="setRk('${d.id}','${h.id}','hr',this.value);refreshRisk('${d.id}','${h.id}')">${rkOpt(h.hr,HR_SHORT,HR_DESC)}</select></td>
-        <td><select onchange="setRk('${d.id}','${h.id}','cr',this.value);refreshRisk('${d.id}','${h.id}')"><option value="" ${!h.cr?'selected':''}>— เลือก —</option>${rkOpt(h.cr,CR_SHORT,CR_DESC)}</select></td>
+        <td><select onchange="setRk('${d.id}','${h.id}','cr',this.value);refreshRisk('${d.id}','${h.id}')"><option value="" ${!h.cr?'selected':''}>ไม่มีข้อมูล</option>${rkOpt(h.cr,CR_SHORT,CR_DESC)}</select></td>
         <td><select onchange="setRk('${d.id}','${h.id}','freq',this.value);refreshRisk('${d.id}','${h.id}')">${rkOpt(h.freq,EF_SHORT,EF_DESC)}</select></td>
         <td class="ercell">${erCellHtml(h)}</td>
         <td class="riskcell">${riskCellHtml(h)}</td>
@@ -1400,6 +1404,35 @@ function highRiskFindings(){
   });
   return out;
 }
+/* รายการสิ่งคุกคามที่ประเมินแล้วอยู่ระดับสูง/สูงมาก (สูงมากมาก่อน) */
+function highRiskList(){
+  const out=[];
+  S.depts.forEach(d=>d.hazards.forEach(h=>{ const r=effRisk(h); if(r==='สูง'||r==='สูงมาก') out.push({dept:d.name||d.en||'(ไม่มีชื่อแผนก)',name:h.name||'(ไม่ระบุ)',risk:r,cat:h.cat}); }));
+  out.sort((a,b)=>(a.risk==='สูงมาก'?0:1)-(b.risk==='สูงมาก'?0:1));
+  return out;
+}
+/* บทสรุปผู้บริหาร — สร้างอัตโนมัติจากผลสำรวจ (3 ย่อหน้า) ดึงรายการเสี่ยงสูงเข้ามา */
+function autoExecSummary(){
+  const g=S.general||{};
+  const deptN=S.depts.length, hazN=S.depts.reduce((a,d)=>a+d.hazards.length,0);
+  const hi=highRiskList();
+  const exSet=new Set(); S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) allExams().forEach(e=>{ if(hd[e]) exSet.add(e); });}); const exams=[...exSet];
+  let p1=`รายงานฉบับนี้เป็นผลการเดินสำรวจสถานประกอบการ ${g.company||'(ชื่อสถานประกอบการ)'}${g.surveyDate?(' เมื่อวันที่ '+beDate(g.surveyDate)):''} เพื่อประเมินสิ่งคุกคามต่อสุขภาพและระดับความเสี่ยงของผู้ปฏิบัติงาน พร้อมเสนอแนวทางการเฝ้าระวังและป้องกัน ครอบคลุม ${deptN} แผนก และสิ่งคุกคามที่ประเมิน ${hazN} รายการ`;
+  let p2;
+  if(hi.length){
+    const byDept={}; hi.forEach(x=>{(byDept[x.dept]=byDept[x.dept]||[]).push(x.name);});
+    const parts=Object.keys(byDept).map(dp=>`${dp} (${[...new Set(byDept[dp])].join(', ')})`);
+    p2=`สิ่งคุกคามที่มีความเสี่ยงระดับสูงถึงสูงมาก ซึ่งควรจัดการเป็นลำดับแรก ได้แก่ ${parts.join(' · ')} จึงควรดำเนินมาตรการควบคุมและเฝ้าระวังอย่างใกล้ชิด`;
+  } else {
+    p2=`ผลการประเมินความเสี่ยงส่วนใหญ่อยู่ในเกณฑ์ที่ยอมรับได้ถึงปานกลาง ยังไม่พบรายการที่อยู่ในระดับสูง อย่างไรก็ตามควรเฝ้าระวังตามปัจจัยเสี่ยงของแต่ละแผนกอย่างต่อเนื่อง`;
+  }
+  let p3=`แนวทางหลัก: ควบคุมความเสี่ยงตามหลักลำดับขั้น (Hierarchy of Control) ร่วมกับมาตรการเชิงบริหารและอุปกรณ์ป้องกันส่วนบุคคล (PPE)`;
+  if(exams.length) p3+=` จัดโปรแกรมตรวจสุขภาพตามปัจจัยเสี่ยง (${exams.slice(0,8).join(', ')}${exams.length>8?' และรายการอื่น ๆ':''})`;
+  p3+=` และดำเนินการตรวจวัดสภาพแวดล้อมในการทำงานที่ยังไม่มีผลตามแผน เพื่อยืนยันระดับการสัมผัสและวางแผนป้องกันให้เหมาะสมต่อไป`;
+  return p1+'\n\n'+p2+'\n\n'+p3;
+}
+function setExec(v){ S.execSummary=v; touch(); bx({k:'exec',v}); }
+function autoExec(){ S.execSummary=autoExecSummary(); renderSummary(); touch(); bxFull(); toast('สร้างบทสรุปผู้บริหารอัตโนมัติแล้ว — ปรับแก้ได้ตามต้องการ'); }
 /* ============================================================
    KNOWLEDGE BASE (v1) — 20 hazards · อ้างอิง ACGIH 2025 + กฎหมายไทย
    ใช้สร้างสรุปเชิงคลินิก/ควบคุม/กฎหมาย/หลักฐาน อัตโนมัติจากสิ่งคุกคามที่พบ
@@ -1499,20 +1532,22 @@ function renderSummary(){
   const f=highRiskFindings();
   const uniq=a=>[...new Set(a)];
   const c=S.conclusion;
+  const hi=highRiskList();
   el.innerHTML=`
   <div class="pagehead">
     <div class="kick">ส่วนที่ 5 · Conclusion</div>
     <h2>สรุปผล &amp; ข้อเสนอแนะ</h2>
-    <p>ระบบสรุปแผนกที่มีความเสี่ยงสูงให้อัตโนมัติ เพิ่มเติมข้อเสนอแนะได้ตามต้องการ แล้วกด “สร้างรายงาน”</p>
+    <p>ระบบดึงสิ่งคุกคามที่ประเมินอยู่ระดับสูงมาสรุปให้ · เขียนบทสรุปผู้บริหารเอง หรือกด “สร้างอัตโนมัติ” แล้วกด “สร้างรายงาน”</p>
   </div>
 
-  <div class="card"><div class="hd"><span class="eyebrow">พบความเสี่ยงสูง</span></div><div class="bd">
-    <div class="grid g3">
-      <div><h4 style="font-size:13px;color:var(--high)">ความร้อน</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.heat).join(', ')||'— ไม่พบระดับสูง'}</p></div>
-      <div><h4 style="font-size:13px;color:var(--high)">เสียงดัง</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.noise).join(', ')||'— ไม่พบระดับสูง'}</p></div>
-      <div><h4 style="font-size:13px;color:var(--high)">ฝุ่นซิลิกา</h4><p style="font-size:12.5px;color:var(--muted);margin:5px 0 0">${uniq(f.silica).join(', ')||'— ไม่พบระดับสูง'}</p></div>
-    </div>
-    ${f.chemOver.length?`<div class="warn" style="margin-top:14px"><b>เกินค่ามาตรฐาน:</b> ${uniq(f.chemOver.map(x=>x.h+' ('+x.d+')')).join(', ')}</div>`:''}
+  <div class="card"><div class="hd"><span class="eyebrow">บทสรุปผู้บริหาร (Executive Summary)</span><div class="sp"></div><button class="btn gold sm" onclick="autoExec()">สร้างอัตโนมัติ</button></div><div class="bd">
+    <div class="field"><label>บทสรุปสำหรับผู้บริหาร — แสดงเป็นหน้าแรกของรายงาน (กรอกเอง หรือกด “สร้างอัตโนมัติ” เพื่อสรุปจากผลสำรวจ)</label>
+    <textarea data-sync="exec" oninput="setExec(this.value)" style="min-height:170px" placeholder="ร่างเอง หรือกด 'สร้างอัตโนมัติ' — 3 ย่อหน้า: บทนำ+วัตถุประสงค์ · ปัญหาสิ่งคุกคามเรียงตามความเสี่ยง · แนวทางป้องกัน/เฝ้าระวัง">${esc(S.execSummary||'')}</textarea></div>
+  </div></div>
+
+  <div class="card"><div class="hd"><span class="eyebrow">สิ่งคุกคามที่มีความเสี่ยงสูง (จากการประเมิน)</span></div><div class="bd">
+    ${hi.length?`<div class="hrlist">${hi.map(x=>`<div class="hritem"><span class="riskbadge ${riskClass(x.risk)}">${esc(x.risk)}</span> <b>${esc(x.name)}</b> <span class="muted">· ${esc(x.dept)}</span></div>`).join('')}</div>`:`<p class="muted">ยังไม่พบสิ่งคุกคามที่ประเมินอยู่ในระดับสูง/สูงมาก (หรือยังประเมินไม่ครบ)</p>`}
+    ${f.chemOver.length?`<div class="warn" style="margin-top:14px"><b>เกินค่ามาตรฐานตรวจวัด:</b> ${uniq(f.chemOver.map(x=>x.h+' ('+x.d+')')).join(', ')}</div>`:''}
   </div></div>
 
   <div class="card kbcard"><div class="hd"><span class="eyebrow">สรุปเชิงคลินิก · อิงฐานความรู้ (Knowledge Base v1)</span></div><div class="bd">${buildKBInner()}</div></div>
@@ -1595,6 +1630,9 @@ function buildReport(){
     <li><span>การตรวจสุขภาพและการสร้างเสริมสุขภาพ</span><span>6</span></li>
     <li><span>บทสรุปและข้อเสนอแนะ</span><span>7</span></li>
   </ul>`;
+
+  // --- บทสรุปผู้บริหาร (ถ้ามี · แสดงเป็นหน้าแรกของเนื้อหา) ---
+  if((S.execSummary||'').trim()) h+=`<h2>◆ บทสรุปสำหรับผู้บริหาร (Executive Summary)</h2><p style="white-space:pre-wrap">${esc(S.execSummary)}</p>`;
 
   // --- ข้อมูลทั่วไป ---
   h+=`<h2>◆ ข้อมูลทั่วไปของสถานประกอบการ</h2>
@@ -1691,6 +1729,10 @@ function buildReport(){
 
   // --- บันทึกภาคสนาม (โน้ตแต่ละส่วน) ---
   h+=buildNotesReport();
+
+  // --- สิ่งคุกคามเสี่ยงสูง (ดึงจากการประเมิน) ---
+  const hiR=highRiskList();
+  if(hiR.length){ h+=`<h2>◆ สิ่งคุกคามที่มีความเสี่ยงสูง (ต้องจัดการก่อน)</h2><table><thead><tr><th style="width:90px">ระดับ</th><th>สิ่งคุกคาม</th><th>แผนก</th></tr></thead><tbody>${hiR.map(x=>`<tr><td><span class="rb ${rbCls(x.risk)}">${esc(x.risk)}</span></td><td>${esc(x.name)}</td><td>${esc(x.dept)}</td></tr>`).join('')}</tbody></table>`; }
 
   // --- สรุป ---
   const c=S.conclusion;
@@ -1826,7 +1868,7 @@ function reportCSS(){
   .rp .kv dt{color:#555;font-weight:600}.rp .kv dd{margin:0}
   .rp .r-ok{color:#137a4b}.rp .r-over{color:#c0392b;font-weight:700}.rp .muted{color:#777;font-size:12px}
   .rp .rb{font-weight:700;padding:2px 7px;border-radius:5px;font-size:10.5px}
-  .rp .rb.h{background:#fbe6e2;color:#c0392b}.rp .rb.vh{background:#7a1420;color:#fff}.rp .rb.u{background:#fdf3e0;color:#a06a12}.rp .rb.m{background:#fdf1dd;color:#c9820a}.rp .rb.l{background:#e7f3ec;color:#2e7d54}.rp .rb.a{background:#eef1f6;color:#516079}
+  .rp .rb.h{background:#fbe6e2;color:#c0392b}.rp .rb.vh{background:#7a1420;color:#fff}.rp .rb.u{background:#efe9f5;color:#6a4a86}.rp .rb.m{background:#fdf1dd;color:#c9820a}.rp .rb.l{background:#e7f3ec;color:#2e7d54}.rp .rb.a{background:#eef1f6;color:#516079}
   .rp .toc{list-style:none;padding:0}.rp .toc li{display:flex;justify-content:space-between;border-bottom:1px dotted #bbb;padding:6px 0}
   .rp .heat td.hi{background:#fbe6e2;color:#c0392b;font-weight:700}
   .rp .sig{margin-top:40px;text-align:right}.rp hr{border:none;border-top:1px solid #ddd;margin:26px 0}
@@ -2152,7 +2194,7 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;backg
 .s-tbl th{background:#0B2545;color:#fff;text-align:left;padding:10px 14px}
 .s-tbl td{padding:9px 14px;border-bottom:1px solid #e3e8f0}
 .rb{font-weight:700;padding:3px 12px;border-radius:20px;font-size:.82em;white-space:nowrap}
-.rb.h{background:#fbe6e2;color:#c0392b}.rb.vh{background:#7a1420;color:#fff}.rb.u{background:#fdf3e0;color:#a06a12}.rb.m{background:#fdf1dd;color:#c9820a}.rb.l{background:#e7f3ec;color:#2e7d54}.rb.a{background:#eef1f6;color:#516079}
+.rb.h{background:#fbe6e2;color:#c0392b}.rb.vh{background:#7a1420;color:#fff}.rb.u{background:#efe9f5;color:#6a4a86}.rb.m{background:#fdf1dd;color:#c9820a}.rb.l{background:#e7f3ec;color:#2e7d54}.rb.a{background:#eef1f6;color:#516079}
 .s-more{color:#6b7a90;margin-top:14px;font-size:clamp(11px,1.4vw,15px)}
 .s-chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{background:#0B2545;color:#fff;padding:8px 16px;border-radius:24px;font-size:clamp(12px,1.6vw,17px);font-weight:600}
@@ -2594,6 +2636,7 @@ function applyRemote(p){
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
     else if(p.k==='note'){ S.notes=S.notes||{}; S.notes[p.sec]=p.v; setWidget('note:'+p.sec,p.v); save(); }
+    else if(p.k==='exec'){ S.execSummary=p.v; setWidget('exec',p.v); save(); }
     else if(p.k==='rssplan'){ const R=rssEnsure(); R.plan[p.type]=p.v; setWidget('rssplan:'+p.type,p.v); save(); }
   }catch(e){}
   CB.applying=false;
