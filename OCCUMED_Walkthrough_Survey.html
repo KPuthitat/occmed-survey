@@ -199,11 +199,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .risklegend>summary::-webkit-details-marker{display:none}
 .risklegend>summary::before{content:"▸ ";color:var(--gold-dk)}
 .risklegend[open]>summary::before{content:"▾ "}
-.rl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 18px;padding:4px 16px 14px}
-.rl-grid h5{font-size:12.5px;color:var(--navy);margin:0 0 6px;padding-bottom:4px;border-bottom:2px solid var(--gold)}
-.rl-grid ul{list-style:none;display:flex;flex-direction:column;gap:4px}
-.rl-grid li{font-size:12px;color:var(--ink);line-height:1.45}
-.rl-grid li b{display:inline-block;min-width:16px;color:var(--gold-dk)}
+.rl-body{padding:4px 16px 16px}
+.rl-body h5{font-size:13px;color:var(--navy);margin:16px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--gold)}
+.rl-body h5:first-child{margin-top:4px}
+.rl-scroll{overflow-x:auto}
+.rltbl{border-collapse:collapse;font-size:12px;width:100%;margin-bottom:2px}
+.rltbl th,.rltbl td{border:1px solid var(--line2);padding:5px 8px;text-align:left;vertical-align:middle}
+.rltbl thead th{background:var(--navy);color:#fff;font-weight:600;text-align:center;white-space:nowrap}
+.rltbl.mtx{width:auto}
+.rltbl.mtx td,.rltbl.mtx th{text-align:center;min-width:36px;font-weight:600}
+.rltbl.mtx tbody th{background:var(--navy);color:#fff}
+.rltwo{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
 .risk-low{background:var(--low-bg);color:var(--low)}
 .risk-med{background:var(--med-bg);color:var(--med)}
 .risk-high{background:var(--high-bg);color:var(--high)}
@@ -691,13 +697,37 @@ const CR_DESC=['ต่ำกว่า 10% ของ OEL-TWA','ต่ำกว่
 const EF_SHORT=['นานๆครั้ง','ไม่บ่อย','ค่อนข้างบ่อย','บ่อย','ประจำ'];
 const EF_DESC=['นานๆ ครั้ง — สัมผัสปีละ 1 ครั้ง','ไม่บ่อย — สัมผัสปีละ 2–3 ครั้ง','ค่อนข้างบ่อย — สัมผัสเดือนละ 2–3 ครั้ง','บ่อย — สัมผัส 2–4 ชม.ต่อเนื่องใน 1 กะ','ประจำ — สัมผัสต่อเนื่องตลอดทั้งกะ (8 ชม.)'];
 function rkOpt(cur,shortArr,descArr){ return [1,2,3,4,5].map(n=>`<option value="${n}" title="${esc(descArr[n-1])}" ${+cur===n?'selected':''}>${n} · ${esc(shortArr[n-1])}</option>`).join(''); }
+const ER_COLOR=['','#eef4ff','#dbe7fb','#bcd2f2','#8fb0e0','#5f86c4'];
+const ER_TXT=['','#1c3a63','#1c3a63','#12294a','#0e2038','#fff'];
+function rkColor(r){return {'ยอมรับได้':'#eef1f6','ต่ำ':'#e7f3ec','ปานกลาง':'#fdf1dd','สูง':'#fbe6e2','สูงมาก':'#7a1420'}[r]||'#fff';}
+function rkTxt(r){return r==='สูงมาก'?'#fff':(r==='สูง'?'#8a2020':'#333');}
 function riskLegendHtml(){
-  const li=arr=>arr.map((t,i)=>`<li><b>${i+1}</b> — ${esc(t)}</li>`).join('');
-  return `<details class="risklegend"><summary>คำอธิบายระดับ HR · CR · EF (อ้างอิงประกาศกรมสวัสดิการฯ ตารางที่ 1–3)</summary>
-    <div class="rl-grid">
-      <div><h5>HR — ความรุนแรง (ตารางที่ 1)</h5><ul>${li(HR_DESC)}</ul></div>
-      <div><h5>CR — ความเข้มข้น (ตารางที่ 2)</h5><ul>${li(CR_DESC)}</ul></div>
-      <div><h5>EF — ความถี่การสัมผัส (ตารางที่ 3)</h5><ul>${li(EF_DESC)}</ul></div>
+  const rows=(a,b)=>[1,2,3,4,5].map(n=>`<tr><td style="text-align:center;font-weight:700">${n}</td>${b?`<td>${esc(a[n-1])}</td><td>${esc(b[n-1])}</td>`:`<td>${esc(a[n-1])}</td>`}</tr>`).join('');
+  // ตารางที่ 4 · ER = CR × EF (แถว=EF, คอลัมน์=CR)
+  let erMtx='<table class="rltbl mtx"><thead><tr><th>EF＼CR</th>'+[1,2,3,4,5].map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  [1,2,3,4,5].forEach(ef=>{ erMtx+=`<tr><th>${ef}</th>`+[1,2,3,4,5].map(cr=>{const s=cr*ef,lv=erLevelFromScore(s);return `<td style="background:${ER_COLOR[lv]};color:${ER_TXT[lv]}">${s}</td>`;}).join('')+'</tr>'; });
+  erMtx+='</tbody></table>';
+  const erMap='<table class="rltbl"><thead><tr><th>คะแนน CR×EF</th><th>การสัมผัส</th><th>ระดับ ER</th></tr></thead><tbody>'+
+    [['1–5','ไม่ได้รับสัมผัส','1'],['6–8','น้อย','2'],['9–15','ปานกลาง','3'],['16–20','สูง','4'],['21–25','สูงมาก','5']].map(r=>`<tr><td style="text-align:center">${r[0]}</td><td>${r[1]}</td><td style="text-align:center;font-weight:700">${r[2]}</td></tr>`).join('')+'</tbody></table>';
+  // ตารางที่ 5 · ความเสี่ยง = HR × ER (แถว=HR, คอลัมน์=ER)
+  let rkMtx='<table class="rltbl mtx"><thead><tr><th>HR＼ER</th>'+[1,2,3,4,5].map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  [1,2,3,4,5].forEach(hr=>{ rkMtx+=`<tr><th>${hr}</th>`+[1,2,3,4,5].map(er=>{const s=hr*er,r=riskFromScore(s);return `<td style="background:${rkColor(r)};color:${rkTxt(r)}">${s}</td>`;}).join('')+'</tr>'; });
+  rkMtx+='</tbody></table>';
+  const rkMap='<table class="rltbl"><thead><tr><th>คะแนน HR×ER</th><th>ระดับความเสี่ยง</th><th>ระดับ</th></tr></thead><tbody>'+
+    [['1–3','ยอมรับได้','0'],['4–9','ต่ำ','1'],['10–16','ปานกลาง','2'],['17–20','สูง','3'],['21–25','สูงมาก','4']].map(r=>`<tr><td style="text-align:center">${r[0]}</td><td><span class="riskbadge ${riskClass(r[1])}" style="font-size:10.5px">${r[1]}</span></td><td style="text-align:center">${r[2]}</td></tr>`).join('')+'</tbody></table>';
+  return `<details class="risklegend"><summary>ตารางอ้างอิงการคำนวณ HRA (ตารางที่ 1–5 · ประกาศกรมสวัสดิการฯ)</summary>
+    <div class="rl-body">
+      <h5>ตารางที่ 1 · ระดับความรุนแรง (HR)</h5>
+      <div class="rl-scroll"><table class="rltbl"><thead><tr><th style="width:48px">ระดับ</th><th style="width:110px">ความรุนแรง</th><th>ผลกระทบต่อสุขภาพ</th></tr></thead><tbody>${rows(HR_SHORT,HR_DESC)}</tbody></table></div>
+      <h5>ตารางที่ 2 · ระดับความเข้มข้น (CR)</h5>
+      <div class="rl-scroll"><table class="rltbl"><thead><tr><th style="width:48px">ระดับ</th><th>ค่าเฉลี่ยความเข้มข้นที่ผู้ปฏิบัติงานสัมผัส</th></tr></thead><tbody>${rows(CR_DESC)}</tbody></table></div>
+      <h5>ตารางที่ 3 · ระดับความถี่การได้รับสัมผัส (EF)</h5>
+      <div class="rl-scroll"><table class="rltbl"><thead><tr><th style="width:48px">ระดับ</th><th style="width:110px">ความถี่</th><th>ความถี่การได้รับสัมผัส</th></tr></thead><tbody>${[1,2,3,4,5].map(n=>`<tr><td style="text-align:center;font-weight:700">${n}</td><td>${esc(EF_SHORT[n-1])}</td><td>${esc(EF_DESC[n-1])}</td></tr>`).join('')}</tbody></table></div>
+      <h5>ตารางที่ 4 · ระดับการสัมผัส (ER) = CR × EF</h5>
+      <div class="rltwo"><div class="rl-scroll">${erMtx}</div><div class="rl-scroll" style="flex:1 1 240px">${erMap}</div></div>
+      <h5>ตารางที่ 5 · ระดับความเสี่ยง = HR × ER</h5>
+      <div class="rltwo"><div class="rl-scroll">${rkMtx}</div><div class="rl-scroll" style="flex:1 1 240px">${rkMap}</div></div>
+      <div class="hint" style="margin-top:10px">วิธีอ่านตารางคูณ: ระบุค่าแถว × คอลัมน์ ได้คะแนน แล้วเทียบช่วงคะแนนเป็นระดับ (ตาราง 4 → ER, ตาราง 5 → ความเสี่ยง)</div>
     </div></details>`;
 }
 const EXAMS=['ผิวหนัง','ทางเดินหายใจ','การมองเห็น','ไหลเวียนโลหิต','กระดูกและกล้ามเนื้อ','การได้ยิน','VA','EKG','CXR','CBC','Cr','AST','ALT','GGT','Neuro','Spirometry','Audiometry'];
