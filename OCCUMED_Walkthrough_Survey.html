@@ -792,9 +792,21 @@ function blankState(){
     depts:[], health:{}, customExams:[],
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[] },
     reportOpts:{ incMachines:false, incRef:false },
+    notes:{ general:'', depts:'', risk:'', health:'', summary:'' },
     conclusion:{heat:'',noise:'',chem:'',extra:''}
   };
 }
+/* ---- โน้ตประจำแต่ละส่วน (จดระหว่างเดินสำรวจ) ---- */
+const NOTE_LABELS={general:'ข้อมูลทั่วไป',depts:'แผนก & สิ่งคุกคาม',risk:'ประเมินความเสี่ยง',health:'ตรวจสุขภาพ',summary:'สรุป'};
+function setNote(sec,v){ S.notes=S.notes||{}; S.notes[sec]=v; touch(); bx({k:'note',sec,v}); }
+function notesCard(sec){
+  const v=(S.notes&&S.notes[sec])||'';
+  return `<div class="card notecard"><div class="hd"><span class="eyebrow">โน้ตเพิ่มเติม</span></div><div class="bd">
+    <div class="field"><label>บันทึกระหว่างเดินสำรวจ (แสดงในรายงาน)</label>
+    <textarea data-sync="note:${sec}" placeholder="จดบันทึกเพิ่มเติมของส่วนนี้ เช่น ข้อสังเกตหน้างาน สิ่งที่ต้องตามต่อ ..." oninput="setNote('${sec}',this.value)">${esc(v)}</textarea></div>
+  </div></div>`;
+}
+function mountNotes(panelId,sec){ const p=document.getElementById(panelId); if(!p) return; const old=p.querySelector('.notecard'); if(old) old.remove(); p.insertAdjacentHTML('beforeend',notesCard(sec)); }
 function allExams(){ return EXAMS.concat((S&&S.customExams)||[]); }
 /* ---- รสส: มาตรฐานตามกฎกระทรวงกำหนดมาตรฐานฯ ความร้อน แสงสว่าง เสียง พ.ศ. 2559 ---- */
 const WBGT_STD={'เบา':34,'ปานกลาง':32,'หนัก':30};   // °C WBGT ตามระดับภาระงาน
@@ -960,6 +972,7 @@ function renderGeneral(){
       </div>
     </div>
   </div>`;
+  mountNotes('p0','general');
 }
 
 /* ============================================================
@@ -1028,6 +1041,7 @@ function renderDepts(){
     </div>`;
   });
   el.innerHTML=html;
+  mountNotes('p1','depts');
 }
 function hazRow(did,h){
   const ev=evalStd(h.measured,h.std,h.name);
@@ -1109,7 +1123,7 @@ function renderRisk(){
   </div>
   <div class="note">เกณฑ์อัตโนมัติ: <b>&lt;10%</b> → ต่ำ · <b>10–100%</b> → ปานกลาง · <b>=100%</b> → สูง · <b>&gt;100%</b> → สูง (ถ้าความถี่ = 5) มิฉะนั้นปานกลาง · ไม่ได้วัดซิลิกา → ให้ 100% (สูง)</div>`;
 
-  if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; return; }
+  if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p2','risk'); return; }
 
   S.depts.forEach((d,i)=>{
     if(!d.hazards.length) return;
@@ -1133,6 +1147,7 @@ function renderRisk(){
     html+=`</tbody></table></div></div></div>`;
   });
   el.innerHTML=html;
+  mountNotes('p2','risk');
 }
 function riskCellHtml(h){
   const auto=autoRisk(h.band,h.freq);
@@ -1172,7 +1187,7 @@ function renderHealth(){
     <h2>การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
     <p>เลือกรายการตรวจสุขภาพที่เหมาะสมกับปัจจัยเสี่ยงของแต่ละแผนก ตารางนี้จะแสดงเป็น “ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง” ในรายงาน</p>
   </div>`;
-  if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; return; }
+  if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p3','health'); return; }
 
   const exams=allExams(); const nBase=EXAMS.length;
   html+=`<div class="card"><div class="bd" style="padding:12px">
@@ -1192,6 +1207,7 @@ function renderHealth(){
   <div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูรายการตรวจทั้งหมด · รายการที่เพิ่มเองมีปุ่ม ✕ ให้ลบได้</div>
   </div></div>`;
   el.innerHTML=html;
+  mountNotes('p3','health');
 }
 function setHC(did,ex,on){ S.health[did]=S.health[did]||{}; if(on)S.health[did][ex]=true; else delete S.health[did][ex]; touch(); bx({k:'hc',did,ex,v:!!on}); }
 function addExam(){
@@ -1372,6 +1388,7 @@ function renderSummary(){
     </div>
     <div class="hint" style="margin-top:8px">รายงาน/ไฟล์นำเสนอจัดรูปแบบตามธีม CI · พิมพ์ PDF / คัดลอกโค้ด / บันทึกไฟล์ได้</div>
   </div></div>`;
+  mountNotes('p4','summary');
 }
 function setC(k,v){S.conclusion[k]=v;touch(); bx({k:'c',key:k,v})}
 function autoConclusion(){
@@ -1526,6 +1543,9 @@ function buildReport(){
   // --- สรุปเชิงคลินิก (Knowledge Base v1) ---
   h+=`<h2>◆ สรุปเชิงคลินิก (อ้างอิงฐานความรู้ v1)</h2>`+buildKBInner();
 
+  // --- บันทึกภาคสนาม (โน้ตแต่ละส่วน) ---
+  h+=buildNotesReport();
+
   // --- สรุป ---
   const c=S.conclusion;
   h+=`<h2>◆ บทสรุปและข้อเสนอแนะ</h2>`;
@@ -1594,6 +1614,15 @@ function buildAppendix(){
   const o=(S&&S.reportOpts)||{}; let h='';
   if(o.incMachines) h+=buildMachinesRef();
   if(o.incRef) h+=buildMetalsRef();
+  return h;
+}
+function buildNotesReport(){
+  const n=(S&&S.notes)||{};
+  const order=['general','depts','risk','health','summary'];
+  const rows=order.filter(k=>((n[k]||'').trim()));
+  if(!rows.length) return '';
+  let h='<h2>◆ บันทึกภาคสนาม (Field Notes)</h2>';
+  rows.forEach(k=>{ h+=`<h3>${esc(NOTE_LABELS[k]||k)}</h3><p style="white-space:pre-wrap">${esc(n[k])}</p>`; });
   return h;
 }
 
@@ -2313,6 +2342,7 @@ function applyRemote(p){
           save(); } }
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
+    else if(p.k==='note'){ S.notes=S.notes||{}; S.notes[p.sec]=p.v; setWidget('note:'+p.sec,p.v); save(); }
   }catch(e){}
   CB.applying=false;
 }
