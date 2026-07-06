@@ -580,6 +580,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
     <div class="mhd">
       <h3>รายงานผลการเดินสำรวจสถานประกอบการ</h3>
       <button class="btn gold sm" onclick="copyReport()">⧉ คัดลอกโค้ด (Deploy)</button>
+      <button class="btn ghost sm" onclick="downloadWord()">📝 บันทึก Word</button>
       <button class="btn ghost sm" onclick="downloadReport()">↓ บันทึก .html</button>
       <button class="btn ghost sm" onclick="printReport()">พิมพ์ / PDF</button>
       <button class="close" onclick="closeReport()">✕</button>
@@ -1963,6 +1964,29 @@ function downloadReport(){
   a.href=URL.createObjectURL(blob);
   a.download=`รายงานเดินสำรวจ_${(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)}_${beYear()}.html`;
   a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์รายงานเรียบร้อยแล้ว');
+}
+/* บันทึกเป็นไฟล์ Word (.doc) — HTML-as-Word เปิด/แก้ไขใน Microsoft Word ได้ (ไม่พึ่ง library) */
+function wordReport(){
+  const styles=reportCSS()
+    +'\nbody{background:#fff!important;margin:0}'
+    +'\n#reportDoc{max-width:100%!important;box-shadow:none!important;margin:0!important}'
+    +'\n.rp{padding:0!important}'
+    +'\n.rp .kv{display:block}.rp .kv dt{font-weight:700;margin-top:6px}.rp .kv dd{margin:0 0 2px 0}'  /* Word ไม่รองรับ grid → แสดงเป็นบล็อก */
+    +'\n@page WordSection1{size:210mm 297mm;mso-page-orientation:portrait;margin:14mm 12mm 14mm 12mm;}'
+    +'\ndiv.WordSection1{page:WordSection1;}';
+  return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
+    +'<head><meta charset="utf-8"><meta name="ProgId" content="Word.Document"><meta name="Originator" content="Microsoft Word 15">'
+    +'<title>รายงานผลการเดินสำรวจ · '+esc(S.general.company||'สถานประกอบการ')+'</title>'
+    +'<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->'
+    +'<style>'+styles+'</style></head>'
+    +'<body><div class="WordSection1"><div id="reportDoc">'+buildReport()+'</div></div></body></html>';
+}
+function downloadWord(){
+  const blob=new Blob(['﻿'+wordReport()],{type:'application/msword'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`รายงานเดินสำรวจ_${(S.general.company||'สถานประกอบการ').replace(/[\/\\?%*:|"<>]/g,'').slice(0,40)}_${beYear()}.doc`;
+  a.click(); URL.revokeObjectURL(a.href); toast('บันทึกไฟล์ Word (.doc) แล้ว — เปิด/แก้ไขใน Microsoft Word ได้ทันที');
 }
 
 /* ============================================================
