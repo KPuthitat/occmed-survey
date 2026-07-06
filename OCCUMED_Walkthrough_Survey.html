@@ -192,6 +192,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .evaltag.na{background:var(--line2);color:var(--muted)}
 
 .riskbadge{font-weight:800;font-size:11.5px;padding:4px 10px;border-radius:7px;white-space:nowrap}
+.ersub{color:var(--muted);font-size:10.5px;font-weight:400;white-space:nowrap}
+.ercell{text-align:center;font-weight:700;color:var(--navy2)}
 .risk-low{background:var(--low-bg);color:var(--low)}
 .risk-med{background:var(--med-bg);color:var(--med)}
 .risk-high{background:var(--high-bg);color:var(--high)}
@@ -671,18 +673,16 @@ const CONC_BANDS=['< 10% OEL-TWA','10-50% OEL-TWA','50-75% OEL-TWA','75-100% OEL
 const RISK_LABELS=['ยอมรับได้','ต่ำ','ปานกลาง','สูง','สูงมาก'];
 const EXAMS=['ผิวหนัง','ทางเดินหายใจ','การมองเห็น','ไหลเวียนโลหิต','กระดูกและกล้ามเนื้อ','การได้ยิน','VA','EKG','CXR','CBC','Cr','AST','ALT','GGT','Neuro','Spirometry','Audiometry'];
 
-/* ---- Auto risk from concentration band + frequency ---- */
-function autoRisk(band,freq){
-  freq=Number(freq)||4;
-  if(!band) return '';
-  if(band.startsWith('< 10')) return 'ต่ำ';
-  if(band.startsWith('10-50')) return 'ปานกลาง';
-  if(band.startsWith('50-75')||band.startsWith('75-100')) return 'ปานกลาง';
-  if(band.startsWith('100%')) return 'สูง';
-  if(band.startsWith('> 100')) return freq>=5?'สูง':'ปานกลาง';
-  if(band.startsWith('ไม่ได้วัด')) return 'สูง';
-  return '';
-}
+/* ---- HRA ทางการ (ประกาศกรมสวัสดิการฯ) ----
+   HR = ระดับความรุนแรง (Hazard rating) 1–5
+   CR = ระดับความเข้มข้น (Concentration rating) 1–5 · EF = ระดับความถี่สัมผัส (Exposure frequency) 1–5
+   ER (Exposure rating) = ระดับจากคะแนน CR×EF :  ≤5→1 · 6–8→2 · 9–15→3 · 16–20→4 · 21–25→5
+   ระดับความเสี่ยง = ระดับจากคะแนน HR×ER :  1–3 ยอมรับได้ · 4–9 ต่ำ · 10–16 ปานกลาง · 17–20 สูง · 21–25 สูงมาก */
+function erLevelFromScore(s){ s=Number(s)||0; if(s<=0) return 0; if(s<=5) return 1; if(s<=8) return 2; if(s<=15) return 3; if(s<=20) return 4; return 5; }
+function erInfo(h){ const cr=Number(h.cr)||0, ef=Number(h.freq)||0; const cs=cr*ef; return {cr,ef,cs,lvl:erLevelFromScore(cs)}; }
+function riskFromScore(s){ s=Number(s)||0; if(s<=0) return ''; if(s<=3) return 'ยอมรับได้'; if(s<=9) return 'ต่ำ'; if(s<=16) return 'ปานกลาง'; if(s<=20) return 'สูง'; return 'สูงมาก'; }
+function riskInfo(h){ const hr=Number(h.hr)||0, er=erInfo(h); const rs=hr*er.lvl; return {hr,er,rs,label:riskFromScore(rs)}; }
+function autoRisk(h){ return riskInfo(h).label; }
 function riskClass(r){return {'สูงมาก':'risk-vhigh','สูง':'risk-high','ปานกลาง':'risk-med','ต่ำ':'risk-low','ยอมรับได้':'risk-acc'}[r]||''}
 function riskRB(r){return {'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a'}[r]||'l'}
 
@@ -717,7 +717,7 @@ function beDate(iso){
 function beYear(iso){const d=new Date((iso||new Date().toISOString().slice(0,10))+'T00:00:00');return (isNaN(d)?new Date():d).getFullYear()+543}
 
 /* ---- helper builders ---- */
-function haz(cat,name,std,unit){return {id:uid(),cat,name,measured:'',std:std||'',unit:unit||'',hr:4,band:'',freq:4,riskOverride:''}}
+function haz(cat,name,std,unit){return {id:uid(),cat,name,measured:'',std:std||'',unit:unit||'',hr:3,cr:3,freq:3,riskOverride:''}}
 
 /* ============================================================
    PRE-LOADED TEMPLATE — โรงงาน machining ชิ้นส่วนไฮดรอลิก
@@ -1182,16 +1182,16 @@ function allPhotos(){ const out=[]; (S.depts||[]).forEach(d=>(d.photos||[]).forE
 /* ============================================================
    PANEL 2 — RISK ASSESSMENT
    ============================================================ */
-function effRisk(h){ return h.riskOverride || autoRisk(h.band,h.freq); }
+function effRisk(h){ return h.riskOverride || autoRisk(h); }
 function renderRisk(){
   const el=document.getElementById('p2');
   let html=`
   <div class="pagehead">
     <div class="kick">ส่วนที่ 3 · Risk Assessment</div>
     <h2>ผลการประเมินความเสี่ยงตามแผนก</h2>
-    <p>กำหนดระดับความรุนแรง (Hazard rating 1–5), ความเข้มข้นเทียบ OEL-TWA และความถี่การสัมผัส (1–5) ระบบจะประเมินระดับความเสี่ยงให้ ปรับแก้ได้ในช่อง “ผล”</p>
+    <p>วิธี HRA ทางการ: ระบุ <b>HR</b> (ความรุนแรง 1–5), <b>CR</b> (ความเข้มข้น 1–5), <b>EF</b> (ความถี่สัมผัส 1–5) → ระบบคำนวณ ER และระดับความเสี่ยงให้ ปรับผลเองได้ในช่อง “ระดับความเสี่ยง”</p>
   </div>
-  <div class="note">เกณฑ์อัตโนมัติ: <b>&lt;10%</b> → ต่ำ · <b>10–100%</b> → ปานกลาง · <b>=100%</b> → สูง · <b>&gt;100%</b> → สูง (ถ้าความถี่ = 5) มิฉะนั้นปานกลาง · ไม่ได้วัดซิลิกา → ให้ 100% (สูง)</div>`;
+  <div class="note"><b>ER</b> = ระดับจาก CR×EF (≤5→1 · 6–8→2 · 9–15→3 · 16–20→4 · 21–25→5) · <b>ระดับความเสี่ยง</b> = ระดับจาก HR×ER (1–3 ยอมรับได้ · 4–9 ต่ำ · 10–16 ปานกลาง · 17–20 สูง · 21–25 สูงมาก)</div>`;
 
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p2','risk'); return; }
 
@@ -1201,16 +1201,16 @@ function renderRisk(){
     <div class="bd" style="padding:0">
       <div class="tbl-scroll" style="border:none;border-radius:0">
       <table class="htbl">
-        <thead><tr><th style="width:66px">ประเภท</th><th>Hazard</th><th style="width:96px">Hazard rating</th><th style="width:150px">Concentration</th><th style="width:100px">Frequency</th><th style="width:120px">ผลการประเมิน</th></tr></thead>
+        <thead><tr><th style="width:60px">ประเภท</th><th>Hazard</th><th style="width:64px" title="Hazard rating: ความรุนแรง 1–5">HR</th><th style="width:88px" title="Concentration rating: ความเข้มข้น 1–5">CR</th><th style="width:80px" title="Exposure frequency: ความถี่สัมผัส 1–5">EF</th><th style="width:78px" title="Exposure rating = ระดับจาก CR×EF">ER</th><th style="width:128px">ระดับความเสี่ยง</th></tr></thead>
         <tbody>`;
     d.hazards.forEach(h=>{
-      const r=effRisk(h);
       html+=`<tr data-h="${h.id}">
         <td class="catcell">${esc(h.cat)}</td>
         <td>${esc(h.name)||'—'}</td>
-        <td><select onchange="setRk('${d.id}','${h.id}','hr',this.value)">${[5,4,3,2,1].map(n=>`<option ${+h.hr===n?'selected':''}>${n}</option>`).join('')}</select></td>
-        <td><select onchange="setRk('${d.id}','${h.id}','band',this.value);refreshRisk('${d.id}','${h.id}')"><option value="">— เลือก —</option>${CONC_BANDS.map(b=>`<option ${b===h.band?'selected':''}>${b}</option>`).join('')}</select></td>
-        <td><select onchange="setRk('${d.id}','${h.id}','freq',this.value);refreshRisk('${d.id}','${h.id}')">${[5,4,3,2,1].map(n=>`<option ${+h.freq===n?'selected':''}>${n}</option>`).join('')}</select></td>
+        <td><select onchange="setRk('${d.id}','${h.id}','hr',this.value);refreshRisk('${d.id}','${h.id}')">${[1,2,3,4,5].map(n=>`<option ${+h.hr===n?'selected':''}>${n}</option>`).join('')}</select></td>
+        <td><select onchange="setRk('${d.id}','${h.id}','cr',this.value);refreshRisk('${d.id}','${h.id}')"><option value="" ${!h.cr?'selected':''}>— เลือก —</option>${[1,2,3,4,5].map(n=>`<option ${+h.cr===n?'selected':''}>${n}</option>`).join('')}</select></td>
+        <td><select onchange="setRk('${d.id}','${h.id}','freq',this.value);refreshRisk('${d.id}','${h.id}')">${[1,2,3,4,5].map(n=>`<option ${+h.freq===n?'selected':''}>${n}</option>`).join('')}</select></td>
+        <td class="ercell">${erCellHtml(h)}</td>
         <td class="riskcell">${riskCellHtml(h)}</td>
       </tr>`;
     });
@@ -1219,24 +1219,27 @@ function renderRisk(){
   el.innerHTML=html;
   mountNotes('p2','risk');
 }
+function erCellHtml(h){ const e=erInfo(h); if(!e.cr||!e.ef) return '<span class="muted">—</span>'; return `<b>${e.lvl}</b> <span class="ersub">(${e.cs})</span>`; }
 function riskCellHtml(h){
-  const auto=autoRisk(h.band,h.freq);
+  const auto=autoRisk(h);
   const r=effRisk(h);
+  const info=riskInfo(h);
+  const score=(!h.riskOverride && info.rs)?` <span class="ersub">HR×ER=${info.hr}×${info.er.lvl}=${info.rs}</span>`:'';
   return `<select onchange="setRk('','${h.id}','riskOverride',this.value===('auto:'+auto)?'':this.value.replace('set:',''));refreshRiskBadge('${h.id}')" style="margin-bottom:4px">
       <option value="auto:${auto}" ${!h.riskOverride?'selected':''}>อัตโนมัติ${auto?' ('+auto+')':''}</option>
       ${RISK_LABELS.map(l=>`<option value="set:${l}" ${h.riskOverride===l?'selected':''}>${l}</option>`).join('')}
-    </select><div class="rbadge">${r?`<span class="riskbadge ${riskClass(r)}">${r}</span>`:''}</div>`;
+    </select><div class="rbadge">${r?`<span class="riskbadge ${riskClass(r)}">${r}</span>`:''}${score}</div>`;
 }
 function setRk(did,hid,k,v){
   let h;
   if(did){h=findHaz(findDept(did),hid);}
   else{ for(const d of S.depts){const f=d.hazards.find(x=>x.id===hid); if(f){h=f;did=d.id;break;}} }
-  h[k]=(k==='hr'||k==='freq')?Number(v):v; touch(); bx({k:'h',did,hid,field:k,v:h[k]});
+  h[k]=(k==='hr'||k==='freq'||k==='cr')?Number(v):v; touch(); bx({k:'h',did,hid,field:k,v:h[k]});
 }
 function refreshRisk(did,hid){
   const h=findHaz(findDept(did),hid);
-  const cell=document.querySelector(`#p2 tr[data-h="${hid}"] .riskcell`);
-  if(cell) cell.innerHTML=riskCellHtml(h);
+  const er=document.querySelector(`#p2 tr[data-h="${hid}"] .ercell`); if(er) er.innerHTML=erCellHtml(h);
+  const cell=document.querySelector(`#p2 tr[data-h="${hid}"] .riskcell`); if(cell) cell.innerHTML=riskCellHtml(h);
 }
 function refreshRiskBadge(hid){
   let h; for(const d of S.depts){const f=d.hazards.find(x=>x.id===hid); if(f){h=f;break;}}
@@ -1594,11 +1597,11 @@ function buildReport(){
   S.depts.forEach((d,i)=>{
     if(!d.hazards.length) return;
     h+=`<h3>${i+1}. ${esc(d.name)} (${esc(d.en)})</h3>
-    <table><thead><tr><th>ประเภท</th><th>Hazard</th><th>Rating</th><th>Concentration</th><th>Frequency</th><th>Risk evaluation</th></tr></thead><tbody>`;
+    <table><thead><tr><th>ประเภท</th><th>Hazard</th><th>HR</th><th>CR</th><th>EF</th><th>ER</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>`;
     let lastCat='';
     d.hazards.forEach(hz=>{
-      const r=effRisk(hz);
-      h+=`<tr><td>${hz.cat!==lastCat?esc(hz.cat):''}</td><td>${esc(hz.name)}</td><td style="text-align:center">${esc(hz.hr)}</td><td>${esc(hz.band)||'—'}</td><td style="text-align:center">${esc(hz.freq)}</td><td>${r?`<span class="rb ${rbCls(r)}">${r}</span>`:'—'}</td></tr>`;
+      const r=effRisk(hz); const e=erInfo(hz);
+      h+=`<tr><td>${hz.cat!==lastCat?esc(hz.cat):''}</td><td>${esc(hz.name)}</td><td style="text-align:center">${esc(hz.hr)||'—'}</td><td style="text-align:center">${e.cr||'—'}</td><td style="text-align:center">${esc(hz.freq)||'—'}</td><td style="text-align:center">${e.lvl||'—'}</td><td>${r?`<span class="rb ${rbCls(r)}">${r}</span>`:'—'}</td></tr>`;
       lastCat=hz.cat;
     });
     h+=`</tbody></table>`;
@@ -2525,7 +2528,7 @@ function applyRemote(p){
         if(h){ h[p.field]=(p.field==='hr'||p.field==='freq')?Number(p.v):p.v;
           if(['cat','name','measured','unit','std'].indexOf(p.field)>=0) setWidget('h:'+p.did+':'+p.hid+':'+p.field,p.v);
           if(p.field==='measured'||p.field==='std') refreshEval(p.did,p.hid);
-          if(['hr','band','freq','riskOverride'].indexOf(p.field)>=0 && document.querySelector('#p2 tr[data-h="'+p.hid+'"]')) refreshRisk(p.did,p.hid);
+          if(['hr','cr','freq','riskOverride'].indexOf(p.field)>=0 && document.querySelector('#p2 tr[data-h="'+p.hid+'"]')) refreshRisk(p.did,p.hid);
           save(); } }
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
