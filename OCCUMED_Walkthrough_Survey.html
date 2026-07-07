@@ -2540,38 +2540,40 @@ function buildSlides(){
   }
 
   // 6) การตรวจสุขภาพ
-  // ตารางแนะนำรายการตรวจสุขภาพตามความเสี่ยง แบ่งตามแผนก (PP = ก่อนเข้างาน / PD = ประจำปี)
+  // ตารางตรวจสุขภาพ: แถว = แผนก, คอลัมน์ = รายการตรวจ (หัวเอียงซ้าย) · แยกตาราง Pre-placement / Periodic · แบ่งหน้าเมื่อไม่พอ
   if(SO('health')){
-    const exUsed=allExams().filter(e=> S.depts.some(d=>(S.health[d.id]&&S.health[d.id][e])||(S.healthPre[d.id]&&S.healthPre[d.id][e])) );
-    if(!S.depts.length || !exUsed.length){
-      slides.push({html:`
-        <div class="s-kick">09 · ตรวจสุขภาพ</div>
-        <h2 class="s-h2">รายการตรวจสุขภาพตามความเสี่ยง (แบ่งตามแผนก)</h2>
-        <div class="s-empty">ยังไม่ได้กำหนดรายการตรวจสุขภาพในแต่ละแผนก</div>`});
-    } else {
-      const DPP=6; const dpages=[]; for(let i=0;i<S.depts.length;i+=DPP) dpages.push(S.depts.slice(i,i+DPP));
-      const npg=dpages.length;
-      const bd='1px solid #cdd6e4';
-      const thd=`border:${bd};background:#0B2545;color:#fff;padding:3px 5px;font-weight:600;text-align:center`;
-      const thsub=`border:${bd};background:#123a63;color:#fff;padding:2px 4px;font-weight:600;text-align:center;width:22px`;
-      dpages.forEach((dchunk,pi)=>{
-        const cell=on=>on?`<td style="border:${bd};text-align:center;color:#0B2545">●</td>`:`<td style="border:${bd}"></td>`;
-        const tbl=`<table style="width:100%;border-collapse:collapse;font-size:.6em">
-          <thead>
-            <tr><th rowspan="2" style="${thd};text-align:left">รายการตรวจสุขภาพ</th>${dchunk.map((d,i)=>`<th colspan="2" style="${thd}">${esc(cut(d.name||('แผนก '+(pi*DPP+i+1)),16))}</th>`).join('')}</tr>
-            <tr>${dchunk.map(()=>`<th style="${thsub}">PP</th><th style="${thsub}">PD</th>`).join('')}</tr>
-          </thead>
-          <tbody>
-            ${exUsed.map(e=>`<tr><td style="border:${bd};padding:2px 6px;white-space:nowrap">${esc(e)}</td>${dchunk.map(d=>cell(S.healthPre[d.id]&&S.healthPre[d.id][e])+cell(S.health[d.id]&&S.health[d.id][e])).join('')}</tr>`).join('')}
-          </tbody>
-        </table>`;
+    const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;};
+    const bd='1px solid #cdd6e4';
+    const vhead=t=>`<th style="border:${bd};background:#0B2545;color:#fff;height:104px;vertical-align:bottom;padding:5px 2px"><span style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.05;font-weight:600">${esc(t)}</span></th>`;
+    const EXPP=12, DPP=10;
+    const healthGroupSlides=(mapKey,title)=>{
+      const map=S[mapKey]||{};
+      const exU=allExams().filter(e=>S.depts.some(d=>map[d.id]&&map[d.id][e]));
+      if(!S.depts.length||!exU.length){
         slides.push({html:`
-          <div class="s-kick">09 · ตรวจสุขภาพ${npg>1?` · หน้า ${pi+1}/${npg}`:''}</div>
-          <h2 class="s-h2">รายการตรวจสุขภาพตามความเสี่ยง (แบ่งตามแผนก)</h2>
-          ${tbl}
-          <div class="s-note" style="font-size:.72em"><b>PP</b> = ตรวจก่อนเข้างาน (Pre-placement) · <b>PD</b> = ตรวจประจำปี (Periodic)</div>`});
+          <div class="s-kick">09 · ตรวจสุขภาพ</div>
+          <h2 class="s-h2">${esc(title)}</h2>
+          <div class="s-empty">ยังไม่ได้เลือกรายการตรวจในตารางนี้</div>`});
+        return;
+      }
+      const exPages=chunk(exU,EXPP), deptPages=chunk(S.depts,DPP);
+      const total=exPages.length*deptPages.length; let pageNo=0;
+      deptPages.forEach(dchunk=>{
+        exPages.forEach(echunk=>{
+          pageNo++;
+          const tbl=`<table style="width:100%;border-collapse:collapse;font-size:.62em">
+            <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:5px 6px;text-align:left;vertical-align:bottom">แผนก</th>${echunk.map(e=>vhead(e)).join('')}</tr></thead>
+            <tbody>${dchunk.map(d=>`<tr><td style="border:${bd};padding:3px 6px;white-space:nowrap;font-weight:600">${esc(d.name)||'—'}</td>${echunk.map(e=>(map[d.id]&&map[d.id][e])?`<td style="border:${bd};text-align:center;color:#0B2545">●</td>`:`<td style="border:${bd}"></td>`).join('')}</tr>`).join('')}</tbody>
+          </table>`;
+          slides.push({html:`
+            <div class="s-kick">09 · ตรวจสุขภาพ${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
+            <h2 class="s-h2">${esc(title)}${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+            ${tbl}`});
+        });
       });
-    }
+    };
+    healthGroupSlides('healthPre','ตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)');
+    healthGroupSlides('health','การตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)');
   }
 
   // 7) สรุปเชิงคลินิก (Knowledge Base) — ตัดข้อความให้พอดีสไลด์ (ฉบับเต็มอยู่ในรายงาน)
