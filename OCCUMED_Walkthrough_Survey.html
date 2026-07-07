@@ -1739,6 +1739,7 @@ function renderSummary(){
   const uniq=a=>[...new Set(a)];
   const c=S.conclusion;
   const hi=highRiskList();
+  const unknownCnt=S.depts.reduce((a,d)=>a+d.hazards.filter(h=>effRisk(h)===RISK_UNKNOWN).length,0);
   el.innerHTML=`
   <div class="pagehead">
     <div class="kick">ส่วนที่ 5 · Conclusion</div>
@@ -1752,7 +1753,7 @@ function renderSummary(){
   </div></div>
 
   <div class="card"><div class="hd"><span class="eyebrow">สิ่งคุกคามที่มีความเสี่ยงสูง (จากการประเมิน)</span></div><div class="bd">
-    ${hi.length?`<div class="hrlist">${hi.map(x=>`<div class="hritem"><span class="riskbadge ${riskClass(x.risk)}">${esc(x.risk)}</span> <b>${esc(x.name)}</b> <span class="muted">· ${esc(x.dept)}</span></div>`).join('')}</div>`:`<p class="muted">ยังไม่พบสิ่งคุกคามที่ประเมินอยู่ในระดับสูง/สูงมาก (หรือยังประเมินไม่ครบ)</p>`}
+    ${hi.length?`<div class="hrlist">${hi.map(x=>`<div class="hritem"><span class="riskbadge ${riskClass(x.risk)}">${esc(x.risk)}</span> <b>${esc(x.name)}</b> <span class="muted">· ${esc(x.dept)}</span></div>`).join('')}</div>`:(unknownCnt?`<p class="muted">ยังไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน) — มี ${unknownCnt} รายการที่ยังประเมินระดับความเสี่ยงไม่ได้</p>`:`<p class="muted">ยังไม่พบสิ่งคุกคามที่ประเมินอยู่ในระดับสูง/สูงมาก</p>`)}
     ${f.chemOver.length?`<div class="warn" style="margin-top:14px"><b>เกินค่ามาตรฐานตรวจวัด:</b> ${uniq(f.chemOver.map(x=>x.h+' ('+x.d+')')).join(', ')}</div>`:''}
   </div></div>
 
