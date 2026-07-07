@@ -2644,7 +2644,7 @@ function buildSlides(){
   if(SO('health')){
     const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;};
     const bd='1px solid #cbd5e3';
-    const EXAM_ROWS_PP=4, DEPT_COLS_PP=12;
+    const EXAM_ROWS_PP=7, DEPT_COLS_PP=12;
     // หัวคอลัมน์ = ชื่อแผนก (แนวตั้ง เอียงซ้าย) ไม่ย่อ · สูงคงที่ ชื่อยาวตัดขึ้นบรรทัดในแนวตั้ง กันตกขอบ
     const vDept=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:8px 4px;text-align:center;min-width:30px;height:156px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:normal;max-height:142px;line-height:1.25;font-weight:600;font-size:.78em;margin:0 auto">${esc(t)}</div></th>`;
     // ตัด prefix ชื่อกลุ่มออกจากชื่อแถว (h2 บอกกลุ่มอยู่แล้ว) — ไม่แตะชื่อจริงที่เก็บไว้
@@ -2682,8 +2682,7 @@ function buildSlides(){
           colPages.forEach(deptCols=>{
             pageNo++;
             slides.push({cls:'top',html:`
-              <div class="s-kick">09 · ${esc(title)}${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
-              <h2 class="s-h2">${esc(gl)}${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+              <div class="s-kick" style="margin-bottom:14px">09 · ${esc(title)} · ${esc(gl)}${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
               ${buildHcTable(map,examRows,deptCols,gl)}`});
           });
         });
