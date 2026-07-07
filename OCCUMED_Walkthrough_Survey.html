@@ -2584,7 +2584,7 @@ function buildSlides(){
             ${pi===0&&(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
             ${pi===0&&info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
             <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
-            ${chunk.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td>${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
+            ${chunk.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td style="white-space:nowrap">${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td style="white-space:nowrap"><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
             </tbody></table><div class="s-note" style="font-size:.78em">HR = ความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${hasUnknown?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_NOENV}</div>`:''}`});
         });
       }
