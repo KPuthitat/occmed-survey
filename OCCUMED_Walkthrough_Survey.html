@@ -2538,10 +2538,11 @@ function buildSlides(){
     slides.push({html:`
       <div class="s-kick">08 · ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)</div>
       <h2 class="s-h2">ผลตรวจวัดสภาพแวดล้อมในการทำงาน</h2>
-      ${rssRows.length?`<table class="s-tbl"><thead><tr><th>ด้าน</th><th>จุด/พื้นที่</th><th>วัดได้</th><th>ผล</th></tr></thead><tbody>
+      ${rssRows.length
+        ? `<table class="s-tbl"><thead><tr><th>ด้าน</th><th>จุด/พื้นที่</th><th>วัดได้</th><th>ผล</th></tr></thead><tbody>
       ${tr.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])||'—'}</td><td>${esc(x[2])}</td><td><span class="rb ${rbc(x[3].c)}">${esc(x[3].t)}</span></td></tr>`).join('')}
-      </tbody></table>${rssRows.length>7?`<div class="s-more">และอีก ${rssRows.length-7} รายการ</div>`:''}`:''}
-      ${rssPlans.length?`<div class="s-note"><b>แผนการตรวจวัด (ยังไม่มีผล):</b> ${rssPlans.map(p=>esc(p[0])).join(' · ')} — มีแผนดำเนินการ</div>`:''}`});
+      </tbody></table>${rssRows.length>7?`<div class="s-more">และอีก ${rssRows.length-7} รายการ</div>`:''}${rssPlans.length?`<div class="s-note"><b>แผนการตรวจวัด (ยังไม่มีผล):</b> ${rssPlans.map(p=>esc(p[0])).join(' · ')} — มีแผนดำเนินการ</div>`:''}`
+        : `<div class="s-empty" style="font-size:1.25em;line-height:1.55;color:#8a6d1f;font-weight:700">ยังไม่มีผลตรวจวัดสภาพแวดล้อมในการทำงาน<div style="font-size:.68em;color:#6b7a90;font-weight:500;margin-top:18px">จึงยังไม่สามารถระบุระดับความเสี่ยงได้ (อยู่ในแผนงาน)${rssPlans.length?`<br>ด้านที่มีแผนตรวจวัด: ${rssPlans.map(p=>esc(p[0])).join(' · ')}`:''}</div></div>`}`});
   }
 
   // 6) การตรวจสุขภาพ
