@@ -2479,7 +2479,46 @@ function buildSlides(){
   const riskEmpty=unknownCnt>0
     ? `<div class="s-empty">ไม่สามารถประเมินระดับความเสี่ยงได้ เนื่องจากยังไม่ได้ตรวจวัดค่าความเข้มข้นของสารในอากาศ ค่าความสว่าง และค่าความดังแบบ TWA<div style="font-size:.7em;color:#8fa6c4;margin-top:10px">(อยู่ในแผนการตรวจวัดสภาพแวดล้อม)</div></div>`
     : `<div class="s-empty">ผลการประเมินอยู่ในเกณฑ์ที่ยอมรับได้ / ต่ำ</div>`;
-  if(SO('risk')) slides.push({html:`
+  // เกณฑ์การประเมินความเสี่ยง (HRA) — แทรกก่อนหัวข้อประเมินความเสี่ยง
+  if(SO('risk')){
+    const bd='1px solid #cdd6e4';
+    const thn=`border:${bd};background:#0B2545;color:#fff;padding:6px 9px;text-align:left;font-weight:600`;
+    const tdn=`border:${bd};padding:5px 9px`, tdc=`border:${bd};padding:5px 9px;text-align:center;font-weight:700`;
+    const lvlTable=(cap,shortArr,descArr)=>`<table style="width:100%;border-collapse:collapse;font-size:.66em;margin-top:5px">
+      <thead><tr><th style="${thn};width:46px;text-align:center">ระดับ</th>${shortArr?`<th style="${thn};width:22%">ระดับ</th>`:''}<th style="${thn}">${esc(cap)}</th></tr></thead>
+      <tbody>${[1,2,3,4,5].map(n=>`<tr><td style="${tdc}">${n}</td>${shortArr?`<td style="${tdn}">${esc(shortArr[n-1])}</td>`:''}<td style="${tdn}">${esc(descArr[n-1])}</td></tr>`).join('')}</tbody></table>`;
+    const capT=t=>`<div style="font-weight:700;color:#0B2545;font-size:.82em;margin-top:6px">${t}</div>`;
+    // สไลด์ 1: HR + EF + CR
+    slides.push({cls:'top',html:`
+      <div class="s-kick">06 · เกณฑ์การประเมินความเสี่ยง</div>
+      <h2 class="s-h2">เกณฑ์การประเมินความเสี่ยง (HRA)</h2>
+      <div style="font-size:.8em;color:#3a4657;margin:-8px 0 4px">ตามประกาศกรมสวัสดิการและคุ้มครองแรงงาน · <b>ความเสี่ยง = HR × ER</b> โดย <b>ER = ระดับจาก (CR × EF)</b></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1 1 320px">${capT('ตารางที่ 1 · ระดับความรุนแรง (HR)')}${lvlTable('ผลกระทบต่อสุขภาพ',HR_SHORT,HR_DESC)}</div>
+        <div style="flex:1 1 320px">${capT('ตารางที่ 3 · ความถี่การได้รับสัมผัส (EF)')}${lvlTable('ความถี่การได้รับสัมผัส',EF_SHORT,EF_DESC)}</div>
+      </div>
+      ${capT('ตารางที่ 2 · ระดับความเข้มข้น (CR)')}${lvlTable('ค่าเฉลี่ยความเข้มข้นที่ผู้ปฏิบัติงานสัมผัส (เทียบ OEL-TWA)',null,CR_DESC)}`});
+    // สไลด์ 2: ER matrix + Risk matrix + การแปลผล
+    const thc=`border:${bd};background:#0B2545;color:#fff;padding:6px 11px;text-align:center;font-weight:700`;
+    const mtxTable=(corner,cellFn)=>{
+      let t=`<table style="border-collapse:collapse;font-size:.78em"><thead><tr><th style="${thc}">${corner}</th>${[1,2,3,4,5].map(c=>`<th style="${thc}">${c}</th>`).join('')}</tr></thead><tbody>`;
+      [1,2,3,4,5].forEach(r=>{ t+=`<tr><th style="${thc}">${r}</th>`+[1,2,3,4,5].map(c=>{const x=cellFn(r,c);return `<td style="border:${bd};text-align:center;padding:6px 12px;background:${x.bg};color:${x.fg};font-weight:600">${x.v}</td>`;}).join('')+`</tr>`; });
+      return t+'</tbody></table>';
+    };
+    const erM=mtxTable('EF＼CR',(ef,cr)=>{const s=cr*ef,lv=erLevelFromScore(s);return {v:s,bg:ER_COLOR[lv]||'#eef4ff',fg:ER_TXT[lv]||'#1c3a63'};});
+    const rkM=mtxTable('HR＼ER',(hr,er)=>{const s=hr*er,r=riskFromScore(s);return {v:s,bg:rkColor(r),fg:rkTxt(r)};});
+    const mapTbl=(head,rows)=>`<table style="border-collapse:collapse;font-size:.66em;margin-top:6px"><thead><tr>${head.map(h=>`<th style="${thn};text-align:center">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td style="border:${bd};padding:3px 9px;text-align:center${i===1?';font-weight:600':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    slides.push({cls:'top',html:`
+      <div class="s-kick">06 · เกณฑ์การประเมินความเสี่ยง</div>
+      <h2 class="s-h2">การให้คะแนนระดับความเสี่ยง</h2>
+      <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+        <div>${capT('ตารางที่ 4 · ระดับการสัมผัส (ER) = CR × EF')}<div style="margin-top:5px">${erM}</div>${mapTbl(['คะแนน CR×EF','การสัมผัส','ER'],[['1–5','ไม่ได้รับสัมผัส','1'],['6–8','น้อย','2'],['9–15','ปานกลาง','3'],['16–20','สูง','4'],['21–25','สูงมาก','5']])}</div>
+        <div>${capT('ตารางที่ 5 · ระดับความเสี่ยง = HR × ER')}<div style="margin-top:5px">${rkM}</div>${mapTbl(['คะแนน HR×ER','ระดับความเสี่ยง','ระดับ'],[['1–3','ยอมรับได้','0'],['4–9','ต่ำ','1'],['10–16','ปานกลาง','2'],['17–20','สูง','3'],['21–25','สูงมาก','4']])}</div>
+      </div>
+      <div class="s-note" style="font-size:.74em">วิธีอ่าน: หาคะแนน (แถว × คอลัมน์) แล้วเทียบช่วงคะแนนเป็นระดับ · สีเข้ม = ความเสี่ยงสูงขึ้น</div>`});
+  }
+
+  if(SO('risk')) slides.push({cls:'top',html:`
     <div class="s-kick">07 · ประเมินความเสี่ยง</div>
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับ</th></tr></thead><tbody>
@@ -2496,7 +2535,7 @@ function buildSlides(){
     const hzAll=d.hazards||[];
     if(SO('deptDetail')){
       if(!hzAll.length){
-        slides.push({html:`
+        slides.push({cls:'top',html:`
           <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}</div>
           <h2 class="s-h2">${titleHtml}</h2>
           ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
@@ -2507,7 +2546,7 @@ function buildSlides(){
         const npg=pages.length;
         pages.forEach((chunk,pi)=>{
           const hasUnknown=chunk.some(h=>effRisk(h)===RISK_UNKNOWN);
-          slides.push({html:`
+          slides.push({cls:'top',html:`
             <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}${npg>1?` · หน้า ${pi+1}/${npg}`:''}</div>
             <h2 class="s-h2">${titleHtml}${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
             ${pi===0&&(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
@@ -2542,7 +2581,7 @@ function buildSlides(){
         ? `<table class="s-tbl"><thead><tr><th>ด้าน</th><th>จุด/พื้นที่</th><th>วัดได้</th><th>ผล</th></tr></thead><tbody>
       ${tr.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])||'—'}</td><td>${esc(x[2])}</td><td><span class="rb ${rbc(x[3].c)}">${esc(x[3].t)}</span></td></tr>`).join('')}
       </tbody></table>${rssRows.length>7?`<div class="s-more">และอีก ${rssRows.length-7} รายการ</div>`:''}${rssPlans.length?`<div class="s-note"><b>แผนการตรวจวัด (ยังไม่มีผล):</b> ${rssPlans.map(p=>esc(p[0])).join(' · ')} — มีแผนดำเนินการ</div>`:''}`
-        : `<div class="s-empty" style="font-size:1.25em;line-height:1.55;color:#8a6d1f;font-weight:700">ยังไม่มีผลตรวจวัดสภาพแวดล้อมในการทำงาน<div style="font-size:.68em;color:#6b7a90;font-weight:500;margin-top:18px">จึงยังไม่สามารถระบุระดับความเสี่ยงได้ (อยู่ในแผนงาน)${rssPlans.length?`<br>ด้านที่มีแผนตรวจวัด: ${rssPlans.map(p=>esc(p[0])).join(' · ')}`:''}</div></div>`}`});
+        : `<div class="s-empty" style="font-size:1.2em;line-height:1.55;color:#8a6d1f;font-weight:700">ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)${rssPlans.length?`<div style="font-size:.7em;color:#6b7a90;font-weight:500;margin-top:18px">ด้านที่มีแผนตรวจวัด: ${rssPlans.map(p=>esc(p[0])).join(' · ')}</div>`:''}</div>`}`});
   }
 
   // 6) การตรวจสุขภาพ
@@ -2697,6 +2736,7 @@ function slidesCSS(){return `*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;background:#0a1a30;color:#0B2545;display:grid;place-items:center;min-height:100vh;padding:16px}
 .deck{position:relative;width:min(96vw,1120px);aspect-ratio:16/9;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .slide{position:absolute;inset:0;padding:6% 7%;display:none;flex-direction:column;justify-content:center;animation:sf .35s ease}
+.slide.top{justify-content:flex-start;padding-top:7%;padding-bottom:7%}
 .slide.on{display:flex}
 @keyframes sf{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .s-kick{color:#C8A046;font-weight:700;letter-spacing:.14em;font-size:clamp(11px,1.5vw,15px);text-transform:uppercase;margin-bottom:10px}
