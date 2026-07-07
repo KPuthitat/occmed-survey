@@ -944,7 +944,7 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, customExams:[], examOrder:[], examSampling:{},
+    depts:[], health:{}, healthPre:{}, customExams:[], examOrder:[], examSampling:{},
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     slideOpts:{},
@@ -1027,8 +1027,8 @@ function rssEval(type,r){
   return {t:'—',c:'na'};
 }
 function syncHealth(st){
-  st.health=st.health||{};
-  (st.depts||[]).forEach(d=>{ if(!st.health[d.id]) st.health[d.id]={}; });
+  st.health=st.health||{}; st.healthPre=st.healthPre||{};
+  (st.depts||[]).forEach(d=>{ if(!st.health[d.id]) st.health[d.id]={}; if(!st.healthPre[d.id]) st.healthPre[d.id]={}; });
 }
 let saveTimer=null;
 function save(){
@@ -1274,7 +1274,7 @@ function setH(did,hid,k,v){findHaz(findDept(did),hid)[k]=v;touch(); bx({k:'h',di
 function toggleDept(id){const d=findDept(id);d.open=!d.open;document.querySelector(`.dept[data-d="${id}"]`).classList.toggle('open',d.open);touch()}
 function expandAll(o){S.depts.forEach(d=>d.open=o);renderDepts();touch()}
 function addDept(){S.depts.push({id:uid(),name:'แผนกใหม่',en:'',proc:'',machines:'',staff:'',hazards:[],machineRefs:[],open:true});syncHealth(S);renderDepts();touch();bxFull()}
-function delDept(id){if(!confirm('ต้องการลบแผนกนี้และข้อมูลทั้งหมดหรือไม่?'))return;S.depts=S.depts.filter(d=>d.id!==id);delete S.health[id];renderDepts();touch();bxFull()}
+function delDept(id){if(!confirm('ต้องการลบแผนกนี้และข้อมูลทั้งหมดหรือไม่?'))return;S.depts=S.depts.filter(d=>d.id!==id);delete S.health[id];delete S.healthPre[id];renderDepts();touch();bxFull()}
 function addHaz(did){findDept(did).hazards.push(haz('กายภาพ','','',''));renderDepts();touch();bxFull()}
 function delHaz(did,hid){const d=findDept(did);d.hazards=d.hazards.filter(h=>h.id!==hid);renderDepts();touch();bxFull()}
 /* ---------- แนบ infographic เครื่องจักร (ไดอะแกรม + อันตราย/มาตรการ/PPE) เข้าแผนก ---------- */
@@ -1480,23 +1480,12 @@ function renderHealth(){
     </div></div>`;
   }
 
-  const exams=allExams(); const smp=S.examSampling||{};
-  html+=`<div class="card"><div class="bd" style="padding:12px">
-    <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
-    <div class="hcwrap"><table class="hcgrid">
-    <thead><tr><th class="dept-name">แผนก</th>${exams.map((e,i)=>`<th class="exhead"${smp[e]?` title="เวลาเก็บตัวอย่าง: ${esc(smp[e])}"`:''}><span>${esc(e)}${smp[e]?' ⏱':''}</span></th>`).join('')}</tr></thead><tbody>`;
-  S.depts.forEach(d=>{
-    html+=`<tr><td class="dept-name">${esc(d.name)}</td>`;
-    exams.forEach(ex=>{
-      const on=S.health[d.id] && S.health[d.id][ex];
-      html+=`<td><input type="checkbox" data-sync="hc:${d.id}:${ex}" ${on?'checked':''} onchange="setHC('${d.id}','${ex.replace(/'/g,"\\'")}',this.checked)"></td>`;
-    });
-    html+=`</tr>`;
-  });
-  html+=`</tbody></table></div>
-  <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ${exOrderOpen?'pri':'ghost'} sm" onclick="exToggleOrder()">⚙ จัดการคอลัมน์</button></div>`;
+  html+=hcMatrixCard('การตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)','ตรวจตามระยะ/เฝ้าระวังตามปัจจัยเสี่ยง','health','hc','setHC','autoHealth()');
+  html+=hcMatrixCard('ตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)','ตรวจก่อนรับเข้าทำงาน (baseline)','healthPre','hcp','setHCPre','autoHealthPre()');
+  const exams=allExams(); const smap=S.examSampling||{};
+  html+=`<div class="card"><div class="hd"><span class="eyebrow">จัดการรายการตรวจ (คอลัมน์ — ใช้ร่วมกันทั้งสองตาราง)</span></div><div class="bd" style="padding:12px">
+    <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ${exOrderOpen?'pri':'ghost'} sm" onclick="exToggleOrder()">⚙ จัดการคอลัมน์</button></div>`;
   if(exOrderOpen){
-    const smap=S.examSampling||{};
     html+=`<div class="exorder"><div class="exorder-h">จัดการคอลัมน์รายการตรวจ — แก้ชื่อในช่อง · ลากที่ ⋮⋮ หรือ ▲▼ เพื่อเรียงลำดับ · ✕ เพื่อลบ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI (เช่น End of shift) · ทำได้ทุกรายการ</div>`+
       `<datalist id="samplingList">${SAMPLING_OPTS.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`+
       `<ul class="exlist" id="exList">`+
@@ -1509,23 +1498,41 @@ function renderHealth(){
       }).join('')+
       `</ul></div>`;
   }
-  html+=`<div class="hint" style="margin-top:8px">หัวคอลัมน์เป็นแนวตั้งเพื่อให้ช่องติ๊กตรงกัน · เลื่อนตารางแนวนอนเพื่อดูทั้งหมด · กด "จัดการคอลัมน์" เพื่อเพิ่ม/ลบ/แก้ไข/เรียงลำดับได้ทุกรายการ</div>
+  html+=`<div class="hint" style="margin-top:8px">รายการตรวจ (คอลัมน์) ใช้ร่วมกันทั้งตารางเฝ้าระวังและตรวจก่อนเริ่มงาน · หัวคอลัมน์แนวตั้งเพื่อให้ช่องติ๊กตรงกัน · กด "จัดการคอลัมน์" เพื่อเพิ่ม/ลบ/แก้ไข/เรียงลำดับ</div>
   </div></div>`;
   el.innerHTML=html;
   if(exOrderOpen) exBindDrag();
   mountNotes('p3','health');
 }
+function hcMatrixCard(title,sub,mapKey,syncK,setFn,autoBtn){
+  const exams=allExams(); const smp=S.examSampling||{}; const map=S[mapKey]||{};
+  let h=`<div class="card"><div class="hd"><span class="eyebrow">${esc(title)}</span>${sub?`<span class="hint" style="margin-left:8px">${esc(sub)}</span>`:''}<div class="sp"></div><button class="btn ghost sm" onclick="${autoBtn}">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div><div class="bd" style="padding:12px">
+    <div class="hcwrap"><table class="hcgrid">
+    <thead><tr><th class="dept-name">แผนก</th>${exams.map(e=>`<th class="exhead"${smp[e]?` title="เวลาเก็บตัวอย่าง: ${esc(smp[e])}"`:''}><span>${esc(e)}${smp[e]?' ⏱':''}</span></th>`).join('')}</tr></thead><tbody>`;
+  S.depts.forEach(d=>{
+    h+=`<tr><td class="dept-name">${esc(d.name)}</td>`;
+    exams.forEach(ex=>{
+      const on=map[d.id] && map[d.id][ex];
+      h+=`<td><input type="checkbox" data-sync="${syncK}:${d.id}:${ex}" ${on?'checked':''} onchange="${setFn}('${d.id}','${ex.replace(/'/g,"\\'")}',this.checked)"></td>`;
+    });
+    h+=`</tr>`;
+  });
+  h+=`</tbody></table></div></div></div>`;
+  return h;
+}
 function setHC(did,ex,on){ S.health[did]=S.health[did]||{}; if(on)S.health[did][ex]=true; else delete S.health[did][ex]; touch(); bx({k:'hc',did,ex,v:!!on}); }
+function setHCPre(did,ex,on){ S.healthPre[did]=S.healthPre[did]||{}; if(on)S.healthPre[did][ex]=true; else delete S.healthPre[did][ex]; touch(); bx({k:'hcp',did,ex,v:!!on}); }
 function addExam(){
   const inp=document.getElementById('newExam'); if(!inp) return;
   const name=inp.value.trim(); if(!name){ inp.focus(); return; }
   if(allExams().some(e=>e.toLowerCase()===name.toLowerCase())){ toast('มีรายการนี้อยู่แล้ว'); inp.value=''; return; }
   examMaterialize(); S.examOrder.push(name); inp.value=''; renderHealth(); touch(); bxFull(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
 }
-function autoHealth(){
+function autoHealthInto(mapKey){
+  S[mapKey]=S[mapKey]||{};
   S.depts.forEach(d=>{
     const hz=d.hazards.map(h=>(h.name+' '+h.cat).toLowerCase());
-    const set=k=>{S.health[d.id]=S.health[d.id]||{};S.health[d.id][k]=true;};
+    const set=k=>{S[mapKey][d.id]=S[mapKey][d.id]||{};S[mapKey][d.id][k]=true;};
     const has=re=>hz.some(x=>re.test(x));
     set('ทางเดินหายใจ'); set('CXR');
     if(has(/เสียง|noise/)){set('การได้ยิน');set('Audiometry');}
@@ -1538,6 +1545,8 @@ function autoHealth(){
   });
   renderHealth(); touch(); bxFull(); toast('แนะนำรายการตรวจตามสิ่งคุกคามเรียบร้อยแล้ว');
 }
+function autoHealth(){ autoHealthInto('health'); }
+function autoHealthPre(){ autoHealthInto('healthPre'); }
 
 /* ============================================================
    PANEL 4 — SUMMARY
@@ -1879,12 +1888,18 @@ function buildReport(){
   h+=buildRssReport();
 
   // --- การตรวจสุขภาพ ---
-  h+=`<h2>◆ การตรวจสุขภาพและการสร้างเสริมสุขภาพ</h2><p class="muted">ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง</p>`;
-  h+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${allExams().map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
-  S.depts.forEach(d=>{
-    h+=`<tr><td style="white-space:nowrap">${esc(d.name)}</td>${allExams().map(e=>`<td style="text-align:center">${(S.health[d.id]&&S.health[d.id][e])?'✕':''}</td>`).join('')}</tr>`;
-  });
-  h+=`</tbody></table>`;
+  h+=`<h2>◆ การตรวจสุขภาพและการสร้างเสริมสุขภาพ</h2>`;
+  const hcTable=(cap,map)=>{
+    let t=`<p class="muted">${cap}</p>`;
+    t+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${allExams().map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
+    S.depts.forEach(d=>{
+      t+=`<tr><td style="white-space:nowrap">${esc(d.name)}</td>${allExams().map(e=>`<td style="text-align:center">${(map[d.id]&&map[d.id][e])?'✕':''}</td>`).join('')}</tr>`;
+    });
+    t+=`</tbody></table>`;
+    return t;
+  };
+  h+=hcTable('ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)',S.health||{});
+  h+=hcTable('ตารางการตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)',S.healthPre||{});
 
   // --- เวลาเก็บตัวอย่างชีวภาพ (ACGIH BEI) ---
   h+=buildSamplingReport();
@@ -3057,6 +3072,7 @@ function applyRemote(p){
           if(['hr','cr','freq','riskOverride'].indexOf(p.field)>=0 && document.querySelector('#p2 tr[data-h="'+p.hid+'"]')) refreshRisk(p.did,p.hid);
           save(); } }
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
+    else if(p.k==='hcp'){ S.healthPre[p.did]=S.healthPre[p.did]||{}; if(p.v) S.healthPre[p.did][p.ex]=true; else delete S.healthPre[p.did][p.ex]; setWidget('hcp:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
     else if(p.k==='note'){ S.notes=S.notes||{}; S.notes[p.sec]=p.v; setWidget('note:'+p.sec,p.v); save(); }
     else if(p.k==='exec'){ S.execSummary=p.v; setWidget('exec',p.v); save(); }
