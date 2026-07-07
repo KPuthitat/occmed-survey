@@ -2488,34 +2488,32 @@ function buildSlides(){
       <thead><tr><th style="${thn};width:46px;text-align:center">ระดับ</th>${shortArr?`<th style="${thn};width:22%">ระดับ</th>`:''}<th style="${thn}">${esc(cap)}</th></tr></thead>
       <tbody>${[1,2,3,4,5].map(n=>`<tr><td style="${tdc}">${n}</td>${shortArr?`<td style="${tdn}">${esc(shortArr[n-1])}</td>`:''}<td style="${tdn}">${esc(descArr[n-1])}</td></tr>`).join('')}</tbody></table>`;
     const capT=t=>`<div style="font-weight:700;color:#0B2545;font-size:.82em;margin-top:6px">${t}</div>`;
-    // สไลด์ 1: HR + EF + CR
+    // สไลด์ 1: ปัจจัยตั้งต้น เรียงตามลำดับ HR (1) → CR (2) → EF (3)
     slides.push({cls:'top',html:`
       <div class="s-kick">06 · เกณฑ์การประเมินความเสี่ยง</div>
       <h2 class="s-h2">เกณฑ์การประเมินความเสี่ยง (HRA)</h2>
-      <div style="font-size:.8em;color:#3a4657;margin:-8px 0 4px">ตามประกาศกรมสวัสดิการและคุ้มครองแรงงาน · <b>ความเสี่ยง = HR × ER</b> โดย <b>ER = ระดับจาก (CR × EF)</b></div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <div style="flex:1 1 320px">${capT('ตารางที่ 1 · ระดับความรุนแรง (HR)')}${lvlTable('ผลกระทบต่อสุขภาพ',HR_SHORT,HR_DESC)}</div>
-        <div style="flex:1 1 320px">${capT('ตารางที่ 3 · ความถี่การได้รับสัมผัส (EF)')}${lvlTable('ความถี่การได้รับสัมผัส',EF_SHORT,EF_DESC)}</div>
-      </div>
-      ${capT('ตารางที่ 2 · ระดับความเข้มข้น (CR)')}${lvlTable('ค่าเฉลี่ยความเข้มข้นที่ผู้ปฏิบัติงานสัมผัส (เทียบ OEL-TWA)',null,CR_DESC)}`});
-    // สไลด์ 2: ER matrix + Risk matrix + การแปลผล
-    const thc=`border:${bd};background:#0B2545;color:#fff;padding:6px 11px;text-align:center;font-weight:700`;
+      <div style="font-size:.82em;color:#3a4657;margin:-10px 0 6px">ลำดับการคำนวณ: <b>CR × EF → ER</b> แล้ว <b>HR × ER → ระดับความเสี่ยง</b> (ตามประกาศกรมสวัสดิการและคุ้มครองแรงงาน)</div>
+      ${capT('ตารางที่ 1 · ระดับความรุนแรง (HR)')}${lvlTable('ผลกระทบต่อสุขภาพ',HR_SHORT,HR_DESC)}
+      ${capT('ตารางที่ 2 · ระดับความเข้มข้น (CR)')}${lvlTable('ค่าเฉลี่ยความเข้มข้นที่ผู้ปฏิบัติงานสัมผัส (เทียบ OEL-TWA)',null,CR_DESC)}
+      ${capT('ตารางที่ 3 · ระดับความถี่การได้รับสัมผัส (EF)')}${lvlTable('ความถี่การได้รับสัมผัส',EF_SHORT,EF_DESC)}`});
+    // สไลด์ 2: ขั้นคำนวณ เรียงตามลำดับ ER = CR×EF (4) → ความเสี่ยง = HR×ER (5)
+    const thc=`border:${bd};background:#0B2545;color:#fff;padding:6px 12px;text-align:center;font-weight:700`;
     const mtxTable=(corner,cellFn)=>{
-      let t=`<table style="border-collapse:collapse;font-size:.78em"><thead><tr><th style="${thc}">${corner}</th>${[1,2,3,4,5].map(c=>`<th style="${thc}">${c}</th>`).join('')}</tr></thead><tbody>`;
-      [1,2,3,4,5].forEach(r=>{ t+=`<tr><th style="${thc}">${r}</th>`+[1,2,3,4,5].map(c=>{const x=cellFn(r,c);return `<td style="border:${bd};text-align:center;padding:6px 12px;background:${x.bg};color:${x.fg};font-weight:600">${x.v}</td>`;}).join('')+`</tr>`; });
+      let t=`<table style="border-collapse:collapse;font-size:.82em"><thead><tr><th style="${thc}">${corner}</th>${[1,2,3,4,5].map(c=>`<th style="${thc}">${c}</th>`).join('')}</tr></thead><tbody>`;
+      [1,2,3,4,5].forEach(r=>{ t+=`<tr><th style="${thc}">${r}</th>`+[1,2,3,4,5].map(c=>{const x=cellFn(r,c);return `<td style="border:${bd};text-align:center;padding:7px 14px;background:${x.bg};color:${x.fg};font-weight:600">${x.v}</td>`;}).join('')+`</tr>`; });
       return t+'</tbody></table>';
     };
     const erM=mtxTable('EF＼CR',(ef,cr)=>{const s=cr*ef,lv=erLevelFromScore(s);return {v:s,bg:ER_COLOR[lv]||'#eef4ff',fg:ER_TXT[lv]||'#1c3a63'};});
     const rkM=mtxTable('HR＼ER',(hr,er)=>{const s=hr*er,r=riskFromScore(s);return {v:s,bg:rkColor(r),fg:rkTxt(r)};});
-    const mapTbl=(head,rows)=>`<table style="border-collapse:collapse;font-size:.66em;margin-top:6px"><thead><tr>${head.map(h=>`<th style="${thn};text-align:center">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td style="border:${bd};padding:3px 9px;text-align:center${i===1?';font-weight:600':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    const mapTbl=(head,rows)=>`<table style="border-collapse:collapse;font-size:.68em"><thead><tr>${head.map(h=>`<th style="${thn};text-align:center">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td style="border:${bd};padding:4px 10px;text-align:center${i===1?';font-weight:600':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    const step=(cap,mtx,map)=>`${capT(cap)}<div style="display:flex;gap:22px;align-items:flex-start;margin-top:5px">${mtx}${map}</div>`;
     slides.push({cls:'top',html:`
       <div class="s-kick">06 · เกณฑ์การประเมินความเสี่ยง</div>
       <h2 class="s-h2">การให้คะแนนระดับความเสี่ยง</h2>
-      <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
-        <div>${capT('ตารางที่ 4 · ระดับการสัมผัส (ER) = CR × EF')}<div style="margin-top:5px">${erM}</div>${mapTbl(['คะแนน CR×EF','การสัมผัส','ER'],[['1–5','ไม่ได้รับสัมผัส','1'],['6–8','น้อย','2'],['9–15','ปานกลาง','3'],['16–20','สูง','4'],['21–25','สูงมาก','5']])}</div>
-        <div>${capT('ตารางที่ 5 · ระดับความเสี่ยง = HR × ER')}<div style="margin-top:5px">${rkM}</div>${mapTbl(['คะแนน HR×ER','ระดับความเสี่ยง','ระดับ'],[['1–3','ยอมรับได้','0'],['4–9','ต่ำ','1'],['10–16','ปานกลาง','2'],['17–20','สูง','3'],['21–25','สูงมาก','4']])}</div>
-      </div>
-      <div class="s-note" style="font-size:.74em">วิธีอ่าน: หาคะแนน (แถว × คอลัมน์) แล้วเทียบช่วงคะแนนเป็นระดับ · สีเข้ม = ความเสี่ยงสูงขึ้น</div>`});
+      <div style="font-size:.82em;color:#3a4657;margin:-10px 0 8px"><b>ขั้นที่ 1</b> หา ER จาก CR × EF · <b>ขั้นที่ 2</b> หาระดับความเสี่ยงจาก HR × ER</div>
+      ${step('ตารางที่ 4 · ระดับการสัมผัส (ER) = CR × EF',erM,mapTbl(['คะแนน CR×EF','การสัมผัส','ER'],[['1–5','ไม่ได้รับสัมผัส','1'],['6–8','น้อย','2'],['9–15','ปานกลาง','3'],['16–20','สูง','4'],['21–25','สูงมาก','5']]))}
+      <div style="margin-top:14px">${step('ตารางที่ 5 · ระดับความเสี่ยง = HR × ER',rkM,mapTbl(['คะแนน HR×ER','ระดับความเสี่ยง','ระดับ'],[['1–3','ยอมรับได้','0'],['4–9','ต่ำ','1'],['10–16','ปานกลาง','2'],['17–20','สูง','3'],['21–25','สูงมาก','4']]))}</div>
+      <div class="s-note" style="font-size:.74em;margin-top:8px">อ่านค่า: แถว × คอลัมน์ = คะแนน แล้วเทียบช่วงเป็นระดับ · สีเข้ม = ความเสี่ยงสูงขึ้น</div>`});
   }
 
   if(SO('risk')) slides.push({cls:'top',html:`
