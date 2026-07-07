@@ -280,7 +280,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .hcgrid input[type=checkbox]{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
 /* หัวคอลัมน์รายการตรวจแบบแนวตั้ง — คอลัมน์แคบ ช่องติ๊กตรงแนวกัน */
 .hcgrid th.exhead{padding:8px 3px;height:118px;vertical-align:bottom;font-size:11px;min-width:30px;max-width:34px}
-.hcgrid th.exhead span{writing-mode:vertical-rl;text-orientation:mixed;display:inline-block;white-space:nowrap;line-height:1.1}
+.hcgrid th.exhead span{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.1}
 .hcgrid th.exhead .exdel{writing-mode:horizontal-tb;display:block;margin:0 auto 6px;background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:5px;width:18px;height:18px;font-size:11px;line-height:1;cursor:pointer;padding:0}
 .hcgrid th.exhead .exdel:hover{background:var(--over)}
 .hcgrid td{min-width:30px}
@@ -1931,7 +1931,7 @@ function buildReport(){
   const hcTable=(cap,map)=>{
     const cols=allExams();
     let t=`<p class="muted">${cap}</p>`;
-    t+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${cols.map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
+    t+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${cols.map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
     S.depts.forEach(d=>{
       t+=`<tr><td style="white-space:nowrap">${esc(d.name)}</td>${cols.map(e=>`<td style="text-align:center">${(map[d.id]&&map[d.id][e])?'✕':''}</td>`).join('')}</tr>`;
     });
