@@ -973,13 +973,15 @@ function mountNotes(panelId,sec){ const p=document.getElementById(panelId); if(!
 // เก็บที่ S.examOrder/customExams/examSampling · การติ๊กแยกกันที่ S.health (periodic) และ S.healthPre (pre)
 function allExams(){ const ord=(S&&S.examOrder)||[]; if(ord.length) return ord.slice(); return EXAMS.concat((S&&S.customExams)||[]); }
 function examMaterialize(){ if(!S.examOrder||!S.examOrder.length){ S.examOrder=EXAMS.concat((S.customExams)||[]); } return S.examOrder; }
+// ส่งซิงค์คอลัมน์แบบเจาะจง (granular) — merge ได้ ไม่ถูก full-sync ของเพื่อนร่วมทีมเขียนทับ
+function bxExset(){ examMaterialize(); bx({k:'exset',order:S.examOrder.slice(),custom:(S.customExams||[]).slice(),samp:Object.assign({},S.examSampling||{})}); }
 function deleteExam(name){
   examMaterialize();
   S.examOrder=S.examOrder.filter(e=>e!==name);
   S.customExams=(S.customExams||[]).filter(e=>e!==name);
   if(S.examSampling) delete S.examSampling[name];
   S.depts.forEach(d=>{ if(S.health[d.id]) delete S.health[d.id][name]; if(S.healthPre[d.id]) delete S.healthPre[d.id][name]; });
-  renderHealth(); touch(); bxFull();
+  renderHealth(); touch(); bxExset();
 }
 function renameExam(oldName,newName){
   newName=(newName||'').trim();
@@ -990,20 +992,20 @@ function renameExam(oldName,newName){
   S.customExams=(S.customExams||[]).map(e=>e===oldName?newName:e);
   if(S.examSampling&&S.examSampling[oldName]!==undefined){ S.examSampling[newName]=S.examSampling[oldName]; delete S.examSampling[oldName]; }
   S.depts.forEach(d=>{ [S.health,S.healthPre].forEach(mp=>{ const hd=mp[d.id]; if(hd&&hd[oldName]){ hd[newName]=true; delete hd[oldName]; } }); });
-  renderHealth(); touch(); bxFull(); toast('เปลี่ยนชื่อเป็น "'+newName+'" แล้ว');
+  renderHealth(); touch(); bx({k:'exren',o:oldName,n:newName}); toast('เปลี่ยนชื่อเป็น "'+newName+'" แล้ว');
 }
 function addExam(){
   const inp=document.getElementById('newExam'); if(!inp) return;
   const name=inp.value.trim(); if(!name){ inp.focus(); return; }
   if(allExams().some(e=>e.toLowerCase()===name.toLowerCase())){ toast('มีรายการนี้อยู่แล้ว'); inp.value=''; return; }
-  examMaterialize(); S.examOrder.push(name); inp.value=''; renderHealth(); touch(); bxFull(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
+  examMaterialize(); S.examOrder.push(name); inp.value=''; renderHealth(); touch(); bxExset(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
 }
 let exOrderOpen=false;
 // เวลาเก็บตัวอย่างมาตรฐานตาม ACGIH BEIs® (biomonitoring sampling time)
 const SAMPLING_OPTS=['สิ้นสุดกะ (End of shift)','สิ้นกะ วันสุดท้ายของสัปดาห์ (End of shift at end of workweek)','สิ้นสุดสัปดาห์ทำงาน (End of workweek)','ก่อนเข้ากะ (Prior to shift)','ระหว่างกะ (During shift)','ก่อนกะถัดไป (Prior to next shift)','เพิ่มขึ้นระหว่างกะ (Increase during shift)','ไม่วิกฤต (Not critical)','ตามดุลยพินิจ (Discretionary)'];
 function exToggleOrder(){ exOrderOpen=!exOrderOpen; renderHealth(); }
-function setExamSampling(name,v){ S.examSampling=S.examSampling||{}; v=(v||'').trim(); if(v) S.examSampling[name]=v; else delete S.examSampling[name]; touch(); bxFull(); renderHealth(); }
-function exMove(i,dir){ const arr=allExams(); const j=i+dir; if(j<0||j>=arr.length) return; const t=arr[i]; arr[i]=arr[j]; arr[j]=t; S.examOrder=arr; touch(); bxFull(); renderHealth(); }
+function setExamSampling(name,v){ S.examSampling=S.examSampling||{}; v=(v||'').trim(); if(v) S.examSampling[name]=v; else delete S.examSampling[name]; touch(); bxExset(); renderHealth(); }
+function exMove(i,dir){ const arr=allExams(); const j=i+dir; if(j<0||j>=arr.length) return; const t=arr[i]; arr[i]=arr[j]; arr[j]=t; S.examOrder=arr; touch(); bxExset(); renderHealth(); }
 function exBindDrag(){
   const list=document.getElementById('exList'); if(!list) return;
   list.querySelectorAll('.exgrip').forEach(gr=>{
@@ -1013,7 +1015,7 @@ function exBindDrag(){
         for(const r of rows){ if(r===row) continue; const b=r.getBoundingClientRect(); if(y<b.top+b.height/2){ target=r; break; } }
         if(target) list.insertBefore(row,target); else list.appendChild(row); };
       const up=()=>{ row.classList.remove('dragging'); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up);
-        const order=[...list.querySelectorAll('.exrow')].map(r=>r.dataset.ex); S.examOrder=order; touch(); bxFull(); renderHealth(); };
+        const order=[...list.querySelectorAll('.exrow')].map(r=>r.dataset.ex); S.examOrder=order; touch(); bxExset(); renderHealth(); };
       document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
     });
   });
@@ -3288,6 +3290,8 @@ function applyRemote(p){
           save(); } }
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='hcp'){ S.healthPre[p.did]=S.healthPre[p.did]||{}; if(p.v) S.healthPre[p.did][p.ex]=true; else delete S.healthPre[p.did][p.ex]; setWidget('hcp:'+p.did+':'+p.ex,p.v,'check'); save(); }
+    else if(p.k==='exset'){ if(Array.isArray(p.order)) S.examOrder=p.order; if(Array.isArray(p.custom)) S.customExams=p.custom; S.examSampling=p.samp||{}; if(document.getElementById('p3')) renderHealth(); save(); }
+    else if(p.k==='exren'){ const o=p.o,n=p.n; if(Array.isArray(S.examOrder)) S.examOrder=S.examOrder.map(e=>e===o?n:e); S.customExams=(S.customExams||[]).map(e=>e===o?n:e); if(S.examSampling&&S.examSampling[o]!==undefined){ S.examSampling[n]=S.examSampling[o]; delete S.examSampling[o]; } (S.depts||[]).forEach(d=>[S.health,S.healthPre].forEach(mp=>{ const hd=mp&&mp[d.id]; if(hd&&hd[o]){ hd[n]=true; delete hd[o]; } })); if(document.getElementById('p3')) renderHealth(); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
     else if(p.k==='citem'){ const it=conclItems().find(x=>x.id===p.id); if(it){ it.text=p.v; setWidget('citem:'+p.id,p.v); } save(); }
     else if(p.k==='citemL'){ const it=conclItems().find(x=>x.id===p.id); if(it){ it.label=p.v; setWidget('citemL:'+p.id,p.v); } save(); }
