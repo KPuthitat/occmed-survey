@@ -2386,16 +2386,16 @@ function buildSlides(){
 
   // 4) ผลประเมินความเสี่ยงตามแผนก
   const risks=[];
-  S.depts.forEach(d=>d.hazards.forEach(h=>{const r=effRisk(h); if(r==='สูงมาก'||r==='สูง'||r==='ปานกลาง') risks.push({d:d.name,h:h.name,r});}));
+  S.depts.forEach(d=>d.hazards.forEach(h=>{const r=effRisk(h); if(r==='สูงมาก'||r==='สูง'||r==='ปานกลาง') risks.push({d:d.name,h:h.name,r,hr:h.hr,ef:h.freq});}));
   const rrank=r=>r==='สูงมาก'?0:r==='สูง'?1:2;
   risks.sort((a,b)=>rrank(a.r)-rrank(b.r));
   const top=risks.slice(0,7);
   slides.push({html:`
     <div class="s-kick">07 · ประเมินความเสี่ยง</div>
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
-    ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>ระดับ</th></tr></thead><tbody>
-    ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td><span class="rb ${x.r==='สูงมาก'?'vh':x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
-    </tbody></table>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
+    ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับ</th></tr></thead><tbody>
+    ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td style="text-align:center">${esc(x.hr)||'—'}</td><td style="text-align:center">${esc(x.ef)||'—'}</td><td><span class="rb ${x.r==='สูงมาก'?'vh':x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
+    </tbody></table><div class="s-note" style="font-size:.8em">HR = ระดับความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
     :`<div class="s-empty">ไม่พบรายการความเสี่ยงระดับสูง / ปานกลาง</div>`}`});
 
   // 4a) รายละเอียดแต่ละแผนก (ดึงจากข้อมูลรายงาน)
@@ -2409,9 +2409,9 @@ function buildSlides(){
       <h2 class="s-h2">${esc(d.name)||'แผนก'}${d.en?` <span style="font-size:.6em;color:#6b7a90;font-weight:400">(${esc(d.en)})</span>`:''}</h2>
       ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
       ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
-      ${hz.length?`<table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
-      ${hz.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td>${esc(h.cat)}</td><td><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
-      </tbody></table>${d.hazards.length>6?`<div class="s-more">และอีก ${d.hazards.length-6} สิ่งคุกคาม</div>`:''}`:'<div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>'}`});
+      ${hz.length?`<table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
+      ${hz.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td>${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
+      </tbody></table><div class="s-note" style="font-size:.78em">HR = ความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${d.hazards.length>6?`<div class="s-more">และอีก ${d.hazards.length-6} สิ่งคุกคาม</div>`:''}`:'<div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>'}`});
     // โปสเตอร์เครื่องจักรที่แนบในแผนก (ภาพเดียว)
     (d.machineRefs||[]).forEach(mi=>{ if(!MACHINE_REF[mi]) return; slides.push({cls:'mch',html:`
       <div class="s-kick">แผนก ${di+1} · ${esc(d.name)} · เครื่องจักร</div>
