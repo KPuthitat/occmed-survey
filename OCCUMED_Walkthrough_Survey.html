@@ -2388,8 +2388,8 @@ function buildSlides(){
     <div class="s-kv">
       <div><span>วันที่เดินสำรวจ</span><b>${beDate(g.surveyDate)||'—'}</b></div>
       <div><span>เวลา</span><b>${esc(g.surveyTime)||'—'}</b></div>
-      <div><span>ผู้ควบคุมการสำรวจ</span><b>${nlines(g.controllers).map(esc).join('<br>')||'—'}</b></div>
-      <div><span>ผู้สังเกตการณ์</span><b>${nlines(g.observers).map(esc).join('<br>')||'—'}</b></div>
+      <div><span>ผู้ควบคุมการสำรวจ</span><b style="font-size:.62em;line-height:1.35;font-weight:600">${nlines(g.controllers).map(esc).join('<br>')||'—'}</b></div>
+      <div><span>ผู้สังเกตการณ์</span><b style="font-size:.62em;line-height:1.35;font-weight:600">${nlines(g.observers).map(esc).join('<br>')||'—'}</b></div>
     </div>`});
 
   // 3) ภาพรวมความเสี่ยง
