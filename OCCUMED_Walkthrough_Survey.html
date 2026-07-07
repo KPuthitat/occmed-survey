@@ -297,6 +297,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .exname-edit{flex:1 1 140px;min-width:100px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:13px;font-weight:600;color:var(--navy2);background:#fff}
 .exname-edit:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
 .exsamp{flex:0 1 210px;min-width:120px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:12px;background:#fff}
+.exgrp{flex:0 0 auto;padding:6px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:12px;font-weight:600;color:var(--navy2);background:#f6f9fc;cursor:pointer}
 .exsamp:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,160,70,.15)}
 .exmove{display:flex;gap:4px}
 .exrowdel{width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--over);font-size:13px;cursor:pointer;line-height:1}
@@ -947,7 +948,7 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, healthPre:{}, customExams:[], examOrder:[], examSampling:{},
+    depts:[], health:{}, healthPre:{}, customExams:[], examOrder:[], examSampling:{}, examGroup:{},
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     slideOpts:{},
@@ -973,13 +974,25 @@ function mountNotes(panelId,sec){ const p=document.getElementById(panelId); if(!
 // เก็บที่ S.examOrder/customExams/examSampling · การติ๊กแยกกันที่ S.health (periodic) และ S.healthPre (pre)
 function allExams(){ const ord=(S&&S.examOrder)||[]; if(ord.length) return ord.slice(); return EXAMS.concat((S&&S.customExams)||[]); }
 function examMaterialize(){ if(!S.examOrder||!S.examOrder.length){ S.examOrder=EXAMS.concat((S.customExams)||[]); } return S.examOrder; }
+// กลุ่มรายการตรวจ: ตรวจร่างกาย (phys) · เครื่องมือพิเศษ (special) · ห้องปฏิบัติการ (lab)
+const EXAM_GROUPS=[['phys','ตรวจร่างกาย'],['special','เครื่องมือพิเศษ'],['lab','ห้องปฏิบัติการ']];
+const EXAM_GROUP_LABEL={phys:'ตรวจร่างกาย',special:'เครื่องมือพิเศษ',lab:'ห้องปฏิบัติการ'};
+function examGroupOf(name){
+  if(S.examGroup && S.examGroup[name]) return S.examGroup[name];
+  const s=String(name||'').toLowerCase();
+  if(/va\b|vision|ekg|ecg|คลื่นไฟฟ้าหัวใจ|cxr|chest|x-?ray|เอกซเรย์|เอกซ์เรย์|spiro|สมรรถภาพปอด|audio|การได้ยิน|ตาบอดสี|lung|เครื่องมือ|กลอง/.test(s)) return 'special';
+  if(/ผิวหนัง|ทางเดินหายใจ|มองเห็น|ไหลเวียน|กระดูก|กล้ามเนื้อ|ระบบประสาท|neuro|ตรวจร่างกาย|ร่างกายทั่วไป|vital|ความดัน|ชีพจร|bmi|น้ำหนัก/.test(s)) return 'phys';
+  return 'lab';
+}
+function setExamGroup(name,g){ S.examGroup=S.examGroup||{}; if(g) S.examGroup[name]=g; else delete S.examGroup[name]; touch(); bxExset(); }
 // ส่งซิงค์คอลัมน์แบบเจาะจง (granular) — merge ได้ ไม่ถูก full-sync ของเพื่อนร่วมทีมเขียนทับ
-function bxExset(){ examMaterialize(); bx({k:'exset',order:S.examOrder.slice(),custom:(S.customExams||[]).slice(),samp:Object.assign({},S.examSampling||{})}); }
+function bxExset(){ examMaterialize(); bx({k:'exset',order:S.examOrder.slice(),custom:(S.customExams||[]).slice(),samp:Object.assign({},S.examSampling||{}),grp:Object.assign({},S.examGroup||{})}); }
 function deleteExam(name){
   examMaterialize();
   S.examOrder=S.examOrder.filter(e=>e!==name);
   S.customExams=(S.customExams||[]).filter(e=>e!==name);
   if(S.examSampling) delete S.examSampling[name];
+  if(S.examGroup) delete S.examGroup[name];
   S.depts.forEach(d=>{ if(S.health[d.id]) delete S.health[d.id][name]; if(S.healthPre[d.id]) delete S.healthPre[d.id][name]; });
   renderHealth(); touch(); bxExset();
 }
@@ -991,6 +1004,7 @@ function renameExam(oldName,newName){
   S.examOrder=S.examOrder.map(e=>e===oldName?newName:e);
   S.customExams=(S.customExams||[]).map(e=>e===oldName?newName:e);
   if(S.examSampling&&S.examSampling[oldName]!==undefined){ S.examSampling[newName]=S.examSampling[oldName]; delete S.examSampling[oldName]; }
+  if(S.examGroup&&S.examGroup[oldName]!==undefined){ S.examGroup[newName]=S.examGroup[oldName]; delete S.examGroup[oldName]; }
   S.depts.forEach(d=>{ [S.health,S.healthPre].forEach(mp=>{ const hd=mp[d.id]; if(hd&&hd[oldName]){ hd[newName]=true; delete hd[oldName]; } }); });
   renderHealth(); touch(); bx({k:'exren',o:oldName,n:newName}); toast('เปลี่ยนชื่อเป็น "'+newName+'" แล้ว');
 }
@@ -1544,12 +1558,13 @@ function examManageCard(){
   let h=`<div class="card"><div class="hd"><span class="eyebrow">จัดการรายการตรวจ (คอลัมน์ — ฐานเดียว ใช้ร่วมกันทั้งสองตาราง)</span></div><div class="bd" style="padding:12px">
     <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ${exOrderOpen?'pri':'ghost'} sm" onclick="exToggleOrder()">⚙ จัดการคอลัมน์</button></div>`;
   if(exOrderOpen){
-    h+=`<div class="exorder"><div class="exorder-h">จัดการคอลัมน์รายการตรวจ (ใช้ร่วมกันทั้งสองตาราง) — แก้ชื่อในช่อง · ลากที่ ⋮⋮ หรือ ▲▼ เพื่อเรียงลำดับ · ✕ เพื่อลบ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI</div>`+
+    h+=`<div class="exorder"><div class="exorder-h">จัดการคอลัมน์รายการตรวจ (ใช้ร่วมกันทั้งสองตาราง) — แก้ชื่อ · เลือก "กลุ่ม" (ใช้แบ่งหน้าในสไลด์) · ลากที่ ⋮⋮ หรือ ▲▼ เพื่อเรียงลำดับ · ✕ เพื่อลบ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI</div>`+
       `<datalist id="samplingList">${SAMPLING_OPTS.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`+
       `<ul class="exlist" id="exList">`+
-      exams.map((e,i)=>{ const nm=esc(e).replace(/'/g,"\\'");
+      exams.map((e,i)=>{ const nm=esc(e).replace(/'/g,"\\'"); const g=examGroupOf(e);
         return `<li class="exrow" data-i="${i}" data-ex="${esc(e)}"><span class="exgrip" title="ลากเพื่อย้าย">⋮⋮</span>`+
         `<input class="exname-edit" value="${esc(e)}" title="แก้ไขชื่อรายการตรวจ" onchange="renameExam('${nm}',this.value)">`+
+        `<select class="exgrp" title="กลุ่มรายการตรวจ (ใช้แบ่งหน้าในสไลด์นำเสนอ)" onchange="setExamGroup('${nm}',this.value)">${EXAM_GROUPS.map(gr=>`<option value="${gr[0]}"${g===gr[0]?' selected':''}>${gr[1]}</option>`).join('')}</select>`+
         `<input class="exsamp" list="samplingList" placeholder="เวลาเก็บตัวอย่าง (BEI)…" value="${esc(smp[e]||'')}" onchange="setExamSampling('${nm}',this.value)">`+
         `<span class="exmove"><button type="button" onclick="exMove(${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMove(${i},1)" title="ลง">▼</button></span>`+
         `<button type="button" class="exrowdel" onclick="deleteExam('${nm}')" title="ลบรายการนี้">✕</button></li>`;
@@ -2630,7 +2645,13 @@ function buildSlides(){
     const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;};
     const bd='1px solid #cbd5e3';
     const vhead=t=>`<th style="border:${bd};background:#0B2545;color:#fff;height:104px;vertical-align:bottom;padding:7px 5px;text-align:center;min-width:34px"><span style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.15;font-weight:600;font-size:.95em">${esc(t)}</span></th>`;
-    const EXPP=11, DPP=5;
+    const EXPP=11, DPP=4;
+    const buildHcTable=(map,echunk,dchunk)=>`<table style="border-collapse:collapse;font-size:.86em;margin:8px auto 0">
+        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:120px">แผนก</th>${echunk.map(e=>vhead(e)).join('')}</tr></thead>
+        <tbody>${dchunk.map((d,ri)=>`<tr><td style="border:${bd};padding:8px 14px;white-space:nowrap;font-weight:600;background:#eef2f8;color:#0B2545">${esc(d.name)||'—'}</td>${echunk.map(e=>(map[d.id]&&map[d.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:8px 16px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:8px 16px"></td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+      <div class="s-note" style="font-size:.78em;text-align:center;margin-top:12px"><span style="display:inline-block;width:15px;height:15px;background:#C8A046;border-radius:3px;vertical-align:middle;color:#fff;font-size:11px;line-height:15px;text-align:center;font-weight:700">✓</span> = รายการที่กำหนดให้ตรวจในแผนกนั้น</div>`;
+    // แยกหน้าตาม "กลุ่ม" (ตรวจร่างกาย / เครื่องมือพิเศษ / ห้องปฏิบัติการ) — หน้าละกลุ่ม
     const healthGroupSlides=(mapKey,title)=>{
       const map=S[mapKey]||{};
       const exU=allExams().filter(e=>S.depts.some(d=>map[d.id]&&map[d.id][e]));
@@ -2641,20 +2662,19 @@ function buildSlides(){
           <div class="s-empty">ยังไม่ได้เลือกรายการตรวจในตารางนี้</div>`});
         return;
       }
-      const exPages=chunk(exU,EXPP), deptPages=chunk(S.depts,DPP);
-      const total=exPages.length*deptPages.length; let pageNo=0;
-      deptPages.forEach(dchunk=>{
-        exPages.forEach(echunk=>{
-          pageNo++;
-          const tbl=`<table style="border-collapse:collapse;font-size:.86em;margin:8px auto 0">
-            <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:120px">แผนก</th>${echunk.map(e=>vhead(e)).join('')}</tr></thead>
-            <tbody>${dchunk.map((d,ri)=>`<tr><td style="border:${bd};padding:8px 14px;white-space:nowrap;font-weight:600;background:#eef2f8;color:#0B2545">${esc(d.name)||'—'}</td>${echunk.map(e=>(map[d.id]&&map[d.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:8px 16px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:8px 16px"></td>`).join('')}</tr>`).join('')}</tbody>
-          </table>
-          <div class="s-note" style="font-size:.78em;text-align:center;margin-top:12px"><span style="display:inline-block;width:15px;height:15px;background:#C8A046;border-radius:3px;vertical-align:middle;color:#fff;font-size:11px;line-height:15px;text-align:center;font-weight:700">✓</span> = รายการที่กำหนดให้ตรวจในแผนกนั้น</div>`;
-          slides.push({cls:'top',html:`
-            <div class="s-kick">09 · ตรวจสุขภาพ${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
-            <h2 class="s-h2">${esc(title)}${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
-            ${tbl}`});
+      EXAM_GROUPS.forEach(([gk,gl])=>{
+        const exG=exU.filter(e=>examGroupOf(e)===gk);
+        if(!exG.length) return;
+        const exPages=chunk(exG,EXPP), deptPages=chunk(S.depts,DPP);
+        const total=exPages.length*deptPages.length; let pageNo=0;
+        deptPages.forEach(dchunk=>{
+          exPages.forEach(echunk=>{
+            pageNo++;
+            slides.push({cls:'top',html:`
+              <div class="s-kick">09 · ตรวจสุขภาพ · ${esc(gl)}${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
+              <h2 class="s-h2">${esc(title)} <span style="font-size:.62em;color:#C8A046">· ${esc(gl)}</span>${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+              ${buildHcTable(map,echunk,dchunk)}`});
+          });
         });
       });
     };
@@ -3290,8 +3310,8 @@ function applyRemote(p){
           save(); } }
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='hcp'){ S.healthPre[p.did]=S.healthPre[p.did]||{}; if(p.v) S.healthPre[p.did][p.ex]=true; else delete S.healthPre[p.did][p.ex]; setWidget('hcp:'+p.did+':'+p.ex,p.v,'check'); save(); }
-    else if(p.k==='exset'){ if(Array.isArray(p.order)) S.examOrder=p.order; if(Array.isArray(p.custom)) S.customExams=p.custom; S.examSampling=p.samp||{}; if(document.getElementById('p3')) renderHealth(); save(); }
-    else if(p.k==='exren'){ const o=p.o,n=p.n; if(Array.isArray(S.examOrder)) S.examOrder=S.examOrder.map(e=>e===o?n:e); S.customExams=(S.customExams||[]).map(e=>e===o?n:e); if(S.examSampling&&S.examSampling[o]!==undefined){ S.examSampling[n]=S.examSampling[o]; delete S.examSampling[o]; } (S.depts||[]).forEach(d=>[S.health,S.healthPre].forEach(mp=>{ const hd=mp&&mp[d.id]; if(hd&&hd[o]){ hd[n]=true; delete hd[o]; } })); if(document.getElementById('p3')) renderHealth(); save(); }
+    else if(p.k==='exset'){ if(Array.isArray(p.order)) S.examOrder=p.order; if(Array.isArray(p.custom)) S.customExams=p.custom; S.examSampling=p.samp||{}; if(p.grp) S.examGroup=p.grp; if(document.getElementById('p3')) renderHealth(); save(); }
+    else if(p.k==='exren'){ const o=p.o,n=p.n; if(Array.isArray(S.examOrder)) S.examOrder=S.examOrder.map(e=>e===o?n:e); S.customExams=(S.customExams||[]).map(e=>e===o?n:e); if(S.examSampling&&S.examSampling[o]!==undefined){ S.examSampling[n]=S.examSampling[o]; delete S.examSampling[o]; } if(S.examGroup&&S.examGroup[o]!==undefined){ S.examGroup[n]=S.examGroup[o]; delete S.examGroup[o]; } (S.depts||[]).forEach(d=>[S.health,S.healthPre].forEach(mp=>{ const hd=mp&&mp[d.id]; if(hd&&hd[o]){ hd[n]=true; delete hd[o]; } })); if(document.getElementById('p3')) renderHealth(); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
     else if(p.k==='citem'){ const it=conclItems().find(x=>x.id===p.id); if(it){ it.text=p.v; setWidget('citem:'+p.id,p.v); } save(); }
     else if(p.k==='citemL'){ const it=conclItems().find(x=>x.id===p.id); if(it){ it.label=p.v; setWidget('citemL:'+p.id,p.v); } save(); }
