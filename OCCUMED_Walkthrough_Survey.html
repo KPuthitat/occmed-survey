@@ -2649,8 +2649,10 @@ function buildSlides(){
     const vDept=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:8px 4px;text-align:center;min-width:30px;height:156px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:normal;max-height:142px;line-height:1.25;font-weight:600;font-size:.78em;margin:0 auto">${esc(t)}</div></th>`;
     // ตัด prefix ชื่อกลุ่มออกจากชื่อแถว (h2 บอกกลุ่มอยู่แล้ว) — ไม่แตะชื่อจริงที่เก็บไว้
     const stripGrp=(name,gl)=>{ if(!gl) return name; const re=new RegExp('^\\s*'+gl.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+'\\s*[-–—·:]+\\s*'); return String(name||'').replace(re,''); };
+    // ชื่อแผนกในสไลด์ใช้แบบกระชับ — ตัดเอาก่อนเครื่องหมาย "/" (เช่น งานทำความสะอาด/ล้างคราบน้ำมัน → งานทำความสะอาด)
+    const shortDept=n=>String(n||'—').split('/')[0].trim()||'—';
     const buildHcTable=(map,examRows,deptCols,gl)=>`<table style="border-collapse:collapse;font-size:.9em;margin:6px auto 0">
-        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:130px">รายการตรวจ</th>${deptCols.map(dp=>vDept(dp.name||'—')).join('')}</tr></thead>
+        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:130px">รายการตรวจ</th>${deptCols.map(dp=>vDept(shortDept(dp.name))).join('')}</tr></thead>
         <tbody>${examRows.map((e,ri)=>`<tr><td style="border:${bd};padding:9px 14px;white-space:nowrap;font-weight:600;background:#eef2f8;color:#0B2545">${esc(stripGrp(e,gl))||esc(e)}</td>${deptCols.map(dp=>(map[dp.id]&&map[dp.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:9px 10px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:9px 10px"></td>`).join('')}</tr>`).join('')}</tbody>
       </table>`;
     // หน้าที่ 1 = สารบัญรายการตรวจ แบ่งกลุ่ม (อธิบายว่าตรวจอะไรบ้าง)
@@ -2676,7 +2678,10 @@ function buildSlides(){
       EXAM_GROUPS.forEach(([gk,gl])=>{
         const exG=exU.filter(e=>examGroupOf(e)===gk);
         if(!exG.length) return;
-        const rowPages=chunk(exG,EXAM_ROWS_PP), colPages=chunk(S.depts,DEPT_COLS_PP);
+        // กระจายแถวให้เท่า ๆ กันเมื่อแบ่งหลายหน้า (ไม่ให้หน้าสุดท้ายโล่ง)
+        const nRowPages=Math.max(1,Math.ceil(exG.length/EXAM_ROWS_PP));
+        const perRows=Math.ceil(exG.length/nRowPages);
+        const rowPages=chunk(exG,perRows), colPages=chunk(S.depts,DEPT_COLS_PP);
         const total=rowPages.length*colPages.length; let pageNo=0;
         rowPages.forEach(examRows=>{
           colPages.forEach(deptCols=>{
