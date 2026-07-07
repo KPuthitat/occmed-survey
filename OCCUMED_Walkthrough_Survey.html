@@ -947,7 +947,7 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, healthPre:{}, customExams:[], examOrder:[], examSampling:{}, customExamsPre:[], examOrderPre:[], examSamplingPre:{},
+    depts:[], health:{}, healthPre:{}, customExams:[], examOrder:[], examSampling:{},
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     slideOpts:{},
@@ -969,48 +969,43 @@ function notesCard(sec){
 function mountNotes(panelId,sec){ const p=document.getElementById(panelId); if(!p) return; const old=p.querySelector('.notecard'); if(old) old.remove(); p.insertAdjacentHTML('beforeend',notesCard(sec)); }
 // รายการตรวจ: EXAMS เป็นค่าตั้งต้น · เมื่อผู้ใช้เริ่มจัดการ (เพิ่ม/ลบ/แก้/เรียง) จะ "materialize"
 // ลง S.examOrder ให้เป็นรายการจริงที่ผู้ใช้ควบคุมเต็มที่ (ลบ/แก้ได้ทุกตัว รวมค่าตั้งต้น)
-// รายการตรวจแยกตามกลุ่ม: 'periodic' (ตามปัจจัยเสี่ยง) และ 'pre' (ก่อนเริ่มงาน) มีคอลัมน์ของตัวเอง
-function exG(grp){
-  return grp==='pre'
-    ? {ord:'examOrderPre', cust:'customExamsPre', samp:'examSamplingPre', map:'healthPre'}
-    : {ord:'examOrder', cust:'customExams', samp:'examSampling', map:'health'};
-}
-function allExamsG(grp){ const g=exG(grp); const ord=(S&&S[g.ord])||[]; if(ord.length) return ord.slice(); return EXAMS.concat((S&&S[g.cust])||[]); }
-function allExams(){ return allExamsG('periodic'); }
-function examMaterializeG(grp){ const g=exG(grp); if(!S[g.ord]||!S[g.ord].length){ S[g.ord]=EXAMS.concat((S[g.cust])||[]); } return S[g.ord]; }
-function deleteExamG(grp,name){
-  const g=exG(grp); examMaterializeG(grp);
-  S[g.ord]=S[g.ord].filter(e=>e!==name);
-  S[g.cust]=(S[g.cust]||[]).filter(e=>e!==name);
-  if(S[g.samp]) delete S[g.samp][name];
-  S.depts.forEach(d=>{ if(S[g.map][d.id]) delete S[g.map][d.id][name]; });
+// รายการตรวจ (คอลัมน์) ใช้ "ฐานเดียวกัน" ทั้งตารางก่อนเริ่มงาน (Pre-placement) และตามปัจจัยเสี่ยง (Periodic)
+// เก็บที่ S.examOrder/customExams/examSampling · การติ๊กแยกกันที่ S.health (periodic) และ S.healthPre (pre)
+function allExams(){ const ord=(S&&S.examOrder)||[]; if(ord.length) return ord.slice(); return EXAMS.concat((S&&S.customExams)||[]); }
+function examMaterialize(){ if(!S.examOrder||!S.examOrder.length){ S.examOrder=EXAMS.concat((S.customExams)||[]); } return S.examOrder; }
+function deleteExam(name){
+  examMaterialize();
+  S.examOrder=S.examOrder.filter(e=>e!==name);
+  S.customExams=(S.customExams||[]).filter(e=>e!==name);
+  if(S.examSampling) delete S.examSampling[name];
+  S.depts.forEach(d=>{ if(S.health[d.id]) delete S.health[d.id][name]; if(S.healthPre[d.id]) delete S.healthPre[d.id][name]; });
   renderHealth(); touch(); bxFull();
 }
-function renameExamG(grp,oldName,newName){
+function renameExam(oldName,newName){
   newName=(newName||'').trim();
   if(!newName||newName===oldName){ renderHealth(); return; }
-  if(allExamsG(grp).some(e=>e.toLowerCase()===newName.toLowerCase())){ toast('มีรายการชื่อนี้อยู่แล้ว'); renderHealth(); return; }
-  const g=exG(grp); examMaterializeG(grp);
-  S[g.ord]=S[g.ord].map(e=>e===oldName?newName:e);
-  S[g.cust]=(S[g.cust]||[]).map(e=>e===oldName?newName:e);
-  if(S[g.samp]&&S[g.samp][oldName]!==undefined){ S[g.samp][newName]=S[g.samp][oldName]; delete S[g.samp][oldName]; }
-  S.depts.forEach(d=>{ const hd=S[g.map][d.id]; if(hd&&hd[oldName]){ hd[newName]=true; delete hd[oldName]; } });
+  if(allExams().some(e=>e.toLowerCase()===newName.toLowerCase())){ toast('มีรายการชื่อนี้อยู่แล้ว'); renderHealth(); return; }
+  examMaterialize();
+  S.examOrder=S.examOrder.map(e=>e===oldName?newName:e);
+  S.customExams=(S.customExams||[]).map(e=>e===oldName?newName:e);
+  if(S.examSampling&&S.examSampling[oldName]!==undefined){ S.examSampling[newName]=S.examSampling[oldName]; delete S.examSampling[oldName]; }
+  S.depts.forEach(d=>{ [S.health,S.healthPre].forEach(mp=>{ const hd=mp[d.id]; if(hd&&hd[oldName]){ hd[newName]=true; delete hd[oldName]; } }); });
   renderHealth(); touch(); bxFull(); toast('เปลี่ยนชื่อเป็น "'+newName+'" แล้ว');
 }
-function addExamG(grp){
-  const inp=document.getElementById('newExam_'+grp); if(!inp) return;
+function addExam(){
+  const inp=document.getElementById('newExam'); if(!inp) return;
   const name=inp.value.trim(); if(!name){ inp.focus(); return; }
-  if(allExamsG(grp).some(e=>e.toLowerCase()===name.toLowerCase())){ toast('มีรายการนี้อยู่แล้ว'); inp.value=''; return; }
-  const g=exG(grp); examMaterializeG(grp); S[g.ord].push(name); inp.value=''; renderHealth(); touch(); bxFull(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
+  if(allExams().some(e=>e.toLowerCase()===name.toLowerCase())){ toast('มีรายการนี้อยู่แล้ว'); inp.value=''; return; }
+  examMaterialize(); S.examOrder.push(name); inp.value=''; renderHealth(); touch(); bxFull(); toast('เพิ่มรายการตรวจ "'+name+'" แล้ว');
 }
-let exOrderOpen={periodic:false, pre:false};
+let exOrderOpen=false;
 // เวลาเก็บตัวอย่างมาตรฐานตาม ACGIH BEIs® (biomonitoring sampling time)
 const SAMPLING_OPTS=['สิ้นสุดกะ (End of shift)','สิ้นกะ วันสุดท้ายของสัปดาห์ (End of shift at end of workweek)','สิ้นสุดสัปดาห์ทำงาน (End of workweek)','ก่อนเข้ากะ (Prior to shift)','ระหว่างกะ (During shift)','ก่อนกะถัดไป (Prior to next shift)','เพิ่มขึ้นระหว่างกะ (Increase during shift)','ไม่วิกฤต (Not critical)','ตามดุลยพินิจ (Discretionary)'];
-function exToggleOrderG(grp){ exOrderOpen[grp]=!exOrderOpen[grp]; renderHealth(); }
-function setExamSamplingG(grp,name,v){ const g=exG(grp); S[g.samp]=S[g.samp]||{}; v=(v||'').trim(); if(v) S[g.samp][name]=v; else delete S[g.samp][name]; touch(); bxFull(); renderHealth(); }
-function exMoveG(grp,i,dir){ const g=exG(grp); const arr=allExamsG(grp); const j=i+dir; if(j<0||j>=arr.length) return; const t=arr[i]; arr[i]=arr[j]; arr[j]=t; S[g.ord]=arr; touch(); bxFull(); renderHealth(); }
-function exBindDragG(grp){
-  const list=document.getElementById('exList_'+grp); if(!list) return; const g=exG(grp);
+function exToggleOrder(){ exOrderOpen=!exOrderOpen; renderHealth(); }
+function setExamSampling(name,v){ S.examSampling=S.examSampling||{}; v=(v||'').trim(); if(v) S.examSampling[name]=v; else delete S.examSampling[name]; touch(); bxFull(); renderHealth(); }
+function exMove(i,dir){ const arr=allExams(); const j=i+dir; if(j<0||j>=arr.length) return; const t=arr[i]; arr[i]=arr[j]; arr[j]=t; S.examOrder=arr; touch(); bxFull(); renderHealth(); }
+function exBindDrag(){
+  const list=document.getElementById('exList'); if(!list) return;
   list.querySelectorAll('.exgrip').forEach(gr=>{
     gr.addEventListener('pointerdown',ev=>{ ev.preventDefault(); const row=gr.closest('.exrow'); if(!row) return;
       row.classList.add('dragging');
@@ -1018,7 +1013,7 @@ function exBindDragG(grp){
         for(const r of rows){ if(r===row) continue; const b=r.getBoundingClientRect(); if(y<b.top+b.height/2){ target=r; break; } }
         if(target) list.insertBefore(row,target); else list.appendChild(row); };
       const up=()=>{ row.classList.remove('dragging'); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up);
-        const order=[...list.querySelectorAll('.exrow')].map(r=>r.dataset.ex); S[g.ord]=order; touch(); bxFull(); renderHealth(); };
+        const order=[...list.querySelectorAll('.exrow')].map(r=>r.dataset.ex); S.examOrder=order; touch(); bxFull(); renderHealth(); };
       document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
     });
   });
@@ -1040,6 +1035,18 @@ function rssEval(type,r){
 }
 function syncHealth(st){
   st.health=st.health||{}; st.healthPre=st.healthPre||{};
+  // migrate: รวมคอลัมน์ Pre/Periodic เป็นฐานเดียวกัน — ยึดตารางที่มีคอลัมน์มากที่สุด (กันข้อมูลหาย)
+  if(st.examOrderPre||st.customExamsPre||st.examSamplingPre){
+    const aLen=(st.examOrder||[]).length, bLen=(st.examOrderPre||[]).length;
+    if(bLen>aLen){
+      st.examOrder=(st.examOrderPre||[]).slice();
+      st.examSampling=Object.assign({}, st.examSampling||{}, st.examSamplingPre||{});
+      if((st.customExamsPre||[]).length) st.customExams=(st.customExamsPre||[]).slice();
+    } else {
+      st.examSampling=Object.assign({}, st.examSamplingPre||{}, st.examSampling||{});
+    }
+    delete st.examOrderPre; delete st.customExamsPre; delete st.examSamplingPre;
+  }
   (st.depts||[]).forEach(d=>{ if(!st.health[d.id]) st.health[d.id]={}; if(!st.healthPre[d.id]) st.healthPre[d.id]={}; });
 }
 let saveTimer=null;
@@ -1501,11 +1508,11 @@ function renderHealth(){
     </div></div>`;
   }
 
-  html+=hcMatrixCard('pre','ตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)','ตรวจก่อนรับเข้าทำงาน (baseline) — รายการตรวจแยกจากตารางเฝ้าระวัง');
-  html+=hcMatrixCard('periodic','การตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)','ตรวจตามระยะ/เฝ้าระวังตามปัจจัยเสี่ยง — รายการตรวจแยกจากตารางก่อนเริ่มงาน');
+  html+=hcMatrixCard('pre','ตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)','ตรวจก่อนรับเข้าทำงาน (baseline)');
+  html+=hcMatrixCard('periodic','การตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)','ตรวจตามระยะ/เฝ้าระวังตามปัจจัยเสี่ยง');
+  html+=examManageCard();
   el.innerHTML=html;
-  if(exOrderOpen.pre) exBindDragG('pre');
-  if(exOrderOpen.periodic) exBindDragG('periodic');
+  if(exOrderOpen) exBindDrag();
   mountNotes('p3','health');
 }
 const HC_GRP={
@@ -1513,8 +1520,8 @@ const HC_GRP={
   periodic:{map:'health', syncK:'hc', setFn:'setHC', autoBtn:'autoHealth()'}
 };
 function hcMatrixCard(grp,title,sub){
-  const cfg=HC_GRP[grp], g=exG(grp);
-  const exams=allExamsG(grp); const smp=S[g.samp]||{}; const map=S[cfg.map]||{}; const open=exOrderOpen[grp];
+  const cfg=HC_GRP[grp];
+  const exams=allExams(); const smp=S.examSampling||{}; const map=S[cfg.map]||{};
   let h=`<div class="card"><div class="hd"><span class="eyebrow">${esc(title)}</span>${sub?`<span class="hint" style="margin-left:8px">${esc(sub)}</span>`:''}<div class="sp"></div><button class="btn ghost sm" onclick="${cfg.autoBtn}">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div><div class="bd" style="padding:12px">
     <div class="hcwrap"><table class="hcgrid">
     <thead><tr><th class="dept-name">แผนก</th>${exams.map(e=>`<th class="exhead"${smp[e]?` title="เวลาเก็บตัวอย่าง: ${esc(smp[e])}"`:''}><span>${esc(e)}${smp[e]?' ⏱':''}</span></th>`).join('')}</tr></thead><tbody>`;
@@ -1526,22 +1533,28 @@ function hcMatrixCard(grp,title,sub){
     });
     h+=`</tr>`;
   });
-  h+=`</tbody></table></div>
-    <div class="exadd"><input id="newExam_${grp}" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExamG('${grp}');event.preventDefault();}"><button class="btn gold sm" onclick="addExamG('${grp}')">＋ เพิ่มรายการตรวจ</button><button class="btn ${open?'pri':'ghost'} sm" onclick="exToggleOrderG('${grp}')">⚙ จัดการคอลัมน์</button></div>`;
-  if(open){
-    h+=`<div class="exorder"><div class="exorder-h">จัดการคอลัมน์รายการตรวจของตารางนี้ — แก้ชื่อในช่อง · ลากที่ ⋮⋮ หรือ ▲▼ เพื่อเรียงลำดับ · ✕ เพื่อลบ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI</div>`+
-      `<datalist id="samplingList_${grp}">${SAMPLING_OPTS.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`+
-      `<ul class="exlist" id="exList_${grp}">`+
+  h+=`</tbody></table></div></div></div>`;
+  return h;
+}
+// การ์ดจัดการคอลัมน์ "ฐานเดียว" ใช้ร่วมกันทั้งสองตาราง (Pre-placement + Periodic)
+function examManageCard(){
+  const exams=allExams(); const smp=S.examSampling||{};
+  let h=`<div class="card"><div class="hd"><span class="eyebrow">จัดการรายการตรวจ (คอลัมน์ — ฐานเดียว ใช้ร่วมกันทั้งสองตาราง)</span></div><div class="bd" style="padding:12px">
+    <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ${exOrderOpen?'pri':'ghost'} sm" onclick="exToggleOrder()">⚙ จัดการคอลัมน์</button></div>`;
+  if(exOrderOpen){
+    h+=`<div class="exorder"><div class="exorder-h">จัดการคอลัมน์รายการตรวจ (ใช้ร่วมกันทั้งสองตาราง) — แก้ชื่อในช่อง · ลากที่ ⋮⋮ หรือ ▲▼ เพื่อเรียงลำดับ · ✕ เพื่อลบ · ช่อง "เวลาเก็บตัวอย่าง" อ้างอิง ACGIH BEI</div>`+
+      `<datalist id="samplingList">${SAMPLING_OPTS.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`+
+      `<ul class="exlist" id="exList">`+
       exams.map((e,i)=>{ const nm=esc(e).replace(/'/g,"\\'");
         return `<li class="exrow" data-i="${i}" data-ex="${esc(e)}"><span class="exgrip" title="ลากเพื่อย้าย">⋮⋮</span>`+
-        `<input class="exname-edit" value="${esc(e)}" title="แก้ไขชื่อรายการตรวจ" onchange="renameExamG('${grp}','${nm}',this.value)">`+
-        `<input class="exsamp" list="samplingList_${grp}" placeholder="เวลาเก็บตัวอย่าง (BEI)…" value="${esc(smp[e]||'')}" onchange="setExamSamplingG('${grp}','${nm}',this.value)">`+
-        `<span class="exmove"><button type="button" onclick="exMoveG('${grp}',${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMoveG('${grp}',${i},1)" title="ลง">▼</button></span>`+
-        `<button type="button" class="exrowdel" onclick="deleteExamG('${grp}','${nm}')" title="ลบรายการนี้">✕</button></li>`;
+        `<input class="exname-edit" value="${esc(e)}" title="แก้ไขชื่อรายการตรวจ" onchange="renameExam('${nm}',this.value)">`+
+        `<input class="exsamp" list="samplingList" placeholder="เวลาเก็บตัวอย่าง (BEI)…" value="${esc(smp[e]||'')}" onchange="setExamSampling('${nm}',this.value)">`+
+        `<span class="exmove"><button type="button" onclick="exMove(${i},-1)" title="ขึ้น">▲</button><button type="button" onclick="exMove(${i},1)" title="ลง">▼</button></span>`+
+        `<button type="button" class="exrowdel" onclick="deleteExam('${nm}')" title="ลบรายการนี้">✕</button></li>`;
       }).join('')+
       `</ul></div>`;
   }
-  h+=`<div class="hint" style="margin-top:8px">รายการตรวจ (คอลัมน์) ของตารางนี้แยกอิสระ · กด "จัดการคอลัมน์" เพื่อเพิ่ม/ลบ/แก้ไข/เรียงลำดับ</div>
+  h+=`<div class="hint" style="margin-top:8px">รายการตรวจ (คอลัมน์) เป็นฐานเดียวกันทั้งตารางก่อนเริ่มงานและตามปัจจัยเสี่ยง · การติ๊กของแต่ละตารางแยกกัน · เพิ่ม/ลบ/แก้ไข/เรียงลำดับที่นี่มีผลกับทั้งสองตาราง</div>
     </div></div>`;
   return h;
 }
@@ -1915,8 +1928,8 @@ function buildReport(){
 
   // --- การตรวจสุขภาพ ---
   h+=`<h2>◆ การตรวจสุขภาพและการสร้างเสริมสุขภาพ</h2>`;
-  const hcTable=(cap,map,grp)=>{
-    const cols=allExamsG(grp);
+  const hcTable=(cap,map)=>{
+    const cols=allExams();
     let t=`<p class="muted">${cap}</p>`;
     t+=`<table style="font-size:10px"><thead><tr><th>แผนก</th>${cols.map(e=>`<th style="writing-mode:vertical-rl;text-orientation:mixed;padding:6px 3px">${e}</th>`).join('')}</tr></thead><tbody>`;
     S.depts.forEach(d=>{
@@ -1925,8 +1938,8 @@ function buildReport(){
     t+=`</tbody></table>`;
     return t;
   };
-  h+=hcTable('ตารางการตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)',S.healthPre||{},'pre');
-  h+=hcTable('ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)',S.health||{},'periodic');
+  h+=hcTable('ตารางการตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)',S.healthPre||{});
+  h+=hcTable('ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)',S.health||{});
 
   // --- เวลาเก็บตัวอย่างชีวภาพ (ACGIH BEI) ---
   h+=buildSamplingReport();
