@@ -1469,6 +1469,15 @@ function renderHealth(){
   </div>`;
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p3','health'); return; }
 
+  // ตารางแนะนำการตรวจสุขภาพตามสิ่งคุกคามที่พบ (ปัจจัยเสี่ยง) — ดึงจากฐานความรู้
+  const kbH=kbForSurvey();
+  if(kbH.entries.length){
+    html+=`<div class="card"><div class="hd"><span class="eyebrow">รายการตรวจสุขภาพตามปัจจัยเสี่ยง (แนะนำตามสิ่งคุกคามที่พบ)</span></div><div class="bd" style="padding:12px">
+      <div class="tbl-scroll"><table class="kbtbl"><thead><tr><th>สิ่งคุกคาม (ปัจจัยเสี่ยง)</th><th>การตรวจสุขภาพที่แนะนำ (Medical Surveillance)</th><th>Biomonitoring (BEI)</th></tr></thead><tbody>${kbH.entries.map(e=>`<tr><td><b>${esc(e.hz)}</b></td><td>${esc(e.med)}</td><td>${esc(e.bei)}</td></tr>`).join('')}</tbody></table></div>
+      <div class="hint" style="margin-top:8px">อ้างอิงฐานความรู้ (ACGIH 2025 + แนวทางเฝ้าระวัง) · ใช้ประกอบการเลือกรายการตรวจในตารางด้านล่าง${kbH.unmatched.length?` · สิ่งคุกคามที่ยังไม่มีในฐานความรู้: ${kbH.unmatched.map(esc).join(', ')}`:''}</div>
+    </div></div>`;
+  }
+
   const exams=allExams(); const smp=S.examSampling||{};
   html+=`<div class="card"><div class="bd" style="padding:12px">
     <div class="btnrow" style="margin-bottom:10px"><button class="btn ghost sm" onclick="autoHealth()">แนะนำอัตโนมัติตามสิ่งคุกคาม</button></div>
