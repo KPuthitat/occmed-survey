@@ -2540,18 +2540,39 @@ function buildSlides(){
   }
 
   // 6) การตรวจสุขภาพ
-  const exSet=new Set();
-  S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) allExams().forEach(e=>{ if(hd[e]) exSet.add(e); });});
-  const exams=[...exSet];
-  if(SO('health')){ const kbHs=kbForSurvey(); const ke=kbHs.entries.slice(0,6);
-    slides.push({html:`
-    <div class="s-kick">09 · ตรวจสุขภาพ</div>
-    <h2 class="s-h2">การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
-    ${ke.length?`<table class="s-tbl"><thead><tr><th>สิ่งคุกคาม (ปัจจัยเสี่ยง)</th><th>การตรวจสุขภาพที่แนะนำ</th></tr></thead><tbody>
-    ${ke.map(e=>`<tr><td>${esc(e.hz)}</td><td>${esc(cut(e.med,74))}</td></tr>`).join('')}
-    </tbody></table>${kbHs.entries.length>6?`<div class="s-more">และอีก ${kbHs.entries.length-6} รายการ</div>`:''}${exams.length?`<div class="s-note" style="font-size:.82em">รายการที่เลือกตรวจ: ${exams.map(esc).join(', ')}</div>`:''}`
-    :(exams.length?`<div class="s-chips">${exams.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div><div class="s-note">แนะนำรายการตรวจข้างต้นตามปัจจัยเสี่ยงที่พบในแต่ละแผนก</div>`
-    :`<div class="s-empty">ยังไม่ได้กำหนดรายการตรวจสุขภาพ</div>`)}`}); }
+  // ตารางแนะนำรายการตรวจสุขภาพตามความเสี่ยง แบ่งตามแผนก (PP = ก่อนเข้างาน / PD = ประจำปี)
+  if(SO('health')){
+    const exUsed=allExams().filter(e=> S.depts.some(d=>(S.health[d.id]&&S.health[d.id][e])||(S.healthPre[d.id]&&S.healthPre[d.id][e])) );
+    if(!S.depts.length || !exUsed.length){
+      slides.push({html:`
+        <div class="s-kick">09 · ตรวจสุขภาพ</div>
+        <h2 class="s-h2">รายการตรวจสุขภาพตามความเสี่ยง (แบ่งตามแผนก)</h2>
+        <div class="s-empty">ยังไม่ได้กำหนดรายการตรวจสุขภาพในแต่ละแผนก</div>`});
+    } else {
+      const DPP=6; const dpages=[]; for(let i=0;i<S.depts.length;i+=DPP) dpages.push(S.depts.slice(i,i+DPP));
+      const npg=dpages.length;
+      const bd='1px solid #cdd6e4';
+      const thd=`border:${bd};background:#0B2545;color:#fff;padding:3px 5px;font-weight:600;text-align:center`;
+      const thsub=`border:${bd};background:#123a63;color:#fff;padding:2px 4px;font-weight:600;text-align:center;width:22px`;
+      dpages.forEach((dchunk,pi)=>{
+        const cell=on=>on?`<td style="border:${bd};text-align:center;color:#0B2545">●</td>`:`<td style="border:${bd}"></td>`;
+        const tbl=`<table style="width:100%;border-collapse:collapse;font-size:.6em">
+          <thead>
+            <tr><th rowspan="2" style="${thd};text-align:left">รายการตรวจสุขภาพ</th>${dchunk.map((d,i)=>`<th colspan="2" style="${thd}">${esc(cut(d.name||('แผนก '+(pi*DPP+i+1)),16))}</th>`).join('')}</tr>
+            <tr>${dchunk.map(()=>`<th style="${thsub}">PP</th><th style="${thsub}">PD</th>`).join('')}</tr>
+          </thead>
+          <tbody>
+            ${exUsed.map(e=>`<tr><td style="border:${bd};padding:2px 6px;white-space:nowrap">${esc(e)}</td>${dchunk.map(d=>cell(S.healthPre[d.id]&&S.healthPre[d.id][e])+cell(S.health[d.id]&&S.health[d.id][e])).join('')}</tr>`).join('')}
+          </tbody>
+        </table>`;
+        slides.push({html:`
+          <div class="s-kick">09 · ตรวจสุขภาพ${npg>1?` · หน้า ${pi+1}/${npg}`:''}</div>
+          <h2 class="s-h2">รายการตรวจสุขภาพตามความเสี่ยง (แบ่งตามแผนก)</h2>
+          ${tbl}
+          <div class="s-note" style="font-size:.72em"><b>PP</b> = ตรวจก่อนเข้างาน (Pre-placement) · <b>PD</b> = ตรวจประจำปี (Periodic)</div>`});
+      });
+    }
+  }
 
   // 7) สรุปเชิงคลินิก (Knowledge Base) — ตัดข้อความให้พอดีสไลด์ (ฉบับเต็มอยู่ในรายงาน)
   const kbs=kbForSurvey();
