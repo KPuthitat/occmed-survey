@@ -2645,10 +2645,10 @@ function buildSlides(){
     const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;};
     const bd='1px solid #cbd5e3';
     const EXAM_ROWS_PP=4, DEPT_COLS_PP=12;
-    // หัวคอลัมน์ = ชื่อแผนก (แนวตั้ง อ่านเอียงซ้าย) ไม่ใช้ตัวเลข
-    const vDept=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:8px 5px;text-align:center;min-width:32px"><span style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.2;font-weight:600;font-size:.8em">${esc(t)}</span></th>`;
+    // หัวคอลัมน์ = ชื่อแผนก (แนวตั้ง เอียงซ้าย) ไม่ย่อ · สูงคงที่ ชื่อยาวตัดขึ้นบรรทัดในแนวตั้ง กันตกขอบ
+    const vDept=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:8px 4px;text-align:center;min-width:30px;height:156px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:normal;max-height:142px;line-height:1.25;font-weight:600;font-size:.78em;margin:0 auto">${esc(t)}</div></th>`;
     const buildHcTable=(map,examRows,deptCols)=>`<table style="border-collapse:collapse;font-size:.9em;margin:6px auto 0">
-        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:150px">รายการตรวจ</th>${deptCols.map(dp=>vDept(cut(dp.name||'—',18))).join('')}</tr></thead>
+        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:150px">รายการตรวจ</th>${deptCols.map(dp=>vDept(dp.name||'—')).join('')}</tr></thead>
         <tbody>${examRows.map((e,ri)=>`<tr><td style="border:${bd};padding:9px 14px;white-space:nowrap;font-weight:600;background:#eef2f8;color:#0B2545">${esc(e)}</td>${deptCols.map(dp=>(map[dp.id]&&map[dp.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:9px 10px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:9px 10px"></td>`).join('')}</tr>`).join('')}</tbody>
       </table>`;
     // หน้าที่ 1 = สารบัญรายการตรวจ แบ่งกลุ่ม (อธิบายว่าตรวจอะไรบ้าง)
@@ -2671,7 +2671,6 @@ function buildSlides(){
           <div class="s-empty">ยังไม่ได้เลือกรายการตรวจในตารางนี้</div>`});
         return;
       }
-      groupOverview(map,title);
       EXAM_GROUPS.forEach(([gk,gl])=>{
         const exG=exU.filter(e=>examGroupOf(e)===gk);
         if(!exG.length) return;
@@ -2681,8 +2680,8 @@ function buildSlides(){
           colPages.forEach(deptCols=>{
             pageNo++;
             slides.push({cls:'top',html:`
-              <div class="s-kick">09 · ตรวจสุขภาพ · ${esc(gl)}${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
-              <h2 class="s-h2">${esc(title)} <span style="font-size:.62em;color:#C8A046">· ${esc(gl)}</span>${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+              <div class="s-kick">09 · ${esc(title)}${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
+              <h2 class="s-h2">${esc(gl)}${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
               ${buildHcTable(map,examRows,deptCols)}`});
           });
         });
