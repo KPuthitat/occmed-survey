@@ -2773,8 +2773,8 @@ function buildSlides(){
   // ปิดท้าย
   slides.push({cls:'cover end',html:`
     <h1 class="s-h1">ขอบคุณครับ</h1>
-    <div class="s-sub">คณะผู้เดินสำรวจอาชีวเวชศาสตร์</div>
-    <div class="s-foot">${THMON[new Date().getMonth()]} ${beYear()} · OCCMED</div>`});
+    ${g.company?`<div class="s-company">${esc(g.company)}</div>`:''}
+    <div class="s-sub">คณะผู้เดินสำรวจอาชีวเวชศาสตร์</div>`});
 
   // เลขหัวข้อไล่ต่อเนื่องอัตโนมัติ (กันเลขขาดช่วงเมื่อบางสไลด์ถูกข้ามเพราะไม่มีข้อมูล)
   let __sn=0;
