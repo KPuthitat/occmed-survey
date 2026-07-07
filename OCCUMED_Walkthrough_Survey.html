@@ -2656,17 +2656,23 @@ function buildSlides(){
     healthGroupSlides('health','ตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic)');
   }
 
-  // 7) สรุปเชิงคลินิก (Knowledge Base) — ตัดข้อความให้พอดีสไลด์ (ฉบับเต็มอยู่ในรายงาน)
+  // 7) สรุปเชิงคลินิก (Knowledge Base) — แสดงข้อความเต็ม ไม่ตัด · แบ่งหน้าเมื่อไม่พอ
   const kbs=kbForSurvey();
   if(kbs.entries.length && SO('clinical')){
-    const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n-1).replace(/[,\s·]+$/,'')+'…':s;};
-    const ke=kbs.entries.slice(0,5);
-    slides.push({html:`
-      <div class="s-kick">10 · สรุปเชิงคลินิก</div>
-      <h2 class="s-h2">สรุปเชิงคลินิก (อ้างอิงฐานความรู้)</h2>
-      <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ผลต่อสุขภาพ</th><th>การตรวจเฝ้าระวัง</th></tr></thead><tbody>
-      ${ke.map(e=>`<tr><td><b>${esc(e.hz)}</b></td><td>${esc(cut(e.eff,58))}</td><td>${esc(cut(e.med,58))}</td></tr>`).join('')}
-      </tbody></table><div class="s-more">${kbs.entries.length>5?`และอีก ${kbs.entries.length-5} รายการ · `:''}ดูรายละเอียดฉบับเต็มในรายงาน</div>`});
+    // ประเมินความ "สูง" ของแต่ละแถวจากความยาวข้อความ แล้วแบ่งหน้าตามงบพื้นที่
+    const rowWeight=e=>1+Math.floor((String(e.eff||'').length+String(e.med||'').length)/120);
+    const pages=[]; let cur=[], acc=0; const BUDGET=6;
+    kbs.entries.forEach(e=>{ const wgt=rowWeight(e); if(cur.length && acc+wgt>BUDGET){ pages.push(cur); cur=[]; acc=0; } cur.push(e); acc+=wgt; });
+    if(cur.length) pages.push(cur);
+    const np=pages.length;
+    pages.forEach((chunk,pi)=>{
+      slides.push({cls:'top',html:`
+        <div class="s-kick">10 · สรุปเชิงคลินิก${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
+        <h2 class="s-h2">สรุปเชิงคลินิก (อ้างอิงฐานความรู้)${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+        <table class="s-tbl" style="font-size:.82em"><thead><tr><th style="width:22%">สิ่งคุกคาม</th><th>ผลต่อสุขภาพ</th><th>การตรวจเฝ้าระวัง</th></tr></thead><tbody>
+        ${chunk.map(e=>`<tr><td><b>${esc(e.hz)}</b></td><td>${esc(e.eff)}</td><td>${esc(e.med)}</td></tr>`).join('')}
+        </tbody></table>`});
+    });
   }
 
   // 8) บันทึกภาคสนาม
