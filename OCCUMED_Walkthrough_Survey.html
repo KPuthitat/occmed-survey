@@ -2508,16 +2508,31 @@ function buildSlides(){
       [1,2,3,4,5].forEach(r=>{ t+=`<tr><th style="${thc}">${r}</th>`+[1,2,3,4,5].map(c=>{const x=cellFn(r,c);return `<td style="border:${bd};text-align:center;padding:9px 22px;background:${x.bg};color:${x.fg};font-weight:700">${x.v}</td>`;}).join('')+`</tr>`; });
       return t+'</tbody></table>';
     };
-    const legend=items=>`<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;font-size:.86em;font-weight:600">${items.map(x=>`<span style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border:${bd};border-radius:8px;background:${x.bg};color:${x.fg}">${x.t}</span>`).join('')}</div>`;
+    // ตารางแปลความหมาย(คะแนน → ระดับ → ความหมาย) วางข้างเมทริกซ์
+    const interp=(head,rows)=>`<table style="border-collapse:collapse;font-size:.86em"><thead><tr>${head.map((h,i)=>`<th style="${thn};text-align:${i<2?'center':'left'}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><td style="border:${bd};padding:8px 12px;text-align:center;font-weight:700;background:${r.bg};color:${r.fg}">${r.range}</td><td style="border:${bd};padding:8px 12px;text-align:center;font-weight:700;background:${r.bg};color:${r.fg}">${r.lvl}</td><td style="border:${bd};padding:8px 14px">${r.mean}</td></tr>`).join('')}</tbody></table>`;
     const erM=mtxTable('EF＼CR',(ef,cr)=>{const s=cr*ef,lv=erLevelFromScore(s);return {v:s,bg:ER_COLOR[lv]||'#eef4ff',fg:ER_TXT[lv]||'#1c3a63'};});
     const rkM=mtxTable('HR＼ER',(hr,er)=>{const s=hr*er,r=riskFromScore(s);return {v:s,bg:rkColor(r),fg:rkTxt(r)};});
+    const erInterp=interp(['คะแนน<br>CR×EF','ระดับ<br>ER','แปลความหมาย'],[
+      {range:'1–5',lvl:'1',mean:'ไม่ได้รับสัมผัส',bg:ER_COLOR[1],fg:ER_TXT[1]},
+      {range:'6–8',lvl:'2',mean:'สัมผัสน้อย',bg:ER_COLOR[2],fg:ER_TXT[2]},
+      {range:'9–15',lvl:'3',mean:'สัมผัสปานกลาง',bg:ER_COLOR[3],fg:ER_TXT[3]},
+      {range:'16–20',lvl:'4',mean:'สัมผัสสูง',bg:ER_COLOR[4],fg:ER_TXT[4]},
+      {range:'21–25',lvl:'5',mean:'สัมผัสสูงมาก',bg:ER_COLOR[5],fg:ER_TXT[5]}]);
+    const rkInterp=interp(['คะแนน<br>HR×ER','ระดับ<br>ความเสี่ยง','แปลความหมาย / แนวทางจัดการ'],[
+      {range:'1–3',lvl:'ยอมรับได้',mean:'ยอมรับได้ ไม่ต้องมีมาตรการเพิ่ม',bg:rkColor('ยอมรับได้'),fg:rkTxt('ยอมรับได้')},
+      {range:'4–9',lvl:'ต่ำ',mean:'เฝ้าระวัง ทบทวนเป็นระยะ',bg:rkColor('ต่ำ'),fg:rkTxt('ต่ำ')},
+      {range:'10–16',lvl:'ปานกลาง',mean:'ต้องมีมาตรการควบคุมเพิ่มเติม',bg:rkColor('ปานกลาง'),fg:rkTxt('ปานกลาง')},
+      {range:'17–20',lvl:'สูง',mean:'ต้องแก้ไข/ควบคุมโดยเร็ว',bg:rkColor('สูง'),fg:rkTxt('สูง')},
+      {range:'21–25',lvl:'สูงมาก',mean:'หยุด/แก้ไขทันที',bg:rkColor('สูงมาก'),fg:rkTxt('สูงมาก')}]);
     // สไลด์ 3: CR × EF = ER
     slides.push({cls:'top',html:`
       <div class="s-kick">06 · เกณฑ์การประเมินความเสี่ยง</div>
       <h2 class="s-h2">ตารางที่ 3 · CR × EF = ER (ระดับการสัมผัส)</h2>
-      ${sub('นำ <b>CR × EF</b> ได้คะแนน แล้วเทียบช่วงเป็นระดับ <b>ER</b> (แถว = EF · คอลัมน์ = CR)')}
-      ${erM}
-      ${legend([1,2,3,4,5].map((lv,i)=>({bg:ER_COLOR[lv]||'#eef4ff',fg:ER_TXT[lv]||'#1c3a63',t:[' 1–5',' 6–8',' 9–15',' 16–20',' 21–25'][i]+' → ER '+lv})))}`});
+      ${sub('อ่านค่าในเมทริกซ์ (แถว EF × คอลัมน์ CR) = คะแนน แล้วเทียบตารางขวาเพื่อแปลเป็นระดับ ER และความหมาย')}
+      <div style="display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap">
+        <div>${erM}</div>
+        <div style="margin-top:12px">${erInterp}</div>
+      </div>`});
     // สไลด์ 4: HR
     slides.push({cls:'top',html:`
       <div class="s-kick">06 · เกณฑ์การประเมินความเสี่ยง</div>
@@ -2525,13 +2540,14 @@ function buildSlides(){
       ${sub('ความรุนแรงของผลกระทบต่อสุขภาพจากสิ่งคุกคาม')}
       ${lvlTable('ผลกระทบต่อสุขภาพ',HR_SHORT,HR_DESC)}`});
     // สไลด์ 5: ER × HR = ระดับความเสี่ยง
-    const RK=['ยอมรับได้','ต่ำ','ปานกลาง','สูง','สูงมาก'];
     slides.push({cls:'top',html:`
       <div class="s-kick">06 · เกณฑ์การประเมินความเสี่ยง</div>
       <h2 class="s-h2">ตารางที่ 5 · ER × HR = ระดับความเสี่ยง</h2>
-      ${sub('นำ <b>HR × ER</b> ได้คะแนน แล้วเทียบช่วงเป็น <b>ระดับความเสี่ยง</b> (แถว = HR · คอลัมน์ = ER)')}
-      ${rkM}
-      ${legend([['1–3','ยอมรับได้'],['4–9','ต่ำ'],['10–16','ปานกลาง'],['17–20','สูง'],['21–25','สูงมาก']].map(x=>({bg:rkColor(x[1]),fg:rkTxt(x[1]),t:x[0]+' → '+x[1]})))}`});
+      ${sub('อ่านค่าในเมทริกซ์ (แถว HR × คอลัมน์ ER) = คะแนน แล้วเทียบตารางขวาเพื่อแปลเป็นระดับความเสี่ยงและแนวทางจัดการ')}
+      <div style="display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap">
+        <div>${rkM}</div>
+        <div style="margin-top:12px">${rkInterp}</div>
+      </div>`});
   }
 
   if(SO('risk')) slides.push({cls:'top',html:`
