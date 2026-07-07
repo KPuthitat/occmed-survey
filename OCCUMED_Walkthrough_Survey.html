@@ -1423,6 +1423,8 @@ function renderRisk(){
     });
     html+=`</tbody></table></div></div></div>`;
   });
+  const noCR=S.depts.some(d=>d.hazards.some(h=>!(Number(h.cr)||0)));
+  if(noCR) html+=`<div class="warn" style="margin-top:12px"><b>หมายเหตุ:</b> มีสิ่งคุกคามที่ยังไม่มีค่าความเข้มข้น (CR) — <b>ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)</b> · เมื่อได้ผลตรวจวัด (สาร/แสง/เสียง แบบ TWA) แล้วจึงเลือกค่า CR เพื่อประเมินความเสี่ยง</div>`;
   el.innerHTML=html;
   mountNotes('p2','risk');
 }
@@ -2371,10 +2373,9 @@ function buildSlides(){
     <div class="s-kv">
       <div><span>วันที่เดินสำรวจ</span><b>${beDate(g.surveyDate)||'—'}</b></div>
       <div><span>เวลา</span><b>${esc(g.surveyTime)||'—'}</b></div>
-      <div><span>ผู้ควบคุมการสำรวจ</span><b>${esc(nlines(g.controllers).join(', '))||'—'}</b></div>
-      <div><span>ผู้สังเกตการณ์</span><b>${esc(nlines(g.observers).join(', '))||'—'}</b></div>
-    </div>
-    ${g.threats?`<div class="s-note"><b>สิ่งคุกคามสุขภาพ (ภาพรวม):</b> ${esc(cut(g.threats,170))}</div>`:''}`});
+      <div><span>ผู้ควบคุมการสำรวจ</span><b>${nlines(g.controllers).map(esc).join('<br>')||'—'}</b></div>
+      <div><span>ผู้สังเกตการณ์</span><b>${nlines(g.observers).map(esc).join('<br>')||'—'}</b></div>
+    </div>`});
 
   // 3) ภาพรวมความเสี่ยง
   const deptN=S.depts.length;
@@ -2408,17 +2409,21 @@ function buildSlides(){
 
   // 4) ผลประเมินความเสี่ยงตามแผนก
   const risks=[];
-  S.depts.forEach(d=>d.hazards.forEach(h=>{const r=effRisk(h); if(r==='สูงมาก'||r==='สูง'||r==='ปานกลาง') risks.push({d:d.name,h:h.name,r,hr:h.hr,ef:h.freq});}));
+  let unknownCnt=0;
+  S.depts.forEach(d=>d.hazards.forEach(h=>{const r=effRisk(h); if(r===RISK_UNKNOWN) unknownCnt++; if(r==='สูงมาก'||r==='สูง'||r==='ปานกลาง') risks.push({d:d.name,h:h.name,r,hr:h.hr,ef:h.freq});}));
   const rrank=r=>r==='สูงมาก'?0:r==='สูง'?1:2;
   risks.sort((a,b)=>rrank(a.r)-rrank(b.r));
   const top=risks.slice(0,7);
+  const riskEmpty=unknownCnt>0
+    ? `<div class="s-empty">ไม่สามารถประเมินระดับความเสี่ยงได้ เนื่องจากยังไม่ได้ตรวจวัดค่าความเข้มข้นของสารในอากาศ ค่าความสว่าง และค่าความดังแบบ TWA<div style="font-size:.7em;color:#8fa6c4;margin-top:10px">(อยู่ในแผนการตรวจวัดสภาพแวดล้อม)</div></div>`
+    : `<div class="s-empty">ผลการประเมินอยู่ในเกณฑ์ที่ยอมรับได้ / ต่ำ</div>`;
   if(SO('risk')) slides.push({html:`
     <div class="s-kick">07 · ประเมินความเสี่ยง</div>
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับ</th></tr></thead><tbody>
     ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td style="text-align:center">${esc(x.hr)||'—'}</td><td style="text-align:center">${esc(x.ef)||'—'}</td><td><span class="rb ${x.r==='สูงมาก'?'vh':x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
-    </tbody></table><div class="s-note" style="font-size:.8em">HR = ระดับความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
-    :`<div class="s-empty">ไม่พบรายการความเสี่ยงระดับสูง / ปานกลาง</div>`}`});
+    </tbody></table><div class="s-note" style="font-size:.8em">HR = ระดับความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)${unknownCnt?` · มี ${unknownCnt} รายการยังประเมินไม่ได้ (ไม่มีผลตรวจวัด)`:''}</div>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
+    :riskEmpty}`});
 
   // 4a) รายละเอียดแต่ละแผนก (ดึงจากข้อมูลรายงาน)
   S.depts.forEach((d,di)=>{
@@ -2464,12 +2469,15 @@ function buildSlides(){
   const exSet=new Set();
   S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) allExams().forEach(e=>{ if(hd[e]) exSet.add(e); });});
   const exams=[...exSet];
-  if(SO('health')) slides.push({html:`
+  if(SO('health')){ const kbHs=kbForSurvey(); const ke=kbHs.entries.slice(0,6);
+    slides.push({html:`
     <div class="s-kick">09 · ตรวจสุขภาพ</div>
     <h2 class="s-h2">การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
-    ${exams.length?`<div class="s-chips">${exams.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div>
-    <div class="s-note">แนะนำรายการตรวจข้างต้นตามปัจจัยเสี่ยงที่พบในแต่ละแผนก</div>`
-    :`<div class="s-empty">ยังไม่ได้กำหนดรายการตรวจสุขภาพ</div>`}`});
+    ${ke.length?`<table class="s-tbl"><thead><tr><th>สิ่งคุกคาม (ปัจจัยเสี่ยง)</th><th>การตรวจสุขภาพที่แนะนำ</th></tr></thead><tbody>
+    ${ke.map(e=>`<tr><td>${esc(e.hz)}</td><td>${esc(cut(e.med,74))}</td></tr>`).join('')}
+    </tbody></table>${kbHs.entries.length>6?`<div class="s-more">และอีก ${kbHs.entries.length-6} รายการ</div>`:''}${exams.length?`<div class="s-note" style="font-size:.82em">รายการที่เลือกตรวจ: ${exams.map(esc).join(', ')}</div>`:''}`
+    :(exams.length?`<div class="s-chips">${exams.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div><div class="s-note">แนะนำรายการตรวจข้างต้นตามปัจจัยเสี่ยงที่พบในแต่ละแผนก</div>`
+    :`<div class="s-empty">ยังไม่ได้กำหนดรายการตรวจสุขภาพ</div>`)}`}); }
 
   // 7) สรุปเชิงคลินิก (Knowledge Base) — ตัดข้อความให้พอดีสไลด์ (ฉบับเต็มอยู่ในรายงาน)
   const kbs=kbForSurvey();
