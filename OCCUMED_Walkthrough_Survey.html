@@ -1480,8 +1480,8 @@ function renderHealth(){
     </div></div>`;
   }
 
-  html+=hcMatrixCard('การตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)','ตรวจตามระยะ/เฝ้าระวังตามปัจจัยเสี่ยง','health','hc','setHC','autoHealth()');
   html+=hcMatrixCard('ตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)','ตรวจก่อนรับเข้าทำงาน (baseline)','healthPre','hcp','setHCPre','autoHealthPre()');
+  html+=hcMatrixCard('การตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)','ตรวจตามระยะ/เฝ้าระวังตามปัจจัยเสี่ยง','health','hc','setHC','autoHealth()');
   const exams=allExams(); const smap=S.examSampling||{};
   html+=`<div class="card"><div class="hd"><span class="eyebrow">จัดการรายการตรวจ (คอลัมน์ — ใช้ร่วมกันทั้งสองตาราง)</span></div><div class="bd" style="padding:12px">
     <div class="exadd"><input id="newExam" type="text" placeholder="เพิ่มรายการตรวจ เช่น Lead (blood), PFT, HAVs screening" onkeydown="if(event.key==='Enter'){addExam();event.preventDefault();}"><button class="btn gold sm" onclick="addExam()">＋ เพิ่มรายการตรวจ</button><button class="btn ${exOrderOpen?'pri':'ghost'} sm" onclick="exToggleOrder()">⚙ จัดการคอลัมน์</button></div>`;
@@ -1898,8 +1898,8 @@ function buildReport(){
     t+=`</tbody></table>`;
     return t;
   };
-  h+=hcTable('ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)',S.health||{});
   h+=hcTable('ตารางการตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)',S.healthPre||{});
+  h+=hcTable('ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)',S.health||{});
 
   // --- เวลาเก็บตัวอย่างชีวภาพ (ACGIH BEI) ---
   h+=buildSamplingReport();
