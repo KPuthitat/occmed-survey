@@ -2574,7 +2574,7 @@ function buildSlides(){
           ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
           <div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>`});
       } else {
-        const PG=3; const pages=[]; for(let i=0;i<hzAll.length;i+=PG) pages.push(hzAll.slice(i,i+PG));
+        const pages=[]; let pi0=0; while(pi0<hzAll.length){ const sz=pages.length===0?3:5; pages.push(hzAll.slice(pi0,pi0+sz)); pi0+=sz; }
         const npg=pages.length;
         pages.forEach((chunk,pi)=>{
           const hasUnknown=chunk.some(h=>effRisk(h)===RISK_UNKNOWN);
