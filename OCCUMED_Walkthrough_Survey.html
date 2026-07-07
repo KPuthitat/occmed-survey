@@ -2477,7 +2477,7 @@ function buildSlides(){
   risks.sort((a,b)=>rrank(a.r)-rrank(b.r));
   const top=risks.slice(0,7);
   const riskEmpty=unknownCnt>0
-    ? `<div class="s-empty">ไม่สามารถประเมินระดับความเสี่ยงได้ เนื่องจากยังไม่ได้ตรวจวัดค่าความเข้มข้นของสารในอากาศ ค่าความสว่าง และค่าความดังแบบ TWA<div style="font-size:.7em;color:#8fa6c4;margin-top:10px">(อยู่ในแผนการตรวจวัดสภาพแวดล้อม)</div></div>`
+    ? `<div class="s-empty" style="font-size:1.2em;line-height:1.55;color:#8a6d1f;font-weight:700">ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)</div>`
     : `<div class="s-empty">ผลการประเมินอยู่ในเกณฑ์ที่ยอมรับได้ / ต่ำ</div>`;
   // เกณฑ์การประเมินความเสี่ยง (HRA) — แทรกก่อนหัวข้อประเมินความเสี่ยง
   if(SO('risk')){
