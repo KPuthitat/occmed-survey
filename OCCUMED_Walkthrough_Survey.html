@@ -814,6 +814,7 @@ function erInfo(h){ const cr=Number(h.cr)||0, ef=Number(h.freq)||0; const cs=cr*
 function riskFromScore(s){ s=Number(s)||0; if(s<=0) return ''; if(s<=3) return 'ยอมรับได้'; if(s<=9) return 'ต่ำ'; if(s<=16) return 'ปานกลาง'; if(s<=20) return 'สูง'; return 'สูงมาก'; }
 function riskInfo(h){ const hr=Number(h.hr)||0, er=erInfo(h); const rs=hr*er.lvl; return {hr,er,rs,label:riskFromScore(rs)}; }
 const RISK_UNKNOWN='ไม่ทราบความเสี่ยง';
+const RISK_NOTE_NOENV='※ ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)';
 function autoRisk(h){ if(!(Number(h&&h.cr)||0)) return RISK_UNKNOWN; return riskInfo(h).label; }
 function riskClass(r){return {'สูงมาก':'risk-vhigh','สูง':'risk-high','ปานกลาง':'risk-med','ต่ำ':'risk-low','ยอมรับได้':'risk-acc','ไม่ทราบความเสี่ยง':'risk-unknown'}[r]||''}
 function riskRB(r){return {'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a','ไม่ทราบความเสี่ยง':'u'}[r]||'l'}
@@ -2445,23 +2446,40 @@ function buildSlides(){
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับ</th></tr></thead><tbody>
     ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td style="text-align:center">${esc(x.hr)||'—'}</td><td style="text-align:center">${esc(x.ef)||'—'}</td><td><span class="rb ${x.r==='สูงมาก'?'vh':x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
-    </tbody></table><div class="s-note" style="font-size:.8em">HR = ระดับความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)${unknownCnt?` · มี ${unknownCnt} รายการยังประเมินไม่ได้ (ไม่มีผลตรวจวัด)`:''}</div>${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
+    </tbody></table><div class="s-note" style="font-size:.8em">HR = ระดับความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${unknownCnt?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_NOENV} (${unknownCnt} รายการ)</div>`:''}${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
     :riskEmpty}`});
 
   // 4a) รายละเอียดแต่ละแผนก (ดึงจากข้อมูลรายงาน)
   S.depts.forEach((d,di)=>{
     const hasContent=(d.hazards&&d.hazards.length)||(d.machineRefs&&d.machineRefs.length)||(d.proc||'').trim()||(d.machines||'').trim();
     if(!hasContent) return;
-    const hz=(d.hazards||[]).slice(0,6);
     const info=[]; if((d.machines||'').trim()) info.push('<b>เครื่องจักร:</b> '+esc(cut(d.machines,70))); if(d.staff) info.push('<b>พนักงาน</b> '+esc(d.staff)+' คน');
-    if(SO('deptDetail')) slides.push({html:`
-      <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}</div>
-      <h2 class="s-h2">${esc(d.name)||'แผนก'}${d.en?` <span style="font-size:.6em;color:#6b7a90;font-weight:400">(${esc(d.en)})</span>`:''}</h2>
-      ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
-      ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
-      ${hz.length?`<table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
-      ${hz.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td>${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
-      </tbody></table><div class="s-note" style="font-size:.78em">HR = ความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${d.hazards.length>6?`<div class="s-more">และอีก ${d.hazards.length-6} สิ่งคุกคาม</div>`:''}`:'<div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>'}`});
+    const titleHtml=`${esc(d.name)||'แผนก'}${d.en?` <span style="font-size:.6em;color:#6b7a90;font-weight:400">(${esc(d.en)})</span>`:''}`;
+    const hzAll=d.hazards||[];
+    if(SO('deptDetail')){
+      if(!hzAll.length){
+        slides.push({html:`
+          <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}</div>
+          <h2 class="s-h2">${titleHtml}</h2>
+          ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
+          ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
+          <div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>`});
+      } else {
+        const PG=6; const pages=[]; for(let i=0;i<hzAll.length;i+=PG) pages.push(hzAll.slice(i,i+PG));
+        const npg=pages.length;
+        pages.forEach((chunk,pi)=>{
+          const hasUnknown=chunk.some(h=>effRisk(h)===RISK_UNKNOWN);
+          slides.push({html:`
+            <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}${npg>1?` · หน้า ${pi+1}/${npg}`:''}</div>
+            <h2 class="s-h2">${titleHtml}${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+            ${pi===0&&(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
+            ${pi===0&&info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
+            <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
+            ${chunk.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td>${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
+            </tbody></table><div class="s-note" style="font-size:.78em">HR = ความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${hasUnknown?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_NOENV}</div>`:''}`});
+        });
+      }
+    }
     // โปสเตอร์เครื่องจักรที่แนบในแผนก (ภาพเดียว)
     if(SO('machines')) (d.machineRefs||[]).forEach(mi=>{ if(!MACHINE_REF[mi]) return; slides.push({cls:'mch',html:`
       <div class="s-kick">แผนก ${di+1} · ${esc(d.name)} · เครื่องจักร</div>
