@@ -2622,14 +2622,14 @@ function buildSlides(){
   // ตารางตรวจสุขภาพ: แถว = แผนก, คอลัมน์ = รายการตรวจ (หัวเอียงซ้าย) · แยกตาราง Pre-placement / Periodic · แบ่งหน้าเมื่อไม่พอ
   if(SO('health')){
     const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;};
-    const bd='1px solid #cdd6e4';
-    const vhead=t=>`<th style="border:${bd};background:#0B2545;color:#fff;height:132px;vertical-align:bottom;padding:6px 3px"><span style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.1;font-weight:600">${esc(t)}</span></th>`;
-    const EXPP=12, DPP=10;
+    const bd='1px solid #cbd5e3';
+    const vhead=t=>`<th style="border:${bd};background:#0B2545;color:#fff;height:104px;vertical-align:bottom;padding:7px 5px;text-align:center;min-width:34px"><span style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.15;font-weight:600;font-size:.95em">${esc(t)}</span></th>`;
+    const EXPP=11, DPP=5;
     const healthGroupSlides=(mapKey,title)=>{
       const map=S[mapKey]||{};
       const exU=allExams().filter(e=>S.depts.some(d=>map[d.id]&&map[d.id][e]));
       if(!S.depts.length||!exU.length){
-        slides.push({html:`
+        slides.push({cls:'top',html:`
           <div class="s-kick">09 · ตรวจสุขภาพ</div>
           <h2 class="s-h2">${esc(title)}</h2>
           <div class="s-empty">ยังไม่ได้เลือกรายการตรวจในตารางนี้</div>`});
@@ -2640,11 +2640,12 @@ function buildSlides(){
       deptPages.forEach(dchunk=>{
         exPages.forEach(echunk=>{
           pageNo++;
-          const tbl=`<table style="width:100%;border-collapse:collapse;font-size:.8em">
-            <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:6px 8px;text-align:left;vertical-align:bottom;font-size:1.05em">แผนก</th>${echunk.map(e=>vhead(e)).join('')}</tr></thead>
-            <tbody>${dchunk.map(d=>`<tr><td style="border:${bd};padding:5px 8px;white-space:nowrap;font-weight:600">${esc(d.name)||'—'}</td>${echunk.map(e=>(map[d.id]&&map[d.id][e])?`<td style="border:${bd};text-align:center;color:#0B2545;font-size:1.15em">●</td>`:`<td style="border:${bd}"></td>`).join('')}</tr>`).join('')}</tbody>
-          </table>`;
-          slides.push({html:`
+          const tbl=`<table style="border-collapse:collapse;font-size:.86em;margin:8px auto 0">
+            <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:120px">แผนก</th>${echunk.map(e=>vhead(e)).join('')}</tr></thead>
+            <tbody>${dchunk.map((d,ri)=>`<tr><td style="border:${bd};padding:8px 14px;white-space:nowrap;font-weight:600;background:#eef2f8;color:#0B2545">${esc(d.name)||'—'}</td>${echunk.map(e=>(map[d.id]&&map[d.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:8px 16px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:8px 16px"></td>`).join('')}</tr>`).join('')}</tbody>
+          </table>
+          <div class="s-note" style="font-size:.78em;text-align:center;margin-top:12px"><span style="display:inline-block;width:15px;height:15px;background:#C8A046;border-radius:3px;vertical-align:middle;color:#fff;font-size:11px;line-height:15px;text-align:center;font-weight:700">✓</span> = รายการที่กำหนดให้ตรวจในแผนกนั้น</div>`;
+          slides.push({cls:'top',html:`
             <div class="s-kick">09 · ตรวจสุขภาพ${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
             <h2 class="s-h2">${esc(title)}${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
             ${tbl}`});
@@ -2652,7 +2653,7 @@ function buildSlides(){
       });
     };
     healthGroupSlides('healthPre','ตรวจสุขภาพก่อนเริ่มงาน (Pre-placement)');
-    healthGroupSlides('health','การตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic / Surveillance)');
+    healthGroupSlides('health','ตรวจสุขภาพตามปัจจัยเสี่ยง (Periodic)');
   }
 
   // 7) สรุปเชิงคลินิก (Knowledge Base) — ตัดข้อความให้พอดีสไลด์ (ฉบับเต็มอยู่ในรายงาน)
