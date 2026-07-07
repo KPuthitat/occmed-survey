@@ -1271,7 +1271,7 @@ function renderDepts(){
         <div class="subhd" style="margin-top:14px">รูปภาพประกอบ (แสดงในรายงาน / ไฟล์นำเสนอ)</div>
         <div class="photos">${(d.photos||[]).map(p=>photoThumb(d.id,p)).join('')}</div>
         <div class="addrow">
-          <label class="btn ghost sm" style="cursor:pointer">＋ ถ่ายภาพ<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addPhotos('${d.id}',this.files);this.value=''"></label>
+          <label class="btn ghost sm" style="cursor:pointer">＋ เพิ่มรูป / ถ่ายภาพ<input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos('${d.id}',this.files);this.value=''"></label>
           <span class="hint" style="margin:2px 0 0 8px">ถ่ายจากมือถือได้ · ระบบย่อรูปอัตโนมัติเพื่อไม่ให้ไฟล์ใหญ่</span>
         </div>
       </div>
