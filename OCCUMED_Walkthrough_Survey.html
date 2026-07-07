@@ -2424,15 +2424,20 @@ function buildSlides(){
     ${g.accidentStats?`<div class="s-note"><b>สถิติอุบัติเหตุ/บาดเจ็บ:</b> ${esc(cut(g.accidentStats,150))}</div>`:''}
     ${g.ppe?`<div class="s-note"><b>PPE ที่จัดให้:</b> ${esc(cut(g.ppe,150))}</div>`:''}`});
   // 04 · การเดินสำรวจ
-  if(SO('walkthrough')) slides.push({html:`
-    <div class="s-kick">04 · การเดินสำรวจ</div>
-    <h2 class="s-h2">การเดินสำรวจสถานประกอบการ</h2>
-    <div class="s-kv">
-      <div><span>วันที่เดินสำรวจ</span><b>${beDate(g.surveyDate)||'—'}</b></div>
-      <div><span>เวลา</span><b>${esc(g.surveyTime)||'—'}</b></div>
-      <div><span>ผู้ควบคุมการสำรวจ</span><b style="font-size:.62em;line-height:1.35;font-weight:600">${nlines(g.controllers).map(esc).join('<br>')||'—'}</b></div>
-      <div><span>ผู้สังเกตการณ์</span><b style="font-size:.62em;line-height:1.35;font-weight:600">${nlines(g.observers).map(esc).join('<br>')||'—'}</b></div>
-    </div>`});
+  if(SO('walkthrough')){
+    const nameList=raw=>{ const arr=nlines(raw).map(esc); if(!arr.length) return '<b>—</b>';
+      const two=arr.length>4;
+      return `<div style="${two?'column-count:2;column-gap:22px;':''}font-size:.8em;line-height:1.45;font-weight:600">${arr.map(n=>`<div style="break-inside:avoid;-webkit-column-break-inside:avoid">${n}</div>`).join('')}</div>`; };
+    slides.push({html:`
+      <div class="s-kick">04 · การเดินสำรวจ</div>
+      <h2 class="s-h2">การเดินสำรวจสถานประกอบการ</h2>
+      <div class="s-kv">
+        <div><span>วันที่เดินสำรวจ</span><b>${beDate(g.surveyDate)||'—'}</b></div>
+        <div><span>เวลา</span><b>${esc(g.surveyTime)||'—'}</b></div>
+        <div><span>ผู้ควบคุมการสำรวจ</span>${nameList(g.controllers)}</div>
+        <div><span>ผู้สังเกตการณ์</span>${nameList(g.observers)}</div>
+      </div>`});
+  }
 
   // 3) ภาพรวมความเสี่ยง
   const deptN=S.depts.length;
@@ -2544,7 +2549,7 @@ function buildSlides(){
   if(SO('health')){
     const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;};
     const bd='1px solid #cdd6e4';
-    const vhead=t=>`<th style="border:${bd};background:#0B2545;color:#fff;height:104px;vertical-align:bottom;padding:5px 2px"><span style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.05;font-weight:600">${esc(t)}</span></th>`;
+    const vhead=t=>`<th style="border:${bd};background:#0B2545;color:#fff;height:132px;vertical-align:bottom;padding:6px 3px"><span style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);display:inline-block;white-space:nowrap;line-height:1.1;font-weight:600">${esc(t)}</span></th>`;
     const EXPP=12, DPP=10;
     const healthGroupSlides=(mapKey,title)=>{
       const map=S[mapKey]||{};
@@ -2561,9 +2566,9 @@ function buildSlides(){
       deptPages.forEach(dchunk=>{
         exPages.forEach(echunk=>{
           pageNo++;
-          const tbl=`<table style="width:100%;border-collapse:collapse;font-size:.62em">
-            <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:5px 6px;text-align:left;vertical-align:bottom">แผนก</th>${echunk.map(e=>vhead(e)).join('')}</tr></thead>
-            <tbody>${dchunk.map(d=>`<tr><td style="border:${bd};padding:3px 6px;white-space:nowrap;font-weight:600">${esc(d.name)||'—'}</td>${echunk.map(e=>(map[d.id]&&map[d.id][e])?`<td style="border:${bd};text-align:center;color:#0B2545">●</td>`:`<td style="border:${bd}"></td>`).join('')}</tr>`).join('')}</tbody>
+          const tbl=`<table style="width:100%;border-collapse:collapse;font-size:.8em">
+            <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:6px 8px;text-align:left;vertical-align:bottom;font-size:1.05em">แผนก</th>${echunk.map(e=>vhead(e)).join('')}</tr></thead>
+            <tbody>${dchunk.map(d=>`<tr><td style="border:${bd};padding:5px 8px;white-space:nowrap;font-weight:600">${esc(d.name)||'—'}</td>${echunk.map(e=>(map[d.id]&&map[d.id][e])?`<td style="border:${bd};text-align:center;color:#0B2545;font-size:1.15em">●</td>`:`<td style="border:${bd}"></td>`).join('')}</tr>`).join('')}</tbody>
           </table>`;
           slides.push({html:`
             <div class="s-kick">09 · ตรวจสุขภาพ${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
