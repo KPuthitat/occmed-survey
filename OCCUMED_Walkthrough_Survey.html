@@ -2476,9 +2476,11 @@ function buildSlides(){
   const rrank=r=>r==='สูงมาก'?0:r==='สูง'?1:2;
   risks.sort((a,b)=>rrank(a.r)-rrank(b.r));
   const top=risks.slice(0,7);
-  const riskEmpty=unknownCnt>0
-    ? `<div class="s-empty" style="font-size:1.2em;line-height:1.55;color:#8a6d1f;font-weight:700">ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)</div>`
-    : `<div class="s-empty">ผลการประเมินอยู่ในเกณฑ์ที่ยอมรับได้ / ต่ำ</div>`;
+  // ข้อความมาตรฐาน "ไม่มีผลตรวจวัดสิ่งแวดล้อม" — ใช้ร่วมกันหน้าประเมินความเสี่ยง + หน้า รสส. (จัดกึ่งกลาง)
+  const _RP=(S.rss&&S.rss.plan)||{};
+  const noEnvPlans=[['ความร้อน',_RP.heat],['แสงสว่าง',_RP.light],['เสียง',_RP.noise]].filter(x=>x[1]&&x[1].trim());
+  const noEnvMsg=`<div class="s-empty" style="font-size:1.2em;line-height:1.55;color:#8a6d1f;font-weight:700">ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)${noEnvPlans.length?`<div style="font-size:.7em;color:#6b7a90;font-weight:500;margin-top:18px">ด้านที่มีแผนตรวจวัด: ${noEnvPlans.map(p=>esc(p[0])).join(' · ')}</div>`:''}</div>`;
+  const riskEmpty=unknownCnt>0 ? noEnvMsg : `<div class="s-empty">ผลการประเมินอยู่ในเกณฑ์ที่ยอมรับได้ / ต่ำ</div>`;
   // เกณฑ์การประเมินความเสี่ยง (HRA) — แทรกก่อนหัวข้อประเมินความเสี่ยง
   if(SO('risk')){
     const bd='1px solid #cdd6e4';
@@ -2550,7 +2552,7 @@ function buildSlides(){
       </div>`});
   }
 
-  if(SO('risk')) slides.push({cls:'top',html:`
+  if(SO('risk')) slides.push({cls:top.length?'top':'',html:`
     <div class="s-kick">07 · ประเมินความเสี่ยง</div>
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับ</th></tr></thead><tbody>
@@ -2613,7 +2615,7 @@ function buildSlides(){
         ? `<table class="s-tbl"><thead><tr><th>ด้าน</th><th>จุด/พื้นที่</th><th>วัดได้</th><th>ผล</th></tr></thead><tbody>
       ${tr.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])||'—'}</td><td>${esc(x[2])}</td><td><span class="rb ${rbc(x[3].c)}">${esc(x[3].t)}</span></td></tr>`).join('')}
       </tbody></table>${rssRows.length>7?`<div class="s-more">และอีก ${rssRows.length-7} รายการ</div>`:''}${rssPlans.length?`<div class="s-note"><b>แผนการตรวจวัด (ยังไม่มีผล):</b> ${rssPlans.map(p=>esc(p[0])).join(' · ')} — มีแผนดำเนินการ</div>`:''}`
-        : `<div class="s-empty" style="font-size:1.2em;line-height:1.55;color:#8a6d1f;font-weight:700">ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)${rssPlans.length?`<div style="font-size:.7em;color:#6b7a90;font-weight:500;margin-top:18px">ด้านที่มีแผนตรวจวัด: ${rssPlans.map(p=>esc(p[0])).join(' · ')}</div>`:''}</div>`}`});
+        : noEnvMsg}`});
   }
 
   // 6) การตรวจสุขภาพ
@@ -2741,10 +2743,32 @@ function buildSlides(){
 
   // หัวข้อสุดท้าย · บทสรุปผู้บริหาร (Executive Summary)
   const execTxt=(S.execSummary||'').trim();
-  if(SO('exec')) slides.push({cls:'rec',html:`
-    <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary</div>
-    <h2 class="s-h2">บทสรุปสำหรับผู้บริหาร</h2>
-    ${execTxt?`<div class="s-body" style="white-space:pre-wrap">${esc(execTxt)}</div>`:`<div class="s-empty">ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”</div>`}`});
+  if(SO('exec')){
+    if(!execTxt){
+      slides.push({cls:'rec',html:`
+        <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary</div>
+        <h2 class="s-h2">บทสรุปสำหรับผู้บริหาร</h2>
+        <div class="s-empty">ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”</div>`});
+    } else {
+      // แบ่งหน้าโดยรักษาย่อหน้า — ถ้าไม่พอขึ้นหน้าใหม่
+      const paginateExec=(txt,lim)=>{
+        const paras=String(txt||'').split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
+        const norm=[];
+        paras.forEach(p=>{ let s=p; while(s.length>lim){ let end=lim; const sp=s.lastIndexOf(' ',end); if(sp>lim*0.6) end=sp; norm.push(s.slice(0,end).trim()); s=s.slice(end).trim(); } if(s) norm.push(s); });
+        const chunks=[]; let cur='';
+        norm.forEach(p=>{ const add=(cur?'\n\n':'')+p; if(cur&&(cur+add).length>lim){ chunks.push(cur); cur=p; } else cur+=add; });
+        if(cur.trim()) chunks.push(cur);
+        return chunks.length?chunks:[''];
+      };
+      const pgs=paginateExec(execTxt,560); const np=pgs.length;
+      pgs.forEach((body,pi)=>{
+        slides.push({cls:'rec',html:`
+          <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
+          <h2 class="s-h2">บทสรุปสำหรับผู้บริหาร${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+          <div class="s-body" style="white-space:pre-wrap">${esc(body)}</div>`});
+      });
+    }
+  }
 
   // ปิดท้าย
   slides.push({cls:'cover end',html:`
