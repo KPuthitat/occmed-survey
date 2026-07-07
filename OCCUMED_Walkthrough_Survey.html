@@ -379,6 +379,15 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .rpopts-l{font-weight:700}
 .rpopts label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .rpopts input{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
+.slideopts{background:#0f2038;border-bottom:1px solid rgba(255,255,255,.1)}
+.slideopts>summary{cursor:pointer;padding:9px 16px;font-size:12.5px;font-weight:700;color:#C8A046;list-style:none}
+.slideopts>summary::-webkit-details-marker{display:none}
+.slideopts>summary::before{content:"▸ "}
+.slideopts[open]>summary::before{content:"▾ "}
+.slideopts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:6px 14px;padding:2px 16px 14px}
+.slideopts-grid label{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#dfe6f2;cursor:pointer}
+.slideopts-grid input{width:15px;height:15px;accent-color:#C8A046;flex:none}
+.slideopts-act{grid-column:1/-1;display:flex;gap:8px;margin-top:8px}
 .modal{position:fixed;inset:0;background:rgba(11,37,69,.55);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;backdrop-filter:blur(3px)}
 .modal.show{display:flex}
 .modal .sheet{background:#fff;border-radius:16px;max-width:900px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;margin:auto}
@@ -645,7 +654,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <button class="btn ghost sm" onclick="downloadSlides()">↓ .html</button>
       <button class="close" onclick="closeSlides()">✕</button>
     </div>
-    <div class="mbd" style="padding:0;background:#0a1a30"><iframe id="slideFrame" title="ไฟล์นำเสนอ" style="width:100%;height:calc(100vh - 160px);min-height:520px;border:0;display:block"></iframe></div>
+    <div class="mbd" style="padding:0;background:#0a1a30"><div id="slideOptsBar"></div><iframe id="slideFrame" title="ไฟล์นำเสนอ" style="width:100%;height:calc(100vh - 200px);min-height:460px;border:0;display:block"></iframe></div>
   </div>
 </div>
 
@@ -938,6 +947,7 @@ function blankState(){
     depts:[], health:{}, customExams:[], examOrder:[], examSampling:{},
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
+    slideOpts:{},
     notes:{ general:'', depts:'', risk:'', health:'', summary:'' },
     execSummary:'',
     conclusion:{heat:'',noise:'',chem:'',extra:''}
@@ -2288,6 +2298,9 @@ const SLIDE_RUNTIME=`(function(){
   show(0);
 })();`;
 
+/* หัวข้อที่เลือกเปิด/ปิดในไฟล์นำเสนอได้ (ปกและปิดท้ายแสดงเสมอ) */
+const SLIDE_SECTIONS=[['company','ข้อมูลบริษัท'],['workforce','กำลังคน & เวลาทำงาน'],['safety','ความปลอดภัย & อาชีวอนามัย'],['walkthrough','การเดินสำรวจ'],['overview','ภาพรวมความเสี่ยง'],['measure','ผลการตรวจวัด'],['risk','ประเมินความเสี่ยง'],['deptDetail','รายละเอียดแต่ละแผนก'],['machines','โปสเตอร์เครื่องจักร'],['rss','ผลตรวจวัดสภาพแวดล้อม (รสส.)'],['health','ตรวจสุขภาพ'],['clinical','สรุปเชิงคลินิก'],['notes','บันทึกภาคสนาม'],['recommend','ข้อเสนอแนะ'],['appendix','ภาคผนวก (เครื่องจักร/ค่าอ้างอิง)'],['photos','รูปภาพหน้างาน'],['exec','บทสรุปผู้บริหาร']];
+function SO(k){ return !(S.slideOpts&&S.slideOpts[k]===false); }
 function buildSlides(){
   const g=S.general, c=S.conclusion, f=highRiskFindings();
   const uniq=a=>[...new Set(a)];
@@ -2305,7 +2318,7 @@ function buildSlides(){
   const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n-1)+'…':s;};
   const nlines=v=>String(v||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
   // 01 · ข้อมูลบริษัท
-  slides.push({html:`
+  if(SO('company')) slides.push({html:`
     <div class="s-kick">01 · ข้อมูลบริษัท</div>
     <h2 class="s-h2">ข้อมูลสถานประกอบการ</h2>
     <div class="s-kv">
@@ -2318,7 +2331,7 @@ function buildSlides(){
     </div>
     ${g.mgmt?`<div class="s-note"><b>โครงสร้าง/ผู้บริหาร:</b> ${esc(cut(g.mgmt,170))}</div>`:''}`});
   // 02 · กำลังคน & เวลาทำงาน
-  slides.push({html:`
+  if(SO('workforce')) slides.push({html:`
     <div class="s-kick">02 · กำลังคน & เวลาทำงาน</div>
     <h2 class="s-h2">กำลังคนและเวลาทำงาน</h2>
     <div class="s-kv">
@@ -2331,7 +2344,7 @@ function buildSlides(){
     </div>
     ${g.shiftDetail?`<div class="s-note"><b>รายละเอียดกะ:</b> ${esc(cut(g.shiftDetail,170))}</div>`:''}`});
   // 03 · ความปลอดภัย & อาชีวอนามัย
-  slides.push({html:`
+  if(SO('safety')) slides.push({html:`
     <div class="s-kick">03 · ความปลอดภัย & อาชีวอนามัย</div>
     <h2 class="s-h2">ความปลอดภัยและอาชีวอนามัย</h2>
     <div class="s-kv">
@@ -2343,7 +2356,7 @@ function buildSlides(){
     ${g.accidentStats?`<div class="s-note"><b>สถิติอุบัติเหตุ/บาดเจ็บ:</b> ${esc(cut(g.accidentStats,150))}</div>`:''}
     ${g.ppe?`<div class="s-note"><b>PPE ที่จัดให้:</b> ${esc(cut(g.ppe,150))}</div>`:''}`});
   // 04 · การเดินสำรวจ
-  slides.push({html:`
+  if(SO('walkthrough')) slides.push({html:`
     <div class="s-kick">04 · การเดินสำรวจ</div>
     <h2 class="s-h2">การเดินสำรวจสถานประกอบการ</h2>
     <div class="s-kv">
@@ -2357,7 +2370,7 @@ function buildSlides(){
   // 3) ภาพรวมความเสี่ยง
   const deptN=S.depts.length;
   const hazN=S.depts.reduce((a,d)=>a+d.hazards.length,0);
-  slides.push({html:`
+  if(SO('overview')) slides.push({html:`
     <div class="s-kick">05 · ภาพรวม</div>
     <h2 class="s-h2">ภาพรวมสิ่งคุกคาม &amp; ความเสี่ยง</h2>
     <div class="s-stats">
@@ -2372,7 +2385,7 @@ function buildSlides(){
   // 3b) ผลการตรวจวัดสิ่งคุกคาม (Hazard Monitoring)
   const meas=[];
   S.depts.forEach(d=>d.hazards.forEach(h=>{ if(h.measured&&/\d/.test(String(h.measured))){ const ev=evalStd(h.measured,h.std,h.name); meas.push({d:d.name,h:h.name,m:h.measured,u:h.unit,s:h.std,ev}); }}));
-  if(meas.length){
+  if(meas.length && SO('measure')){
     meas.sort((a,b)=>(a.ev.c==='over'?0:1)-(b.ev.c==='over'?0:1));
     const tm=meas.slice(0,8);
     const rbc=c=>c==='over'?'h':c==='ok'?'l':'a', rbt=c=>c==='over'?'เกิน':c==='ok'?'ผ่าน':'—';
@@ -2390,7 +2403,7 @@ function buildSlides(){
   const rrank=r=>r==='สูงมาก'?0:r==='สูง'?1:2;
   risks.sort((a,b)=>rrank(a.r)-rrank(b.r));
   const top=risks.slice(0,7);
-  slides.push({html:`
+  if(SO('risk')) slides.push({html:`
     <div class="s-kick">07 · ประเมินความเสี่ยง</div>
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับ</th></tr></thead><tbody>
@@ -2404,7 +2417,7 @@ function buildSlides(){
     if(!hasContent) return;
     const hz=(d.hazards||[]).slice(0,6);
     const info=[]; if((d.machines||'').trim()) info.push('<b>เครื่องจักร:</b> '+esc(cut(d.machines,70))); if(d.staff) info.push('<b>พนักงาน</b> '+esc(d.staff)+' คน');
-    slides.push({html:`
+    if(SO('deptDetail')) slides.push({html:`
       <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}</div>
       <h2 class="s-h2">${esc(d.name)||'แผนก'}${d.en?` <span style="font-size:.6em;color:#6b7a90;font-weight:400">(${esc(d.en)})</span>`:''}</h2>
       ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
@@ -2413,7 +2426,7 @@ function buildSlides(){
       ${hz.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td>${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
       </tbody></table><div class="s-note" style="font-size:.78em">HR = ความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${d.hazards.length>6?`<div class="s-more">และอีก ${d.hazards.length-6} สิ่งคุกคาม</div>`:''}`:'<div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>'}`});
     // โปสเตอร์เครื่องจักรที่แนบในแผนก (ภาพเดียว)
-    (d.machineRefs||[]).forEach(mi=>{ if(!MACHINE_REF[mi]) return; slides.push({cls:'mch',html:`
+    if(SO('machines')) (d.machineRefs||[]).forEach(mi=>{ if(!MACHINE_REF[mi]) return; slides.push({cls:'mch',html:`
       <div class="s-kick">แผนก ${di+1} · ${esc(d.name)} · เครื่องจักร</div>
       <h2 class="s-h2" style="margin-bottom:8px">${esc(MACHINE_REF[mi].th)} <span style="font-size:.55em;color:#6b7a90;font-weight:400">(${esc(MACHINE_REF[mi].en)})</span></h2>
       <div class="s-poster">${machinePoster(mi)}</div>`}); });
@@ -2426,7 +2439,7 @@ function buildSlides(){
   (RR.light||[]).forEach(r=>{if((r.lux||'').trim())rssRows.push(['แสงสว่าง',r.point,(r.lux||'')+' lux',rssEval('light',r)]);});
   (RR.noise||[]).forEach(r=>{if((r.twa||'').trim())rssRows.push(['เสียง',r.seg,(r.twa||'')+' dBA',rssEval('noise',r)]);});
   const rssPlans=[['ความร้อน',RP.heat],['แสงสว่าง',RP.light],['เสียง',RP.noise]].filter(x=>x[1]&&x[1].trim());
-  if(rssRows.length||rssPlans.length){
+  if((rssRows.length||rssPlans.length) && SO('rss')){
     const rbc=c=>c==='over'?'h':c==='ok'?'l':'a';
     const tr=rssRows.slice(0,7);
     slides.push({html:`
@@ -2442,7 +2455,7 @@ function buildSlides(){
   const exSet=new Set();
   S.depts.forEach(d=>{const hd=S.health[d.id]; if(hd) allExams().forEach(e=>{ if(hd[e]) exSet.add(e); });});
   const exams=[...exSet];
-  slides.push({html:`
+  if(SO('health')) slides.push({html:`
     <div class="s-kick">09 · ตรวจสุขภาพ</div>
     <h2 class="s-h2">การตรวจสุขภาพตามปัจจัยเสี่ยง</h2>
     ${exams.length?`<div class="s-chips">${exams.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div>
@@ -2451,7 +2464,7 @@ function buildSlides(){
 
   // 7) สรุปเชิงคลินิก (Knowledge Base) — ตัดข้อความให้พอดีสไลด์ (ฉบับเต็มอยู่ในรายงาน)
   const kbs=kbForSurvey();
-  if(kbs.entries.length){
+  if(kbs.entries.length && SO('clinical')){
     const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n-1).replace(/[,\s·]+$/,'')+'…':s;};
     const ke=kbs.entries.slice(0,5);
     slides.push({html:`
@@ -2465,7 +2478,7 @@ function buildSlides(){
   // 8) บันทึกภาคสนาม
   const nt=S.notes||{};
   const noteRows=['general','depts','risk','health','summary'].map(k=>[NOTE_LABELS[k],nt[k]]).filter(x=>x[1]&&x[1].trim());
-  if(noteRows.length){
+  if(noteRows.length && SO('notes')){
     slides.push({cls:'rec',html:`
       <div class="s-kick">11 · บันทึกภาคสนาม</div>
       <h2 class="s-h2">บันทึกภาคสนาม (Field Notes)</h2>
@@ -2474,14 +2487,14 @@ function buildSlides(){
 
   // 9) ข้อเสนอแนะ (สไลด์ละหัวข้อ)
   const recs=[['ความร้อน (Heat)',c.heat],['เสียงดัง (Noise)',c.noise],['สารเคมีอันตราย (Chemical)',c.chem],['ข้อเสนอแนะเพิ่มเติม',c.extra]].filter(x=>x[1]&&x[1].trim());
-  if(recs.length){
+  if(SO('recommend')&&recs.length){
     recs.forEach((r,idx)=>{
       slides.push({cls:'rec',html:`
         <div class="s-kick">12 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}</div>
         <h2 class="s-h2">${esc(r[0])}</h2>
         <div class="s-body">${esc(r[1])}</div>`});
     });
-  } else {
+  } else if(SO('recommend')) {
     slides.push({html:`
       <div class="s-kick">12 · ข้อเสนอแนะ</div>
       <h2 class="s-h2">ข้อเสนอแนะ</h2>
@@ -2490,7 +2503,7 @@ function buildSlides(){
 
   // 10) ภาคผนวก — เครื่องจักร / ค่าอ้างอิง (ตามที่เลือกในรายงาน)
   const ro=S.reportOpts||{};
-  if(ro.incMachines){
+  if(ro.incMachines && SO('appendix')){
     const txt=rptDeptText();
     const mm=MACHINE_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
     if(mm.length) slides.push({cls:'rec',html:`
@@ -2498,7 +2511,7 @@ function buildSlides(){
       <h2 class="s-h2">เครื่องจักรและปัจจัยเสี่ยง (ที่เกี่ยวข้อง)</h2>
       <div class="s-body">${mm.slice(0,6).map(m=>`<div style="margin-bottom:9px"><b style="color:#0B2545">${esc(m.th)}</b> — ${esc(m.haz.slice(0,4).join(' · '))}</div>`).join('')}</div>`});
   }
-  if(ro.incRef){
+  if(ro.incRef && SO('appendix')){
     const txt=rptDeptText();
     const mt=METAL_REF.filter(m=>m.kw.some(k=>txt.includes(k.toLowerCase())));
     if(mt.length) slides.push({html:`
@@ -2511,7 +2524,7 @@ function buildSlides(){
 
   // ภาพประกอบการเดินสำรวจ (4 รูป/สไลด์)
   const ph=allPhotos();
-  for(let i=0;i<ph.length;i+=4){
+  for(let i=0; SO('photos') && i<ph.length; i+=4){
     const grp=ph.slice(i,i+4);
     slides.push({html:`
       <div class="s-kick">ภาพประกอบการเดินสำรวจ${ph.length>4?` (${Math.floor(i/4)+1}/${Math.ceil(ph.length/4)})`:''}</div>
@@ -2521,7 +2534,7 @@ function buildSlides(){
 
   // หัวข้อสุดท้าย · บทสรุปผู้บริหาร (Executive Summary)
   const execTxt=(S.execSummary||'').trim();
-  slides.push({cls:'rec',html:`
+  if(SO('exec')) slides.push({cls:'rec',html:`
     <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary</div>
     <h2 class="s-h2">บทสรุปสำหรับผู้บริหาร</h2>
     ${execTxt?`<div class="s-body" style="white-space:pre-wrap">${esc(execTxt)}</div>`:`<div class="s-empty">ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”</div>`}`});
@@ -2612,10 +2625,20 @@ function standaloneSlides(){
     +'<script>'+SLIDE_RUNTIME+'<\/script></body></html>';
 }
 function openSlides(){
+  renderSlideOpts();
   document.getElementById('slideFrame').srcdoc=standaloneSlides();
   document.getElementById('slideModal').classList.add('show');
   document.body.style.overflow='hidden';
 }
+function renderSlideOpts(){
+  const el=document.getElementById('slideOptsBar'); if(!el) return;
+  el.innerHTML=`<details class="slideopts"><summary>เลือกหัวข้อที่จะขึ้นในไฟล์นำเสนอ (${SLIDE_SECTIONS.filter(s=>SO(s[0])).length}/${SLIDE_SECTIONS.length})</summary>`+
+    `<div class="slideopts-grid">`+SLIDE_SECTIONS.map(s=>`<label><input type="checkbox" ${SO(s[0])?'checked':''} onchange="toggleSlideOpt('${s[0]}',this.checked)"> ${esc(s[1])}</label>`).join('')+
+    `<div class="slideopts-act"><button class="btn ghost sm" onclick="allSlideOpts(true)">เลือกทั้งหมด</button><button class="btn ghost sm" onclick="allSlideOpts(false)">ไม่เลือกเลย</button></div></div></details>`;
+}
+function toggleSlideOpt(k,on){ S.slideOpts=S.slideOpts||{}; if(on) delete S.slideOpts[k]; else S.slideOpts[k]=false; touch(); bxFull(); refreshSlides(); }
+function allSlideOpts(on){ S.slideOpts=S.slideOpts||{}; if(on){ S.slideOpts={}; } else { SLIDE_SECTIONS.forEach(s=>S.slideOpts[s[0]]=false); } touch(); bxFull(); refreshSlides(); }
+function refreshSlides(){ renderSlideOpts(); const fr=document.getElementById('slideFrame'); if(fr) fr.srcdoc=standaloneSlides(); }
 function closeSlides(){document.getElementById('slideModal').classList.remove('show');document.body.style.overflow=''}
 function copySlides(){ copyText(standaloneSlides(),'คัดลอกโค้ดไฟล์นำเสนอเรียบร้อยแล้ว — สามารถวางเพื่อนำขึ้นใช้งาน (deploy) ได้ทันที'); }
 function downloadSlides(){
