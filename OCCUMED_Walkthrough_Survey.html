@@ -2376,14 +2376,28 @@ function setClaudeKey(v){ try{ v=(v||'').trim(); if(v) localStorage.setItem('occ
 // แปลชุดข้อความด้วย Claude (opus 4.8) — เรียก HTTP ตรงจากเบราว์เซอร์ · คืน map ต้นฉบับ→จีน
 async function claudeTranslateBatch(list){
   const key=claudeKey(); if(!key) throw new Error('ยังไม่ได้ใส่ Claude API key');
-  const sys='你是职业医学（occupational medicine）领域的专业翻译。将泰语/英语术语准确翻译为规范的简体中文职业卫生术语。英文缩写（如 CBC、CXR、VA、HBsAg）保留原文或加中文括注。只输出一个 JSON 对象：键为原文、值为中文译文，不要任何额外说明或代码块标记。';
-  const user='请将下列条目翻译为简体中文，仅输出 JSON 对象：\n'+JSON.stringify(list);
+  const sys='你是职业医学（occupational medicine）领域的专业翻译。将泰语/英语术语准确翻译为规范的简体中文职业卫生术语。英文缩写（如 CBC、CXR、VA、HBsAg）保留原文或加中文括注。输入是一个 JSON 字符串数组；只输出一个等长的 JSON 数组，按相同顺序给出每一条的简体中文译文，长度必须与输入完全相同，不要任何额外说明或代码块标记。';
+  const user='请将下列 JSON 数组中的每一条翻译为简体中文，按原顺序输出等长的 JSON 数组（第 i 项对应输入第 i 项），仅输出该 JSON 数组：\n'+JSON.stringify(list);
   const body={model:'claude-opus-4-8',max_tokens:8000,system:sys,messages:[{role:'user',content:user}]};
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
-  if(!r.ok){ const t=await r.text(); throw new Error('Claude API '+r.status+': '+t.slice(0,160)); }
+  let r;
+  try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)}); }
+  catch(netErr){ throw new Error('เชื่อมต่อ Claude API ไม่ได้ (network/CORS): '+String(netErr&&netErr.message||netErr)); }
+  if(!r.ok){ let t=''; try{ t=await r.text(); }catch(_){}
+    throw new Error('Claude API '+r.status+': '+t.slice(0,300)); }
   const j=await r.json();
   const txt=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
-  const m=txt.match(/\{[\s\S]*\}/); return JSON.parse(m?m[0]:txt);
+  // ตอบเป็น array เรียงตามลำดับ → map ด้วย index (ทนกว่าการ match key ไทย)
+  let arr=null;
+  const ma=txt.match(/\[[\s\S]*\]/);
+  if(ma){ try{ const p=JSON.parse(ma[0]); if(Array.isArray(p)) arr=p.map(x=>String(x==null?'':x)); }catch(_){}
+  }
+  if(!arr){ // fallback: ถ้าโมเดลตอบเป็น object แบบเดิม ให้ map ด้วย key
+    const mo=txt.match(/\{[\s\S]*\}/);
+    if(mo){ try{ const o=JSON.parse(mo[0]); arr=list.map(s=>String(o[s]==null?'':o[s])); }catch(_){}
+    }
+  }
+  if(!arr) throw new Error('อ่านผลแปลจาก Claude ไม่ได้: '+txt.slice(0,200));
+  return arr;
 }
 async function zhAutoTranslate(){
   const srcs=zhSources().filter(s=>!(S.zh&&S.zh[s]));
@@ -2394,16 +2408,17 @@ async function zhAutoTranslate(){
   try{
     if(useClaude){
       const chunks=[]; for(let i=0;i<srcs.length;i+=40) chunks.push(srcs.slice(i,i+40));
-      for(const c of chunks){ const map=await claudeTranslateBatch(c); c.forEach(s=>{ const v=map&&map[s]; if(v){ S.zh[s]=String(v).trim(); ok++; } }); }
+      for(const c of chunks){ const arr=await claudeTranslateBatch(c); c.forEach((s,i)=>{ const v=arr[i]; if(v&&String(v).trim()){ S.zh[s]=String(v).trim(); ok++; } }); }
     } else {
       for(const s of srcs){
         try{ const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q='+encodeURIComponent(s);
           const r=await fetch(url); const j=await r.json(); const tr=(j[0]||[]).map(x=>x[0]).join('').trim(); if(tr){ S.zh[s]=tr; ok++; } }catch(e){}
       }
     }
-  }catch(e){ touch(); bxFull(); const el0=document.getElementById('reportDoc'); if(el0) el0.innerHTML=reportHTML(); toast('แปลไม่สำเร็จ: '+String(e.message||e).slice(0,140)); return; }
+  }catch(e){ touch(); bxFull(); const el0=document.getElementById('reportDoc'); if(el0) el0.innerHTML=reportHTML(); const msg=String(e.message||e); toast('แปลไม่สำเร็จ: '+msg.slice(0,140)); alert('แปลด้วย '+engName+' ไม่สำเร็จ\n\n'+msg+(ok?('\n\n(แปลสำเร็จบางส่วนแล้ว '+ok+' รายการ)'):'')); return; }
   touch(); bxFull(); const el=document.getElementById('reportDoc'); if(el) el.innerHTML=reportHTML();
-  toast(ok?('แปลแล้ว '+ok+' รายการ ('+engName+') — โปรดตรวจทาน'):'แปลไม่สำเร็จ (ตรวจคีย์/อินเทอร์เน็ต แล้วลองใหม่)');
+  if(ok){ toast('แปลแล้ว '+ok+' รายการ ('+engName+') — โปรดตรวจทาน'); }
+  else { toast('แปลไม่สำเร็จ'); alert('แปลไม่สำเร็จ — ได้รับการตอบกลับแต่ไม่มีคำแปล\nตรวจ API key / เครดิต / อินเทอร์เน็ต แล้วลองใหม่'); }
 }
 function zhTransPanel(){
   const srcs=zhSources();
