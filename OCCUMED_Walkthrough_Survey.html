@@ -379,6 +379,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .rpopts{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:11px 16px;background:#eef1f6;border-bottom:1px solid var(--line);font-size:13px;color:var(--navy);position:sticky;top:0;z-index:1}
 .rpopts-l{font-weight:700}
 .rpopts label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.langseg{display:inline-flex;border:1px solid var(--gold);border-radius:8px;overflow:hidden}
+.langbtn{background:#fff;color:var(--navy);border:none;padding:5px 14px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.langbtn.on{background:var(--gold);color:#fff}
 .rpopts input{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
 .slideopts{background:#0f2038;border-bottom:1px solid rgba(255,255,255,.1)}
 .slideopts>summary{cursor:pointer;padding:9px 16px;font-size:12.5px;font-weight:700;color:#C8A046;list-style:none}
@@ -2118,7 +2121,7 @@ function buildCombinedTable(){
 }
 
 function reportCSS(){
-  return `body{font-family:'TH Sarabun New','TH SarabunPSK','Sarabun','Noto Sans Thai',sans-serif;color:#222;margin:0;background:#e9edf3}
+  return `body{font-family:'TH Sarabun New','TH SarabunPSK','Sarabun','Noto Sans Thai','Noto Sans SC','Microsoft YaHei',sans-serif;color:#222;margin:0;background:#e9edf3}
   #reportDoc{background:#fff;max-width:800px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,.1)}
   .rp{padding:38px 44px;font-size:16pt;line-height:1.5}
   .rp h1{text-align:center;font-size:20pt;color:#111}
@@ -2195,27 +2198,151 @@ function reportCSS(){
     .rp tr{break-inside:avoid}
   }`;
 }
+/* ============================================================
+   รายงานภาษาจีน (中文报告) — สำหรับผู้บริหารชาวจีน · ศัพท์เทคนิคอาชีวเวชศาสตร์
+   ข้อความคงที่/ศัพท์วิชาการแปลเป็นจีน · ข้อความที่ผู้ใช้กรอกเอง (ชื่อบริษัท/แผนก) คงตามเดิม
+   ============================================================ */
+let RPT_LANG='th';
+function setRptLang(l){ RPT_LANG=l; const el=document.getElementById('reportDoc'); if(el) el.innerHTML=reportHTML(); renderRpOpts(); }
+function reportHTML(){ return RPT_LANG==='zh' ? buildReportZH() : buildReport(); }
+const ZH_CAT={Physical:'物理性',Chemical:'化学性',Ergonomic:'人机工效学',Biological:'生物性','กายภาพ':'物理性','เคมี':'化学性','ชีวภาพ':'生物性','การยศาสตร์':'人机工效学','จิตสังคม':'心理社会','ความปลอดภัย':'安全'};
+const ZH_RISK={'สูงมาก':'极高','สูง':'高','ปานกลาง':'中等','ต่ำ':'低','ยอมรับได้':'可接受','ไม่ทราบความเสี่ยง':'无法判定'};
+const ZH_GROUP={phys:'体格检查',special:'特殊仪器检查',lab:'实验室检查'};
+// คำแปลจีนของสิ่งคุกคามในฐานความรู้ (keyed by KB k[0])
+const KB_ZH={
+ 'noise':{hz:'噪声',eff:'暂时性/永久性听阈位移、耳鸣、交流困难、应激',med:'基线及定期纯音听力测定、耳部检查'},
+ 'heat':{hz:'高温 / 热应激',eff:'热疹、热痉挛、热衰竭、晕厥、中暑、脱水、肾脏负担',med:'岗位适任评估、危险因素筛查、作业中症状监测'},
+ 'vibration':{hz:'振动',eff:'手臂振动综合征、麻木、血管症状、肌肉疼痛；全身振动致腰痛',med:'症状问卷、神经/血管检查、肌肉骨骼评估'},
+ 'light':{hz:'采光与作业辐射',eff:'眼疲劳、头痛、照度不足/眩光致事故风险、焊接UV-IR',med:'视力筛查、眼疲劳症状复核、必要时眼科转诊'},
+ 'silica':{hz:'可吸入结晶二氧化硅粉尘',eff:'咳嗽、呼吸困难、肺功能下降、结核风险、肾/免疫影响',med:'呼吸问卷、肺功能、胸片(ILO)、结核筛查'},
+ 'welding fume':{hz:'焊接烟尘',eff:'金属烟热、呼吸道刺激、职业性哮喘、慢性支气管炎；含Cr(VI)/Ni致癌',med:'呼吸问卷、肺功能、必要时胸片、锰接触者神经评估'},
+ 'chromium':{hz:'铬及其化合物',eff:'皮肤刺激/溃疡、接触性皮炎、哮喘；Cr(VI)致癌',med:'皮肤/鼻/呼吸症状复核、肺功能、必要时胸片'},
+ 'nickel':{hz:'镍及其化合物',eff:'过敏性接触性皮炎、哮喘/呼吸道致敏、部分化合物致鼻/肺癌',med:'皮肤检查、呼吸问卷、肺功能'},
+ 'manganese':{hz:'锰',eff:'呼吸道刺激；慢性接触致类帕金森神经损害',med:'神经症状问卷、运动协调筛查、肺功能'},
+ 'xylene':{hz:'二甲苯',eff:'眼/呼吸道刺激、中枢抑制、头痛头晕、皮炎；与噪声协同致听力损害',med:'溶剂症状问卷、皮肤/神经评估、必要时肝功能、生物监测'},
+ 'toluene':{hz:'甲苯',eff:'中枢抑制、头晕、黏膜刺激、皮炎；高接触关注生殖影响',med:'溶剂症状问卷、神经评估、皮肤检查、生物监测'},
+ 'hexane':{hz:'正己烷',eff:'周围神经病(麻木/无力)、中枢抑制、皮炎',med:'神经症状问卷、周围神经检查、2,5-己二酮生物监测'},
+ 'trichloroethylene':{hz:'三氯乙烯 (TCE)',eff:'中枢抑制、认知下降、眼/皮肤刺激、肾毒性；致癌(IARC 1类)',med:'神经/认知问卷、肾功能、肝功能、生物监测'},
+ 'isocyanate':{hz:'异氰酸酯',eff:'呼吸道致敏、职业性哮喘、眼/皮肤刺激',med:'呼吸问卷+肺功能(基线/定期)、哮喘监测'},
+ 'ozone':{hz:'臭氧',eff:'眼/呼吸道刺激、咳嗽、胸闷、肺功能下降、诱发哮喘',med:'呼吸问卷、肺功能、哮喘史复核'},
+ 'carbon monoxide':{hz:'一氧化碳',eff:'头晕头痛、恶心、晕厥、缺氧、心肌缺血风险、致命中毒',med:'症状监测、COHb检测、心血管风险评估'},
+ 'oil mist':{hz:'油雾（金属加工液）',eff:'呼吸道刺激、咳嗽、皮疹/痤疮、加工液相关呼吸症状',med:'皮肤检查、呼吸问卷、必要时肺功能'},
+ 'voc':{hz:'混合有机溶剂蒸气 (VOC)',eff:'刺激、中枢抑制、头晕、皮炎、依成分致肝/肾影响',med:'溶剂症状问卷、皮肤/神经评估、必要时肝肾功能'},
+ 'dust':{hz:'可吸入粉尘（总尘）',eff:'上呼吸道刺激、咳嗽、支气管炎样症状',med:'呼吸问卷、必要时肺功能、明确粉尘成分'},
+ 'manual handling':{hz:'人工搬运（人机工效学）',eff:'下腰痛、肩颈痛、肌肉肌腱损伤、疲劳',med:'肌肉骨骼症状问卷、功能评估、伤后适任/复工评估'},
+ 'biological':{hz:'生物因素',eff:'感染、过敏、生物气溶胶刺激（依病原而定）',med:'相关疫苗复核、症状监测、暴露后处置'},
+ 'lead':{hz:'铅（无机）',eff:'神经系统影响、贫血、腹绞痛、肾损害、生殖及胎儿毒性',med:'血铅、CBC、神经症状及肾功能评估'},
+ 'formaldehyde':{hz:'甲醛',eff:'眼/鼻/呼吸道刺激、接触性皮炎、诱发哮喘；鼻咽癌风险(IARC 1类)',med:'呼吸/皮肤问卷、肺功能、鼻咽症状监测'},
+ 'ammonia':{hz:'氨',eff:'眼/呼吸道强刺激、高浓度致支气管痉挛/肺水肿、碱性灼伤',med:'呼吸/眼症状问卷、肺功能、暴露急救预案'},
+ 'zinc':{hz:'氧化锌（烟尘）',eff:'金属烟热（发热/寒战/肌痛）、咳嗽、呼吸道刺激',med:'金属烟热症状监测、呼吸问卷'},
+ 'paint':{hz:'喷漆漆雾',eff:'漆雾/溶剂致呼吸道及眼刺激、异氰酸酯致哮喘、溶剂神经影响',med:'呼吸/皮肤问卷、肺功能(尤其PU/异氰酸酯)、哮喘监测'}
+};
+function zhHaz(name){ const e=kbMatch(name); if(e){ const z=KB_ZH[e.k[0]]; if(z) return z.hz; return e.hz; } return name||'—'; }
+function buildReportZH(){
+  const g=S.general;
+  const rbCls=r=>({'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a','ไม่ทราบความเสี่ยง':'u'}[r]||'l');
+  const unknownCnt=S.depts.reduce((a,d)=>a+d.hazards.filter(h=>effRisk(h)===RISK_UNKNOWN).length,0);
+  const noEnv='由于尚无作业环境检测结果，暂无法判定风险等级（已列入检测计划）。';
+  let h=`<div class="rp">
+  <div class="cover">
+    <h1 style="font-size:20pt">职业卫生现场巡查报告</h1>
+    <h1 style="font-size:16pt;margin-top:4px;font-weight:400">Occupational Health Walk-through Survey Report</h1>
+    <h1 style="font-size:24pt;margin-top:14px">${esc(g.company)||'（企业名称）'}</h1>
+    <p class="muted" style="margin-top:24px">编制：职业医学现场巡查组</p>
+    <p class="muted">巡查日期：${beDate(g.surveyDate)||'—'}</p>
+    <p class="muted" style="margin-top:20px;font-size:11px">本报告由 OCCMED — 现场巡查系统生成（供中文管理层参阅）</p>
+  </div>`;
+  // 执行摘要
+  const hi=highRiskList();
+  h+=`<h2>◆ 执行摘要 (Executive Summary)</h2>`;
+  const deptN=S.depts.length, hazN=S.depts.reduce((a,d)=>a+d.hazards.length,0);
+  h+=`<p>本报告为对 ${esc(g.company)||'该企业'} 于 ${beDate(g.surveyDate)||'—'} 进行职业卫生现场巡查（Walk-through Survey）之结果，覆盖 ${deptN} 个部门、共识别危害因素 ${hazN} 项，旨在识别作业场所职业危害、评估劳动者健康风险，并提出预防控制与健康监护建议。</p>`;
+  if(hi.length){ const byD={}; hi.forEach(x=>{(byD[x.dept]=byD[x.dept]||[]).push(zhHaz(x.name));});
+    h+=`<p>评估发现属<strong>高至极高风险</strong>、需优先管理者包括：${Object.keys(byD).map(dp=>`${esc(dp)}（${[...new Set(byD[dp])].join('、')}）`).join('；')}，应尽快落实工程与管理控制并加强健康监护。</p>`;
+  } else if(unknownCnt){ h+=`<p>${noEnv}目前有 ${unknownCnt} 项危害因素因缺乏环境检测数据尚无法定级，建议按检测计划完成作业环境监测后再行风险定级并制定相应控制措施。</p>`;
+  } else { h+=`<p>总体风险处于可接受至中等水平，尚未发现高风险项，仍建议按各部门危害因素持续监护。</p>`; }
+  h+=`<p><strong>主要建议：</strong>按控制层级原则（消除／替代／工程控制／管理控制／个体防护 PPE）管控风险，完成尚缺的作业环境检测，并依危害因素开展针对性健康监护（岗前及定期体检）。</p>`;
+  // 企业基本信息
+  h+=`<h2>◆ 企业基本信息</h2>
+  <dl class="kv">
+    <dt>企业名称</dt><dd>${esc(g.company)||'—'}</dd>
+    <dt>行业／类型</dt><dd>${esc(g.type)||'—'}</dd>
+    <dt>地址</dt><dd>${esc(g.address)||'—'}</dd>
+    <dt>厂区面积</dt><dd>${esc(g.area)||'—'} 平方米</dd>
+    <dt>员工人数</dt><dd>${esc(g.workers)||'—'} 人（正式 ${esc(g.workersFull)||'—'} · 外包 ${esc(g.workersSub)||'—'}）</dd>
+    <dt>工作日／班制</dt><dd>${esc(g.days)||'—'} · ${esc(g.shifts)||'—'}</dd>
+    <dt>巡查日期／时间</dt><dd>${beDate(g.surveyDate)||'—'} ${esc(g.surveyTime)||''}</dd>
+  </dl>
+  <p class="muted" style="font-size:11px">注：企业与部门名称、备注等由巡查人员按原文录入（泰文／英文），未作机器翻译。</p>`;
+  // 巡查目的与范围
+  h+=`<h2>◆ 巡查目的与范围</h2>
+  <p>现场巡查（Walk-through Survey）是职业医学医师了解真实作业环境、识别劳动者所接触危害因素的重要方法，据此制定预防、促进、治疗与康复措施。本次巡查覆盖企业主要生产部门，内容包括生产工艺、危害因素识别、风险评估与健康监护建议。</p>`;
+  // 各部门危害因素
+  h+=`<h2>◆ 各部门危害因素识别与风险</h2>
+  <table><thead><tr><th>部门</th><th>危害因素</th><th>类别</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>风险等级</th></tr></thead><tbody>`;
+  let anyRow=false;
+  S.depts.forEach(d=>{ (d.hazards||[]).forEach(hz=>{ anyRow=true; const r=effRisk(hz);
+    h+=`<tr><td>${esc(d.name)||'—'}</td><td>${esc(zhHaz(hz.name))}</td><td>${ZH_CAT[hz.cat]||esc(hz.cat)||'—'}</td><td style="text-align:center">${esc(hz.hr)||'—'}</td><td style="text-align:center">${esc(hz.freq)||'—'}</td><td><span class="rb ${rbCls(r)}">${ZH_RISK[r]||r||'—'}</span></td></tr>`;
+  });});
+  if(!anyRow) h+=`<tr><td colspan="6" class="muted">尚未录入危害因素</td></tr>`;
+  h+=`</tbody></table>
+  <p class="muted" style="font-size:11px">HR＝危害严重度（1–5）· EF＝接触频率（1–5）· 风险等级依 HR×ER 判定（ER 由 CR×EF 得出）。</p>
+  ${unknownCnt?`<div class="warn" style="margin-top:10px">${noEnv}（共 ${unknownCnt} 项）</div>`:''}`;
+  // 风险评估方法
+  h+=`<h2>◆ 风险评估方法（HRA）</h2>
+  <p>依据泰国劳动福利与保护厅职业危害风险评估法：<strong>风险等级 ＝ HR × ER</strong>，其中 <strong>ER（接触等级）由 CR（浓度等级）× EF（接触频率）</strong> 得出。CR、EF、HR 各分 1–5 级；当缺乏作业环境浓度检测（CR）时，暂记为无法判定并列入检测计划。</p>`;
+  // 危害因素临床要点
+  const kb=kbForSurvey();
+  if(kb.entries.length){
+    h+=`<h2>◆ 危害因素临床要点（依据知识库）</h2>
+    <table><thead><tr><th>危害因素</th><th>健康影响</th><th>健康监护</th></tr></thead><tbody>`;
+    kb.entries.forEach(e=>{ const z=KB_ZH[e.k[0]]||{};
+      h+=`<tr><td><strong>${esc(z.hz||e.hz)}</strong></td><td>${esc(z.eff||e.eff)}</td><td>${esc(z.med||e.med)}</td></tr>`;
+    });
+    h+=`</tbody></table><p class="muted" style="font-size:11px">参考：ACGIH 2025 TLVs®/BEIs® 及职业卫生监护指南。</p>`;
+  }
+  // 健康监护计划（按组）
+  const grpLines=(mapKey)=>{ const map=S[mapKey]||{}; const used=allExams().filter(e=>S.depts.some(d=>map[d.id]&&map[d.id][e]));
+    return EXAM_GROUPS.map(([gk,gl])=>({zh:ZH_GROUP[gk],items:used.filter(e=>examGroupOf(e)===gk)})).filter(x=>x.items.length); };
+  const preG=grpLines('healthPre'), perG=grpLines('health');
+  if(preG.length||perG.length){
+    h+=`<h2>◆ 健康监护计划</h2>`;
+    const block=(title,groups)=>{ if(!groups.length) return `<h3>${title}</h3><p class="muted">—</p>`; return `<h3>${title}</h3>`+groups.map(x=>`<p style="margin:3px 0 3px 14px"><strong>${x.zh}：</strong>${x.items.map(esc).join('、')}</p>`).join(''); };
+    h+=block('岗前体检（Pre-placement）',preG);
+    h+=block('定期／风险因素体检（Periodic）',perG);
+  }
+  // 管理建议
+  h+=`<h2>◆ 管理建议</h2>
+  <p>建议按<strong>控制层级（Hierarchy of Control）</strong>管控职业危害：优先采用消除与替代，其次工程控制（局部排风 LEV、密闭、隔离），再辅以管理控制（轮岗、限时、培训、作业规程）与个体防护（PPE）。同时应完成尚缺的作业环境检测（噪声、照度、化学物浓度等），并依危害因素落实岗前及定期健康监护，建立健康档案与异常随访机制。</p>`;
+  // 参考依据
+  h+=`<h2>◆ 参考依据</h2>
+  <p class="muted">ACGIH 2025 TLVs® and BEIs®；泰国《职业安全卫生法 2554》、《危险化学品部级条例 2556》、《作业环境检测公告 2559》、《职业病控制法 2562》。</p>`;
+  h+=`</div>`;
+  return h;
+}
 function standaloneReport(){
-  return `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>รายงานผลการเดินสำรวจ · ${esc(S.general.company||'สถานประกอบการ')}</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-<style>${reportCSS()}</style></head><body><div id="reportDoc">${buildReport()}</div></body></html>`;
+  return `<!DOCTYPE html><html lang="${RPT_LANG==='zh'?'zh':'th'}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${RPT_LANG==='zh'?'职业卫生巡查报告':'รายงานผลการเดินสำรวจ'} · ${esc(S.general.company||'สถานประกอบการ')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>${reportCSS()}</style></head><body><div id="reportDoc">${reportHTML()}</div></body></html>`;
 }
 
 function openReport(){
   renderRpOpts();
-  document.getElementById('reportDoc').innerHTML=buildReport();
+  document.getElementById('reportDoc').innerHTML=reportHTML();
   document.getElementById('reportModal').classList.add('show');
   document.body.style.overflow='hidden';
 }
 function renderRpOpts(){
   const o=(S.reportOpts=S.reportOpts||{incMachines:false,incRef:false});
   const el=document.getElementById('rpOpts'); if(!el) return;
-  el.innerHTML='<span class="rpopts-l">แสดงเพิ่มในรายงาน (เฉพาะที่เกี่ยวข้อง):</span>'+
+  el.innerHTML='<span class="rpopts-l">ภาษารายงาน:</span>'+
+    `<span class="langseg"><button class="langbtn${RPT_LANG==='th'?' on':''}" onclick="setRptLang('th')">ไทย</button><button class="langbtn${RPT_LANG==='zh'?' on':''}" onclick="setRptLang('zh')">中文</button></span>`+
+    '<span class="rpopts-l" style="margin-left:14px">แสดงเพิ่มในรายงาน (เฉพาะที่เกี่ยวข้อง):</span>'+
     `<label><input type="checkbox" ${o.incMachines?'checked':''} onchange="setRepOpt('incMachines',this.checked)"> เครื่องจักรที่เกี่ยวข้อง</label>`+
     `<label><input type="checkbox" ${o.incRef?'checked':''} onchange="setRepOpt('incRef',this.checked)"> ค่าอ้างอิง OEL/BEI โลหะ</label>`;
 }
-function setRepOpt(k,v){ S.reportOpts=S.reportOpts||{}; S.reportOpts[k]=v; touch(); document.getElementById('reportDoc').innerHTML=buildReport(); }
+function setRepOpt(k,v){ S.reportOpts=S.reportOpts||{}; S.reportOpts[k]=v; touch(); document.getElementById('reportDoc').innerHTML=reportHTML(); }
 function closeReport(){document.getElementById('reportModal').classList.remove('show');document.body.style.overflow=''}
 function copyReport(){
   const txt=standaloneReport();
@@ -2264,7 +2391,7 @@ function docxChunkHtml(){
   const styles=reportCSS()
     +'\nbody{background:#fff;margin:0}#reportDoc{max-width:100%;box-shadow:none;margin:0}.rp{padding:0}'
     +'\n.rp .kv{display:block}.rp .kv dt{font-weight:700;margin-top:6px}.rp .kv dd{margin:0 0 2px}';
-  return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style>'+styles+'</style></head><body>'+buildReport()+'</body></html>';
+  return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style>'+styles+'</style></head><body>'+reportHTML()+'</body></html>';
 }
 function buildDocx(){
   const enc=new TextEncoder();
