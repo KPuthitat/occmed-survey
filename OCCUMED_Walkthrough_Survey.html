@@ -394,6 +394,8 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .zhkey .zhok{color:#2e7d54;font-weight:700}
 @media print{.zhtrans{display:none!important}}
 .rpopts input{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
+.slidelangbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;background:#0f2038;border-bottom:1px solid rgba(255,255,255,.1)}
+.slidelanghint{font-size:11.5px;color:#8aa0c0}
 .slideopts{background:#0f2038;border-bottom:1px solid rgba(255,255,255,.1)}
 .slideopts>summary{cursor:pointer;padding:9px 16px;font-size:12.5px;font-weight:700;color:#C8A046;list-style:none}
 .slideopts>summary::-webkit-details-marker{display:none}
@@ -2251,13 +2253,118 @@ const KB_ZH={
 function zhHaz(name){ const ov=(S.zh&&S.zh[name]); if(ov) return ov; const e=kbMatch(name); if(e){ const z=KB_ZH[e.k[0]]; if(z) return z.hz; return e.hz; } return name||'—'; }
 // คำแปลจีนของข้อความที่ผู้ใช้กรอกเอง — ใช้ค่าที่แปลไว้ (S.zh) ถ้ามี ไม่งั้นคืนต้นฉบับ
 function Z(s){ s=(s==null?'':String(s)); const t=(s||'').trim(); return (t&&S.zh&&S.zh[t])?S.zh[t]:s; }
+/* ===== แปลสไลด์นำเสนอเป็นจีน — dictionary หัวข้อคงที่ (post-process ไม่แตะ buildSlides) ===== */
+let SLIDE_LANG='th';
+const SLIDE_ZH={
+  /* ปก / ทั่วไป */
+  'รายงานการเดินสำรวจ':'现场巡查报告','การเดินสำรวจสถานประกอบการ':'作业场所现场巡查',
+  'คณะผู้เดินสำรวจอาชีวเวชศาสตร์':'职业医学巡查小组','คณะผู้เดินสำรวจ':'巡查小组','กลุ่มงานอาชีวเวชศาสตร์':'职业医学组',
+  'วันที่เดินสำรวจ':'巡查日期','ผู้ควบคุมการสำรวจ':'巡查负责人','ผู้สังเกตการณ์':'观察员','ผู้ติดต่อ':'联系人',
+  /* ข้อมูลบริษัท */
+  'ข้อมูลสถานประกอบการ':'企业基本信息','ข้อมูลบริษัท':'公司资料','ชื่อสถานประกอบการ':'企业名称',
+  'ประเภท / ชนิดกิจการ':'行业类别','ประเภท':'类别','ที่อยู่':'地址','ก่อตั้ง':'成立年份','เริ่มการผลิต':'投产年份',
+  'ขนาดพื้นที่':'面积','ตร.ม.':'平方米','โครงสร้าง/ผู้บริหาร':'组织架构/管理层',
+  /* กำลังคน */
+  'กำลังคนและเวลาทำงาน':'劳动力与工时','กำลังคน &amp; เวลาทำงาน':'劳动力与工时','กำลังคน & เวลาทำงาน':'劳动力与工时',
+  'บุคลากรทั้งหมด':'员工总数','พนักงานประจำ':'正式员工','รับเหมาช่วง':'外包/承包','พนักงาน':'员工',
+  'อัตราการลาออก (Turnover)':'离职率 (Turnover)','ระบบกะ':'轮班制度','รายละเอียดกะ':'班次详情',
+  'วันทำงาน':'工作日','ห้องพยาบาล / คลินิก':'医务室/诊所',
+  /* ความปลอดภัย */
+  'ความปลอดภัยและอาชีวอนามัย':'安全与职业卫生','ความปลอดภัย &amp; อาชีวอนามัย':'安全与职业卫生','ความปลอดภัย & อาชีวอนามัย':'安全与职业卫生',
+  'เจ้าหน้าที่ความปลอดภัย (จป.)':'安全主任 (จป.)','สถิติอุบัติเหตุ/บาดเจ็บ':'事故/伤害统计','แผนฉุกเฉิน':'应急预案',
+  /* เดินสำรวจ / ภาพรวม */
+  'การเดินสำรวจ':'现场巡查','แผนกที่สำรวจ':'巡查部门',
+  'ภาพรวมความเสี่ยง':'风险总览','ภาพรวมสิ่งคุกคาม &amp; ความเสี่ยง':'危害与风险总览','ภาพรวมสิ่งคุกคาม & ความเสี่ยง':'危害与风险总览',
+  'แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง':'部门与需监测的危害','แผนก & สิ่งคุกคามที่ต้องเฝ้าระวัง':'部门与需监测的危害',
+  'สิ่งคุกคามที่ประเมิน':'已评估危害','สิ่งคุกคาม':'危害因素',
+  /* ผลตรวจวัด */
+  'ผลการตรวจวัดสิ่งคุกคาม (Hazard Monitoring)':'危害监测结果 (Hazard Monitoring)','ผลการตรวจวัด':'检测结果',
+  'ค่ามาตรฐาน (TLV)':'标准值 (TLV)','รายการเกินค่ามาตรฐาน':'超标项目','เกินค่ามาตรฐาน':'超过标准值',
+  'ค่าเฉลี่ยความเข้มข้นที่ผู้ปฏิบัติงานสัมผัส (เทียบ OEL-TWA)':'作业者接触平均浓度（对照 OEL-TWA）',
+  /* HRA */
+  'เกณฑ์การประเมินความเสี่ยง (HRA)':'风险评估准则 (HRA)','เกณฑ์การประเมินความเสี่ยง':'风险评估准则',
+  'ตารางที่ 1 · ระดับความเข้มข้น (CR)':'表1 · 浓度等级 (CR)','ตารางที่ 2 · ระดับความถี่การได้รับสัมผัส (EF)':'表2 · 接触频率等级 (EF)',
+  'ตารางที่ 3 · CR × EF':'表3 · CR × EF','ตารางที่ 4 · ระดับความรุนแรง (HR)':'表4 · 严重度等级 (HR)','ตารางที่ 5 · ER × HR':'表5 · ER × HR',
+  'ระดับความเข้มข้นของสิ่งคุกคามที่ผู้ปฏิบัติงานได้รับสัมผัส (เทียบกับค่า OEL-TWA)':'作业者接触危害的浓度等级（对照 OEL-TWA）',
+  'ความถี่ที่ผู้ปฏิบัติงานได้รับสัมผัสสิ่งคุกคาม':'作业者接触危害的频率','ความรุนแรงของผลกระทบต่อสุขภาพจากสิ่งคุกคาม':'危害对健康影响的严重程度',
+  'ระดับความเข้มข้น (CR)':'浓度等级 (CR)','ระดับความถี่การได้รับสัมผัส (EF)':'接触频率等级 (EF)','ระดับความรุนแรง (HR)':'严重度等级 (HR)',
+  'ระดับความเข้มข้น':'浓度等级','ความถี่การได้รับสัมผัส':'接触频率','ความถี่การสัมผัส':'接触频率','ระดับการสัมผัส':'接触等级',
+  'อ่านค่าในเมทริกซ์ (แถว EF × คอลัมน์ CR)':'在矩阵中读取（行 EF × 列 CR）','อ่านค่าในเมทริกซ์ (แถว HR × คอลัมน์ ER)':'在矩阵中读取（行 HR × 列 ER）',
+  'แปลความหมาย / แนวทางจัดการ':'解读 / 管理措施','แปลความหมาย':'解读','ผลกระทบต่อสุขภาพ':'健康影响','ผลต่อสุขภาพ':'健康影响',
+  'ไม่ได้รับสัมผัส':'无接触','สัมผัสน้อย':'低接触','สัมผัสปานกลาง':'中等接触','สัมผัสสูงมาก':'极高接触','สัมผัสสูง':'高接触',
+  'หยุด/แก้ไขทันที':'立即停止/整改','ต้องแก้ไข/ควบคุมโดยเร็ว':'须尽快整改/控制','ต้องมีมาตรการควบคุมเพิ่มเติม':'须增加控制措施',
+  'เฝ้าระวัง ทบทวนเป็นระยะ':'监测并定期复查','ยอมรับได้ ไม่ต้องมีมาตรการเพิ่ม':'可接受，无需额外措施',
+  /* ประเมินความเสี่ยง */
+  'ผลประเมินความเสี่ยงตามแผนก':'各部门风险评估结果','ประเมินความเสี่ยง':'风险评估',
+  'ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)':'因缺少作业环境检测结果，暂无法判定风险等级（已列入计划）',
+  'ยังไม่ได้ระบุสิ่งคุกคาม':'尚未指定危害因素','รายละเอียดแต่ละแผนก':'各部门详情',
+  /* รสส. */
+  'ผลตรวจวัดสภาพแวดล้อมในการทำงาน':'作业环境检测结果','ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)':'作业环境检测结果 (รสส.1/2/3)','ผลตรวจวัดสภาพแวดล้อม':'作业环境检测结果',
+  'ความร้อน (Heat)':'高温 (Heat)','เสียงดัง (Noise)':'噪声 (Noise)','แสงสว่าง':'照明','ความร้อน':'高温',
+  'แผนการตรวจวัด (ยังไม่มีผล)':'检测计划（尚无结果）','ไม่มีผลตรวจวัดสิ่งแวดล้อม':'无环境检测结果','ด้านที่มีแผนตรวจวัด':'已列入检测计划的项目',
+  'จุด/พื้นที่':'测点/区域','มีแผนดำเนินการ':'已有实施计划',
+  /* ตรวจสุขภาพ */
+  'ตรวจสุขภาพก่อนเริ่มงาน':'岗前健康检查','การตรวจสุขภาพตามปัจจัยเสี่ยง':'风险因素定期健康检查','ตรวจสุขภาพตามปัจจัยเสี่ยง':'风险因素定期健康检查',
+  'ตารางตรวจสุขภาพ':'健康检查表','การตรวจสุขภาพ':'健康检查','ตรวจสุขภาพ':'健康检查',
+  'ตรวจร่างกาย':'体格检查','เครื่องมือพิเศษ':'特殊仪器检查','ห้องปฏิบัติการ':'实验室检查',
+  'ยังไม่ได้เลือกรายการตรวจในตารางนี้':'本表尚未选择检查项目','รายการตรวจ':'检查项目',
+  /* คลินิก */
+  'สรุปเชิงคลินิก (อ้างอิงฐานความรู้)':'临床要点（基于知识库）','สรุปเชิงคลินิก':'临床要点','การตรวจเฝ้าระวัง':'健康监护',
+  /* บันทึก / ข้อเสนอแนะ */
+  'บันทึกภาคสนาม (Field Notes)':'现场记录 (Field Notes)','บันทึกภาคสนาม':'现场记录',
+  'ข้อเสนอแนะเพิ่มเติม':'补充建议','ข้อเสนอแนะ':'管理建议','ยังไม่ได้กรอกข้อเสนอแนะ (กลับไปแท็บสรุปเพื่อร่างอัตโนมัติ)':'尚未填写建议',
+  /* ภาคผนวก / ภาพ */
+  'ค่าอ้างอิง OEL/BEI โลหะ (ACGIH 2025)':'OEL/BEI 参考值 · 金属 (ACGIH 2025)','เครื่องจักรและปัจจัยเสี่ยง (ที่เกี่ยวข้อง)':'机械设备与相关风险因素',
+  'ภาคผนวก':'附录','ค่าอ้างอิง':'参考值','เครื่องจักร':'机械设备','โลหะ':'金属',
+  'ภาพประกอบการเดินสำรวจ':'巡查现场照片','ภาพหน้างาน':'现场照片',
+  /* ผู้บริหาร / ปิดท้าย */
+  'บทสรุปผู้บริหาร · Executive Summary':'执行摘要 · Executive Summary','บทสรุปสำหรับผู้บริหาร':'执行摘要','บทสรุปผู้บริหาร':'执行摘要',
+  'ผลการประเมินอยู่ในเกณฑ์ที่ยอมรับได้ / ต่ำ':'评估结果处于可接受 / 低风险水平','ยังไม่ได้สร้างบทสรุปผู้บริหาร':'尚未生成执行摘要',
+  'ขอบคุณครับ':'谢谢','สารเคมีอันตราย (Chemical)':'危险化学品 (Chemical)',
+  /* คำทั่วไป / คอลัมน์ / นำทาง */
+  'ระดับความเสี่ยง':'风险等级','ระดับความรุนแรง':'严重度等级','ความรุนแรง':'严重度','ความเสี่ยง':'风险','ความถี่':'频率',
+  'ผลกระทบต่อสุขภาพ':'健康影响','หัวคอลัมน์':'表头','คอลัมน์':'列','มาตรฐาน':'标准','วัดได้':'实测值',
+  'ก่อนหน้า':'上一页','หน้าถัดไป':'下一页','ถัดไป':'下一页','แผนก':'部门','ระดับ':'等级','คะแนน':'分','ไม่มีชื่อ':'未命名',
+  /* เกณฑ์ CR / EF / HR (ข้อความเต็ม) */
+  'ต่ำกว่า 10% ของ OEL-TWA':'低于 OEL-TWA 的 10%','ต่ำกว่า 50% ของ OEL-TWA':'低于 OEL-TWA 的 50%','ต่ำกว่า 75% ของ OEL-TWA':'低于 OEL-TWA 的 75%',
+  'เท่ากับ 75% ถึง 100% ของ OEL-TWA':'相当于 OEL-TWA 的 75%–100%','สูงกว่า 100% ของ OEL-TWA':'高于 OEL-TWA 的 100%',
+  'นานๆ ครั้ง — สัมผัสปีละ 1 ครั้ง':'偶尔 — 每年接触 1 次','ไม่บ่อย — สัมผัสปีละ 2–3 ครั้ง':'不频繁 — 每年接触 2–3 次','ค่อนข้างบ่อย — สัมผัสเดือนละ 2–3 ครั้ง':'较频繁 — 每月接触 2–3 次',
+  'บ่อย — สัมผัส 2–4 ชม.ต่อเนื่องใน 1 กะ':'频繁 — 每班连续接触 2–4 小时','ประจำ — สัมผัสต่อเนื่องตลอดทั้งกะ (8 ชม.)':'经常 — 整班持续接触（8 小时）',
+  'นานๆครั้ง':'偶尔','ค่อนข้างบ่อย':'较频繁','ไม่บ่อย':'不频繁','ประจำ':'经常','บ่อย':'频繁',
+  'ไม่มีผลกระทบต่อสุขภาพ':'对健康无影响','ผลเล็กน้อย ไม่ต้องรักษา หายเอง':'轻微影响，无需治疗可自愈','รุนแรงที่หายได้ แต่ต้องรักษา/ขาดงาน':'较重但可康复，需治疗/请假',
+  'ผลถาวร บาดเจ็บรุนแรง รักษาไม่หาย':'永久性影响，严重损伤，无法治愈','เสียชีวิต หรือพิการ หรือช่วยตัวเองไม่ได้':'死亡、残疾或丧失自理能力',
+  'รุนแรงมาก':'极严重','รุนแรง':'严重','น้อย':'轻微','ไม่มี':'无',
+  /* หมายเหตุตาราง / เมทริกซ์ */
+  'ระดับความรุนแรง (1–5)':'严重度等级 (1–5)','ความรุนแรง (1–5)':'严重度 (1–5)','ความถี่การสัมผัส (1–5)':'接触频率 (1–5)','ความถี่การสัมผัส':'接触频率',
+  'แล้วเทียบตารางขวาเพื่อแปลเป็น':'再对照右表转换为','และแนวทางจัดการ':' 及管理措施','และความหมาย':' 及其含义','และอีก':'另有','รายการ':'项',
+  /* ป้ายภาพรวมแผนกเสี่ยง */
+  'แผนกเสี่ยงความร้อนสูง':'高温高风险部门','แผนกเสี่ยงเสียงดังสูง':'噪声高风险部门','แผนกเสี่ยงซิลิกาสูง':'二氧化硅高风险部门',
+  /* สถานะวัด / นำทาง / เบ็ดเตล็ด */
+  'ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”':'尚未生成执行摘要 — 前往「摘要」标签页点击「自动生成」',
+  'ภาพรวม':'总览','เสียง':'噪声','ผ่าน':'合格','หน้า':'页','คน':'人',
+  'สถานประกอบการ':'企业','เวลา':'时间','เกิน':'超标','ด้าน':'项'
+};
+/* ใช้ escape พิเศษ: & ในบางหัวข้อถูก render เป็น &amp; ครอบคลุมไว้ทั้งสองแบบในตารางแล้ว */
+function translateDeckZH(html){
+  const pairs=[];
+  const push=(k,v)=>{ if(k && v && k!==v) pairs.push([String(k),String(v)]); };
+  for(const k in SLIDE_ZH) push(k,SLIDE_ZH[k]);
+  for(const k in ZH_RISK) push(k,ZH_RISK[k]);
+  for(const k in ZH_CAT) push(k,ZH_CAT[k]);
+  if(S.zh) for(const k in S.zh) push(k,S.zh[k]);   // ข้อความผู้ใช้ที่แปลไว้ (บริษัท/แผนก/สิ่งคุกคาม/รายการตรวจ/โน้ต)
+  try{ if(typeof KB!=='undefined' && typeof KB_ZH!=='undefined'){ KB.forEach(e=>{ const z=KB_ZH[e&&e.k&&e.k[0]]; if(!z) return; push(e.hz,z.hz); if(z.eff) push(e.eff,z.eff); if(z.med) push(e.med,z.med); if(z.dz&&e.dz) push(e.dz,z.dz); }); } }catch(_){}
+  pairs.sort((a,b)=>b[0].length-a[0].length);       // แทนที่ตัวยาวก่อน กันซ้อนทับบางส่วน
+  for(const [k,v] of pairs){ if(html.indexOf(k)>=0) html=html.split(k).join(v); }
+  return html;
+}
+function setSlideLang(l){ SLIDE_LANG=(l==='zh'?'zh':'th'); const fr=document.getElementById('slideFrame'); if(fr) fr.srcdoc=standaloneSlides(); renderSlideOpts(); }
 let zhEdit=false;
 // รวบรวมข้อความไทยที่ผู้ใช้กรอกเองซึ่งจะปรากฏในรายงานจีน (เฉพาะที่มีอักษรไทย)
 function zhSources(){
   const set=new Set(); const add=s=>{ s=(s||'').trim(); if(s && /[฀-๿]/.test(s)) set.add(s); };
   const g=S.general||{};
   ['company','type','address','mgmt','history','threats','days','shifts','shiftDetail','surveyTime','turnover','contact','safetyOfficer','healthCheckup','clinic','emergency','accidentStats','ppe'].forEach(k=>add(g[k]));
-  (S.depts||[]).forEach(d=>{ add(d.name); add(d.proc); (d.hazards||[]).forEach(h=>{ if(!kbMatch(h.name)) add(h.name); }); });
+  (S.depts||[]).forEach(d=>{ add(d.name); add(d.proc); (d.hazards||[]).forEach(h=>{ add(h.name); }); });  // รวมชื่อสิ่งคุกคามทั้งหมด (แม้ตรง KB) เพื่อให้สไลด์แปลได้
   allExams().forEach(add);
   return [...set];
 }
@@ -3038,7 +3145,7 @@ function buildSlides(){
 }
 
 function slidesCSS(){return `*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;background:#0a1a30;color:#0B2545;display:grid;place-items:center;min-height:100vh;padding:16px}
+body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun','Noto Sans SC','Microsoft YaHei',sans-serif;background:#0a1a30;color:#0B2545;display:grid;place-items:center;min-height:100vh;padding:16px}
 .deck{position:relative;width:min(96vw,1120px);aspect-ratio:16/9;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .slide{position:absolute;inset:0;padding:6% 7%;display:none;flex-direction:column;justify-content:center;animation:sf .35s ease}
 .slide.top{justify-content:flex-start;padding-top:7%;padding-bottom:7%}
@@ -3098,11 +3205,13 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun',sans-serif;backg
 }`}
 
 function standaloneSlides(){
-  return '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    +'<title>ไฟล์นำเสนอ · '+esc(S.general.company||'สถานประกอบการ')+'</title>'
-    +'<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">'
+  const zh=(SLIDE_LANG==='zh');
+  let body=buildSlides(); if(zh) body=translateDeckZH(body);
+  return '<!DOCTYPE html><html lang="'+(zh?'zh':'th')+'"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    +'<title>'+(zh?'演示文件 · ':'ไฟล์นำเสนอ · ')+esc(S.general.company||'สถานประกอบการ')+'</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Sarabun:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">'
     +'<style>'+slidesCSS()+'</style></head><body>'
-    +buildSlides()
+    +body
     +'<script>'+SLIDE_RUNTIME+'<\/script></body></html>';
 }
 function openSlides(){
@@ -3113,7 +3222,8 @@ function openSlides(){
 }
 function renderSlideOpts(){
   const el=document.getElementById('slideOptsBar'); if(!el) return;
-  el.innerHTML=`<details class="slideopts"><summary>เลือกหัวข้อที่จะขึ้นในไฟล์นำเสนอ (${SLIDE_SECTIONS.filter(s=>SO(s[0])).length}/${SLIDE_SECTIONS.length})</summary>`+
+  el.innerHTML=`<div class="slidelangbar"><span class="langseg"><button class="langbtn${SLIDE_LANG==='th'?' on':''}" onclick="setSlideLang('th')">ไทย</button><button class="langbtn${SLIDE_LANG==='zh'?' on':''}" onclick="setSlideLang('zh')">中文</button></span>${SLIDE_LANG==='zh'?`<span class="slidelanghint">แปลหัวข้อ + ใช้คำแปลที่บันทึกไว้ (จัดการคำแปลในหน้ารายงาน → 译)</span>`:''}</div>`+
+    `<details class="slideopts"><summary>เลือกหัวข้อที่จะขึ้นในไฟล์นำเสนอ (${SLIDE_SECTIONS.filter(s=>SO(s[0])).length}/${SLIDE_SECTIONS.length})</summary>`+
     `<div class="slideopts-grid">`+SLIDE_SECTIONS.map(s=>`<label><input type="checkbox" ${SO(s[0])?'checked':''} onchange="toggleSlideOpt('${s[0]}',this.checked)"> ${esc(s[1])}</label>`).join('')+
     `<div class="slideopts-act"><button class="btn ghost sm" onclick="allSlideOpts(true)">เลือกทั้งหมด</button><button class="btn ghost sm" onclick="allSlideOpts(false)">ไม่เลือกเลย</button></div></div></details>`;
 }
