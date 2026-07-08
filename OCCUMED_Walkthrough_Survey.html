@@ -3620,7 +3620,9 @@ async function doJoin(create,opts){
       const {data,error}=await CB.sb.rpc('survey_join',{p_id:id,p_pass:pass});
       if(error){ if(isSetupError(error)){ showSetupNeeded(); }else{ toast('ผิดพลาด: '+(error.message||'')); } return; }
       if(!data||data.ok===false){ toast(data&&data.reason==='badpass'?'รหัสผ่านไม่ถูกต้อง':'ไม่พบโปรเจคต์นี้ — ใช้ “สร้างโปรเจคต์ใหม่” แทน'); return; }
-      if(data.state&&Object.keys(data.state).length){ S=data.state; syncHealth(S); save(); renderAll(); setTab(0); }
+      // เข้าโปรเจกต์ = แทน state ทั้งหมดด้วยของโปรเจกต์นั้นเสมอ (เติม default จาก blankState สำหรับฟิลด์ที่ขาด)
+      // กันข้อมูล รสส./เครื่องจักร/คอลัมน์ ของโปรเจกต์ก่อนหน้าข้ามมาเมื่อ state ของโปรเจกต์นี้ว่าง
+      S=Object.assign(blankState(), (data.state&&typeof data.state==='object')?data.state:{}); syncHealth(S); save(); renderAll(); setTab(0);
       CB.ver=data.ver||1;
     }
     CB.active=true;
