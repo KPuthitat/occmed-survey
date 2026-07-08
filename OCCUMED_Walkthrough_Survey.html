@@ -382,6 +382,14 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .langseg{display:inline-flex;border:1px solid var(--gold);border-radius:8px;overflow:hidden}
 .langbtn{background:#fff;color:var(--navy);border:none;padding:5px 14px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
 .langbtn.on{background:var(--gold);color:#fff}
+.zhtrans{background:#fffbe9;border:1px solid var(--gold);border-radius:10px;margin:0 0 14px;overflow:hidden}
+.zhtrans-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;background:#f6ecc9;border-bottom:1px solid var(--gold);font-size:13px}
+.zhtrans-h .sp{flex:1}
+.zhrows{max-height:320px;overflow:auto;padding:6px 10px}
+.zhrow{display:flex;gap:10px;align-items:center;padding:4px 0;border-bottom:1px dotted #e3d9b5}
+.zhsrc{flex:0 0 44%;font-size:12.5px;color:var(--navy2);word-break:break-word}
+.zhinp{flex:1;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:13px}
+@media print{.zhtrans{display:none!important}}
 .rpopts input{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
 .slideopts{background:#0f2038;border-bottom:1px solid rgba(255,255,255,.1)}
 .slideopts>summary{cursor:pointer;padding:9px 16px;font-size:12.5px;font-weight:700;color:#C8A046;list-style:none}
@@ -951,7 +959,7 @@ function blankState(){
       workers:'',workersFull:'',workersSub:'',turnover:'',days:'',shifts:'',shiftDetail:'',
       safetyOfficer:'',healthCheckup:'',clinic:'',accidentStats:'',ppe:'',emergency:'',
       surveyDate:new Date().toISOString().slice(0,10),surveyTime:'',threats:'',controllers:'',observers:''},
-    depts:[], health:{}, healthPre:{}, customExams:[], examOrder:[], examSampling:{}, examGroup:{},
+    depts:[], health:{}, healthPre:{}, customExams:[], examOrder:[], examSampling:{}, examGroup:{}, zh:{},
     rss:{ meta:{company:'',date:'',by:'',instrument:'',serial:''}, heat:[], light:[], noise:[], plan:{heat:'',light:'',noise:''} },
     reportOpts:{ incMachines:false, incRef:false },
     slideOpts:{},
@@ -2237,17 +2245,53 @@ const KB_ZH={
  'zinc':{hz:'氧化锌（烟尘）',eff:'金属烟热（发热/寒战/肌痛）、咳嗽、呼吸道刺激',med:'金属烟热症状监测、呼吸问卷'},
  'paint':{hz:'喷漆漆雾',eff:'漆雾/溶剂致呼吸道及眼刺激、异氰酸酯致哮喘、溶剂神经影响',med:'呼吸/皮肤问卷、肺功能(尤其PU/异氰酸酯)、哮喘监测'}
 };
-function zhHaz(name){ const e=kbMatch(name); if(e){ const z=KB_ZH[e.k[0]]; if(z) return z.hz; return e.hz; } return name||'—'; }
+function zhHaz(name){ const ov=(S.zh&&S.zh[name]); if(ov) return ov; const e=kbMatch(name); if(e){ const z=KB_ZH[e.k[0]]; if(z) return z.hz; return e.hz; } return name||'—'; }
+// คำแปลจีนของข้อความที่ผู้ใช้กรอกเอง — ใช้ค่าที่แปลไว้ (S.zh) ถ้ามี ไม่งั้นคืนต้นฉบับ
+function Z(s){ s=(s==null?'':String(s)); const t=(s||'').trim(); return (t&&S.zh&&S.zh[t])?S.zh[t]:s; }
+let zhEdit=false;
+// รวบรวมข้อความไทยที่ผู้ใช้กรอกเองซึ่งจะปรากฏในรายงานจีน (เฉพาะที่มีอักษรไทย)
+function zhSources(){
+  const set=new Set(); const add=s=>{ s=(s||'').trim(); if(s && /[฀-๿]/.test(s)) set.add(s); };
+  const g=S.general||{};
+  ['company','type','address','mgmt','history','threats','days','shifts','shiftDetail','surveyTime','turnover','contact','safetyOfficer','healthCheckup','clinic','emergency','accidentStats','ppe'].forEach(k=>add(g[k]));
+  (S.depts||[]).forEach(d=>{ add(d.name); add(d.proc); (d.hazards||[]).forEach(h=>{ if(!kbMatch(h.name)) add(h.name); }); });
+  allExams().forEach(add);
+  return [...set];
+}
+function setZh(src,val){ S.zh=S.zh||{}; val=(val||'').trim(); if(val) S.zh[src]=val; else delete S.zh[src]; touch(); bx({k:'zh',src,v:val}); const el=document.getElementById('reportDoc'); if(el&&RPT_LANG==='zh') el.innerHTML=reportHTML(); }
+function toggleZhEdit(){ zhEdit=!zhEdit; const el=document.getElementById('reportDoc'); if(el) el.innerHTML=reportHTML(); }
+async function zhAutoTranslate(){
+  const srcs=zhSources().filter(s=>!(S.zh&&S.zh[s]));
+  if(!srcs.length){ toast('แปลครบทุกรายการแล้ว'); return; }
+  if(!confirm('จะส่งข้อความ '+srcs.length+' รายการไป Google แปลเป็นจีน (ต้องต่ออินเทอร์เน็ต · ควรตรวจทานผลหลังแปล) — ดำเนินการต่อ?')) return;
+  toast('กำลังแปล '+srcs.length+' รายการ…'); let ok=0;
+  for(const s of srcs){
+    try{
+      const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q='+encodeURIComponent(s);
+      const r=await fetch(url); const j=await r.json();
+      const tr=(j[0]||[]).map(x=>x[0]).join('').trim();
+      if(tr){ S.zh[s]=tr; ok++; }
+    }catch(e){}
+  }
+  touch(); bxFull(); const el=document.getElementById('reportDoc'); if(el) el.innerHTML=reportHTML();
+  toast(ok?('แปลอัตโนมัติแล้ว '+ok+' รายการ — โปรดตรวจทาน'):'แปลไม่สำเร็จ (ตรวจอินเทอร์เน็ต/ลองใหม่)');
+}
+function zhTransPanel(){
+  const srcs=zhSources();
+  if(!zhEdit) return '';
+  const rows=srcs.length?srcs.map(s=>`<div class="zhrow"><div class="zhsrc">${esc(s)}</div><input class="zhinp" value="${esc((S.zh&&S.zh[s])||'')}" placeholder="คำแปลจีน…" onchange="setZh('${esc(s).replace(/'/g,"\\'")}',this.value)"></div>`).join(''):'<div class="muted" style="padding:8px">ไม่มีข้อความไทยที่ต้องแปล</div>';
+  return `<div class="zhtrans"><div class="zhtrans-h"><b>จัดการคำแปลจีน (${srcs.length} รายการ)</b><span class="sp"></span><button class="btn ghost sm" onclick="zhAutoTranslate()">🌐 แปลอัตโนมัติที่ยังว่าง (Google)</button><button class="btn ghost sm" onclick="toggleZhEdit()">ปิดแผง</button></div><div class="zhrows">${rows}</div><div class="hint" style="padding:6px 10px">พิมพ์คำแปลเองได้ · ปุ่มแปลอัตโนมัติส่งข้อความไป Google (ต้องต่อเน็ต ควรตรวจทาน) · คำแปลถูกบันทึกและซิงค์ให้ทีม</div></div>`;
+}
 function buildReportZH(){
   const g=S.general;
   const rbCls=r=>({'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a','ไม่ทราบความเสี่ยง':'u'}[r]||'l');
   const unknownCnt=S.depts.reduce((a,d)=>a+d.hazards.filter(h=>effRisk(h)===RISK_UNKNOWN).length,0);
   const noEnv='由于尚无作业环境检测结果，暂无法判定风险等级（已列入检测计划）。';
-  let h=`<div class="rp">
+  let h=zhTransPanel()+`<div class="rp">
   <div class="cover">
     <h1 style="font-size:20pt">职业卫生现场巡查报告</h1>
     <h1 style="font-size:16pt;margin-top:4px;font-weight:400">Occupational Health Walk-through Survey Report</h1>
-    <h1 style="font-size:24pt;margin-top:14px">${esc(g.company)||'（企业名称）'}</h1>
+    <h1 style="font-size:24pt;margin-top:14px">${esc(Z(g.company))||'（企业名称）'}</h1>
     <p class="muted" style="margin-top:24px">编制：职业医学现场巡查组</p>
     <p class="muted">巡查日期：${beDate(g.surveyDate)||'—'}</p>
     <p class="muted" style="margin-top:20px;font-size:11px">本报告由 OCCMED — 现场巡查系统生成（供中文管理层参阅）</p>
@@ -2256,24 +2300,24 @@ function buildReportZH(){
   const hi=highRiskList();
   h+=`<h2>◆ 执行摘要 (Executive Summary)</h2>`;
   const deptN=S.depts.length, hazN=S.depts.reduce((a,d)=>a+d.hazards.length,0);
-  h+=`<p>本报告为对 ${esc(g.company)||'该企业'} 于 ${beDate(g.surveyDate)||'—'} 进行职业卫生现场巡查（Walk-through Survey）之结果，覆盖 ${deptN} 个部门、共识别危害因素 ${hazN} 项，旨在识别作业场所职业危害、评估劳动者健康风险，并提出预防控制与健康监护建议。</p>`;
+  h+=`<p>本报告为对 ${esc(Z(g.company))||'该企业'} 于 ${beDate(g.surveyDate)||'—'} 进行职业卫生现场巡查（Walk-through Survey）之结果，覆盖 ${deptN} 个部门、共识别危害因素 ${hazN} 项，旨在识别作业场所职业危害、评估劳动者健康风险，并提出预防控制与健康监护建议。</p>`;
   if(hi.length){ const byD={}; hi.forEach(x=>{(byD[x.dept]=byD[x.dept]||[]).push(zhHaz(x.name));});
-    h+=`<p>评估发现属<strong>高至极高风险</strong>、需优先管理者包括：${Object.keys(byD).map(dp=>`${esc(dp)}（${[...new Set(byD[dp])].join('、')}）`).join('；')}，应尽快落实工程与管理控制并加强健康监护。</p>`;
+    h+=`<p>评估发现属<strong>高至极高风险</strong>、需优先管理者包括：${Object.keys(byD).map(dp=>`${esc(Z(dp))}（${[...new Set(byD[dp])].join('、')}）`).join('；')}，应尽快落实工程与管理控制并加强健康监护。</p>`;
   } else if(unknownCnt){ h+=`<p>${noEnv}目前有 ${unknownCnt} 项危害因素因缺乏环境检测数据尚无法定级，建议按检测计划完成作业环境监测后再行风险定级并制定相应控制措施。</p>`;
   } else { h+=`<p>总体风险处于可接受至中等水平，尚未发现高风险项，仍建议按各部门危害因素持续监护。</p>`; }
   h+=`<p><strong>主要建议：</strong>按控制层级原则（消除／替代／工程控制／管理控制／个体防护 PPE）管控风险，完成尚缺的作业环境检测，并依危害因素开展针对性健康监护（岗前及定期体检）。</p>`;
   // 企业基本信息
   h+=`<h2>◆ 企业基本信息</h2>
   <dl class="kv">
-    <dt>企业名称</dt><dd>${esc(g.company)||'—'}</dd>
-    <dt>行业／类型</dt><dd>${esc(g.type)||'—'}</dd>
-    <dt>地址</dt><dd>${esc(g.address)||'—'}</dd>
+    <dt>企业名称</dt><dd>${esc(Z(g.company))||'—'}</dd>
+    <dt>行业／类型</dt><dd>${esc(Z(g.type))||'—'}</dd>
+    <dt>地址</dt><dd>${esc(Z(g.address))||'—'}</dd>
     <dt>厂区面积</dt><dd>${esc(g.area)||'—'} 平方米</dd>
     <dt>员工人数</dt><dd>${esc(g.workers)||'—'} 人（正式 ${esc(g.workersFull)||'—'} · 外包 ${esc(g.workersSub)||'—'}）</dd>
-    <dt>工作日／班制</dt><dd>${esc(g.days)||'—'} · ${esc(g.shifts)||'—'}</dd>
-    <dt>巡查日期／时间</dt><dd>${beDate(g.surveyDate)||'—'} ${esc(g.surveyTime)||''}</dd>
+    <dt>工作日／班制</dt><dd>${esc(Z(g.days))||'—'} · ${esc(Z(g.shifts))||'—'}</dd>
+    <dt>巡查日期／时间</dt><dd>${beDate(g.surveyDate)||'—'} ${esc(Z(g.surveyTime))||''}</dd>
   </dl>
-  <p class="muted" style="font-size:11px">注：企业与部门名称、备注等由巡查人员按原文录入（泰文／英文），未作机器翻译。</p>`;
+  <p class="muted" style="font-size:11px">注：企业与部门名称等原文由巡查人员录入；已翻译项来自"翻译管理"（人工／辅助翻译），未翻译项按原文（泰文／英文）显示。</p>`;
   // 巡查目的与范围
   h+=`<h2>◆ 巡查目的与范围</h2>
   <p>现场巡查（Walk-through Survey）是职业医学医师了解真实作业环境、识别劳动者所接触危害因素的重要方法，据此制定预防、促进、治疗与康复措施。本次巡查覆盖企业主要生产部门，内容包括生产工艺、危害因素识别、风险评估与健康监护建议。</p>`;
@@ -2282,7 +2326,7 @@ function buildReportZH(){
   <table><thead><tr><th>部门</th><th>危害因素</th><th>类别</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>风险等级</th></tr></thead><tbody>`;
   let anyRow=false;
   S.depts.forEach(d=>{ (d.hazards||[]).forEach(hz=>{ anyRow=true; const r=effRisk(hz);
-    h+=`<tr><td>${esc(d.name)||'—'}</td><td>${esc(zhHaz(hz.name))}</td><td>${ZH_CAT[hz.cat]||esc(hz.cat)||'—'}</td><td style="text-align:center">${esc(hz.hr)||'—'}</td><td style="text-align:center">${esc(hz.freq)||'—'}</td><td><span class="rb ${rbCls(r)}">${ZH_RISK[r]||r||'—'}</span></td></tr>`;
+    h+=`<tr><td>${esc(Z(d.name))||'—'}</td><td>${esc(zhHaz(hz.name))}</td><td>${ZH_CAT[hz.cat]||esc(hz.cat)||'—'}</td><td style="text-align:center">${esc(hz.hr)||'—'}</td><td style="text-align:center">${esc(hz.freq)||'—'}</td><td><span class="rb ${rbCls(r)}">${ZH_RISK[r]||r||'—'}</span></td></tr>`;
   });});
   if(!anyRow) h+=`<tr><td colspan="6" class="muted">尚未录入危害因素</td></tr>`;
   h+=`</tbody></table>
@@ -2307,7 +2351,7 @@ function buildReportZH(){
   const preG=grpLines('healthPre'), perG=grpLines('health');
   if(preG.length||perG.length){
     h+=`<h2>◆ 健康监护计划</h2>`;
-    const block=(title,groups)=>{ if(!groups.length) return `<h3>${title}</h3><p class="muted">—</p>`; return `<h3>${title}</h3>`+groups.map(x=>`<p style="margin:3px 0 3px 14px"><strong>${x.zh}：</strong>${x.items.map(esc).join('、')}</p>`).join(''); };
+    const block=(title,groups)=>{ if(!groups.length) return `<h3>${title}</h3><p class="muted">—</p>`; return `<h3>${title}</h3>`+groups.map(x=>`<p style="margin:3px 0 3px 14px"><strong>${x.zh}：</strong>${x.items.map(e=>esc(Z(e))).join('、')}</p>`).join(''); };
     h+=block('岗前体检（Pre-placement）',preG);
     h+=block('定期／风险因素体检（Periodic）',perG);
   }
@@ -2321,10 +2365,11 @@ function buildReportZH(){
   return h;
 }
 function standaloneReport(){
+  const pe=zhEdit; zhEdit=false; const body=reportHTML(); zhEdit=pe;
   return `<!DOCTYPE html><html lang="${RPT_LANG==='zh'?'zh':'th'}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${RPT_LANG==='zh'?'职业卫生巡查报告':'รายงานผลการเดินสำรวจ'} · ${esc(S.general.company||'สถานประกอบการ')}</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-<style>${reportCSS()}</style></head><body><div id="reportDoc">${reportHTML()}</div></body></html>`;
+<style>${reportCSS()}</style></head><body><div id="reportDoc">${body}</div></body></html>`;
 }
 
 function openReport(){
@@ -2338,6 +2383,7 @@ function renderRpOpts(){
   const el=document.getElementById('rpOpts'); if(!el) return;
   el.innerHTML='<span class="rpopts-l">ภาษารายงาน:</span>'+
     `<span class="langseg"><button class="langbtn${RPT_LANG==='th'?' on':''}" onclick="setRptLang('th')">ไทย</button><button class="langbtn${RPT_LANG==='zh'?' on':''}" onclick="setRptLang('zh')">中文</button></span>`+
+    (RPT_LANG==='zh'?`<button class="btn ${zhEdit?'pri':'ghost'} sm" style="margin-left:10px" onclick="toggleZhEdit()">译 จัดการคำแปลจีน</button>`:'')+
     '<span class="rpopts-l" style="margin-left:14px">แสดงเพิ่มในรายงาน (เฉพาะที่เกี่ยวข้อง):</span>'+
     `<label><input type="checkbox" ${o.incMachines?'checked':''} onchange="setRepOpt('incMachines',this.checked)"> เครื่องจักรที่เกี่ยวข้อง</label>`+
     `<label><input type="checkbox" ${o.incRef?'checked':''} onchange="setRepOpt('incRef',this.checked)"> ค่าอ้างอิง OEL/BEI โลหะ</label>`;
@@ -2391,7 +2437,8 @@ function docxChunkHtml(){
   const styles=reportCSS()
     +'\nbody{background:#fff;margin:0}#reportDoc{max-width:100%;box-shadow:none;margin:0}.rp{padding:0}'
     +'\n.rp .kv{display:block}.rp .kv dt{font-weight:700;margin-top:6px}.rp .kv dd{margin:0 0 2px}';
-  return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style>'+styles+'</style></head><body>'+reportHTML()+'</body></html>';
+  const pe=zhEdit; zhEdit=false; const body=reportHTML(); zhEdit=pe;
+  return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style>'+styles+'</style></head><body>'+body+'</body></html>';
 }
 function buildDocx(){
   const enc=new TextEncoder();
@@ -3454,6 +3501,7 @@ function applyRemote(p){
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='hcp'){ S.healthPre[p.did]=S.healthPre[p.did]||{}; if(p.v) S.healthPre[p.did][p.ex]=true; else delete S.healthPre[p.did][p.ex]; setWidget('hcp:'+p.did+':'+p.ex,p.v,'check'); save(); }
     else if(p.k==='exset'){ if(Array.isArray(p.order)) S.examOrder=p.order; if(Array.isArray(p.custom)) S.customExams=p.custom; S.examSampling=p.samp||{}; if(p.grp) S.examGroup=p.grp; if(document.getElementById('p3')) renderHealth(); save(); }
+    else if(p.k==='zh'){ S.zh=S.zh||{}; if(p.v) S.zh[p.src]=p.v; else delete S.zh[p.src]; const el=document.getElementById('reportDoc'); if(el&&RPT_LANG==='zh') el.innerHTML=reportHTML(); save(); }
     else if(p.k==='exren'){ const o=p.o,n=p.n; if(Array.isArray(S.examOrder)) S.examOrder=S.examOrder.map(e=>e===o?n:e); S.customExams=(S.customExams||[]).map(e=>e===o?n:e); if(S.examSampling&&S.examSampling[o]!==undefined){ S.examSampling[n]=S.examSampling[o]; delete S.examSampling[o]; } if(S.examGroup&&S.examGroup[o]!==undefined){ S.examGroup[n]=S.examGroup[o]; delete S.examGroup[o]; } (S.depts||[]).forEach(d=>[S.health,S.healthPre].forEach(mp=>{ const hd=mp&&mp[d.id]; if(hd&&hd[o]){ hd[n]=true; delete hd[o]; } })); if(document.getElementById('p3')) renderHealth(); save(); }
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
     else if(p.k==='citem'){ const it=conclItems().find(x=>x.id===p.id); if(it){ it.text=p.v; setWidget('citem:'+p.id,p.v); } save(); }
