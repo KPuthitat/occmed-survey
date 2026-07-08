@@ -389,6 +389,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .zhrow{display:flex;gap:10px;align-items:center;padding:4px 0;border-bottom:1px dotted #e3d9b5}
 .zhsrc{flex:0 0 44%;font-size:12.5px;color:var(--navy2);word-break:break-word}
 .zhinp{flex:1;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:13px}
+.zhkey{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 10px;border-bottom:1px dotted #e3d9b5;font-size:12.5px}
+.zhkey input{flex:1 1 260px;min-width:180px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:12.5px}
+.zhkey .zhok{color:#2e7d54;font-weight:700}
 @media print{.zhtrans{display:none!important}}
 .rpopts input{width:17px;height:17px;accent-color:var(--gold-dk);cursor:pointer}
 .slideopts{background:#0f2038;border-bottom:1px solid rgba(255,255,255,.1)}
@@ -2260,27 +2263,50 @@ function zhSources(){
 }
 function setZh(src,val){ S.zh=S.zh||{}; val=(val||'').trim(); if(val) S.zh[src]=val; else delete S.zh[src]; touch(); bx({k:'zh',src,v:val}); const el=document.getElementById('reportDoc'); if(el&&RPT_LANG==='zh') el.innerHTML=reportHTML(); }
 function toggleZhEdit(){ zhEdit=!zhEdit; const el=document.getElementById('reportDoc'); if(el) el.innerHTML=reportHTML(); }
+// Claude API key — เก็บใน localStorage ของเบราว์เซอร์นี้เท่านั้น (ไม่ซิงค์ ไม่ขึ้น repo)
+function claudeKey(){ try{ return localStorage.getItem('occumed_anthropic_key')||''; }catch(e){ return ''; } }
+function setClaudeKey(v){ try{ v=(v||'').trim(); if(v) localStorage.setItem('occumed_anthropic_key',v); else localStorage.removeItem('occumed_anthropic_key'); }catch(e){} const el=document.getElementById('reportDoc'); if(el) el.innerHTML=reportHTML(); }
+// แปลชุดข้อความด้วย Claude (opus 4.8) — เรียก HTTP ตรงจากเบราว์เซอร์ · คืน map ต้นฉบับ→จีน
+async function claudeTranslateBatch(list){
+  const key=claudeKey(); if(!key) throw new Error('ยังไม่ได้ใส่ Claude API key');
+  const sys='你是职业医学（occupational medicine）领域的专业翻译。将泰语/英语术语准确翻译为规范的简体中文职业卫生术语。英文缩写（如 CBC、CXR、VA、HBsAg）保留原文或加中文括注。只输出一个 JSON 对象：键为原文、值为中文译文，不要任何额外说明或代码块标记。';
+  const user='请将下列条目翻译为简体中文，仅输出 JSON 对象：\n'+JSON.stringify(list);
+  const body={model:'claude-opus-4-8',max_tokens:8000,system:sys,messages:[{role:'user',content:user}]};
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+  if(!r.ok){ const t=await r.text(); throw new Error('Claude API '+r.status+': '+t.slice(0,160)); }
+  const j=await r.json();
+  const txt=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+  const m=txt.match(/\{[\s\S]*\}/); return JSON.parse(m?m[0]:txt);
+}
 async function zhAutoTranslate(){
   const srcs=zhSources().filter(s=>!(S.zh&&S.zh[s]));
   if(!srcs.length){ toast('แปลครบทุกรายการแล้ว'); return; }
-  if(!confirm('จะส่งข้อความ '+srcs.length+' รายการไป Google แปลเป็นจีน (ต้องต่ออินเทอร์เน็ต · ควรตรวจทานผลหลังแปล) — ดำเนินการต่อ?')) return;
-  toast('กำลังแปล '+srcs.length+' รายการ…'); let ok=0;
-  for(const s of srcs){
-    try{
-      const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q='+encodeURIComponent(s);
-      const r=await fetch(url); const j=await r.json();
-      const tr=(j[0]||[]).map(x=>x[0]).join('').trim();
-      if(tr){ S.zh[s]=tr; ok++; }
-    }catch(e){}
-  }
+  const useClaude=!!claudeKey(); const engName=useClaude?'Claude (Anthropic)':'Google แปลภาษา';
+  if(!confirm('จะแปล '+srcs.length+' รายการด้วย '+engName+'\n(ส่งข้อความออกไปยังบริการภายนอก · ต้องต่ออินเทอร์เน็ต · ควรตรวจทานผลหลังแปล)\nดำเนินการต่อ?')) return;
+  toast('กำลังแปลด้วย '+engName+' …'); let ok=0;
+  try{
+    if(useClaude){
+      const chunks=[]; for(let i=0;i<srcs.length;i+=40) chunks.push(srcs.slice(i,i+40));
+      for(const c of chunks){ const map=await claudeTranslateBatch(c); c.forEach(s=>{ const v=map&&map[s]; if(v){ S.zh[s]=String(v).trim(); ok++; } }); }
+    } else {
+      for(const s of srcs){
+        try{ const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q='+encodeURIComponent(s);
+          const r=await fetch(url); const j=await r.json(); const tr=(j[0]||[]).map(x=>x[0]).join('').trim(); if(tr){ S.zh[s]=tr; ok++; } }catch(e){}
+      }
+    }
+  }catch(e){ touch(); bxFull(); const el0=document.getElementById('reportDoc'); if(el0) el0.innerHTML=reportHTML(); toast('แปลไม่สำเร็จ: '+String(e.message||e).slice(0,140)); return; }
   touch(); bxFull(); const el=document.getElementById('reportDoc'); if(el) el.innerHTML=reportHTML();
-  toast(ok?('แปลอัตโนมัติแล้ว '+ok+' รายการ — โปรดตรวจทาน'):'แปลไม่สำเร็จ (ตรวจอินเทอร์เน็ต/ลองใหม่)');
+  toast(ok?('แปลแล้ว '+ok+' รายการ ('+engName+') — โปรดตรวจทาน'):'แปลไม่สำเร็จ (ตรวจคีย์/อินเทอร์เน็ต แล้วลองใหม่)');
 }
 function zhTransPanel(){
   const srcs=zhSources();
   if(!zhEdit) return '';
+  const hasKey=!!claudeKey();
   const rows=srcs.length?srcs.map(s=>`<div class="zhrow"><div class="zhsrc">${esc(s)}</div><input class="zhinp" value="${esc((S.zh&&S.zh[s])||'')}" placeholder="คำแปลจีน…" onchange="setZh('${esc(s).replace(/'/g,"\\'")}',this.value)"></div>`).join(''):'<div class="muted" style="padding:8px">ไม่มีข้อความไทยที่ต้องแปล</div>';
-  return `<div class="zhtrans"><div class="zhtrans-h"><b>จัดการคำแปลจีน (${srcs.length} รายการ)</b><span class="sp"></span><button class="btn ghost sm" onclick="zhAutoTranslate()">🌐 แปลอัตโนมัติที่ยังว่าง (Google)</button><button class="btn ghost sm" onclick="toggleZhEdit()">ปิดแผง</button></div><div class="zhrows">${rows}</div><div class="hint" style="padding:6px 10px">พิมพ์คำแปลเองได้ · ปุ่มแปลอัตโนมัติส่งข้อความไป Google (ต้องต่อเน็ต ควรตรวจทาน) · คำแปลถูกบันทึกและซิงค์ให้ทีม</div></div>`;
+  return `<div class="zhtrans"><div class="zhtrans-h"><b>จัดการคำแปลจีน (${srcs.length} รายการ)</b><span class="sp"></span><button class="btn ghost sm" onclick="zhAutoTranslate()">${hasKey?'✦ แปลด้วย Claude':'🌐 แปลด้วย Google'} (ที่ยังว่าง)</button><button class="btn ghost sm" onclick="toggleZhEdit()">ปิดแผง</button></div>
+    <div class="zhkey"><span>Claude API key:</span><input type="password" id="zhKeyInp" value="${esc(claudeKey())}" placeholder="sk-ant-... (เว้นว่าง = ใช้ Google)" onchange="setClaudeKey(this.value)"><span class="${hasKey?'zhok':'muted'}">${hasKey?'✓ ใช้ Claude แปล':'ยังไม่ใส่คีย์ → ใช้ Google'}</span></div>
+    <div class="zhrows">${rows}</div>
+    <div class="hint" style="padding:6px 10px">พิมพ์คำแปลเองได้ · ปุ่มแปลอัตโนมัติส่งข้อความไปบริการภายนอก (Claude ถ้าใส่คีย์ · ไม่งั้น Google) ควรตรวจทาน · <b>API key เก็บในเบราว์เซอร์นี้เท่านั้น ไม่ซิงค์ ไม่ขึ้น repo</b> · คำแปลถูกบันทึกและซิงค์ให้ทีม</div></div>`;
 }
 function buildReportZH(){
   const g=S.general;
