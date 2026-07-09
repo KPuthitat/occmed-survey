@@ -839,6 +839,7 @@ function riskFromScore(s){ s=Number(s)||0; if(s<=0) return ''; if(s<=3) return '
 function riskInfo(h){ const hr=Number(h.hr)||0, er=erInfo(h); const rs=hr*er.lvl; return {hr,er,rs,label:riskFromScore(rs)}; }
 const RISK_UNKNOWN='ไม่ทราบความเสี่ยง';
 const RISK_NOTE_NOENV='※ ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)';
+const RISK_NOTE_UNKNOWN='※ เฉพาะรายการที่แสดง “ไม่ทราบความเสี่ยง” คือปัจจัยที่ยังไม่มีผลตรวจวัดสิ่งแวดล้อมมาประเมิน (อยู่ในแผนงาน) — ไม่รวมรายการอื่นในตาราง';
 function autoRisk(h){ if(!(Number(h&&h.cr)||0)) return RISK_UNKNOWN; return riskInfo(h).label; }
 function riskClass(r){return {'สูงมาก':'risk-vhigh','สูง':'risk-high','ปานกลาง':'risk-med','ต่ำ':'risk-low','ยอมรับได้':'risk-acc','ไม่ทราบความเสี่ยง':'risk-unknown'}[r]||''}
 function riskRB(r){return {'สูงมาก':'vh','สูง':'h','ปานกลาง':'m','ต่ำ':'l','ยอมรับได้':'a','ไม่ทราบความเสี่ยง':'u'}[r]||'l'}
@@ -1425,7 +1426,7 @@ function compressImg(file,cb){
     if(w>=h && w>MAX){ h=Math.round(h*MAX/w); w=MAX; } else if(h>w && h>MAX){ w=Math.round(w*MAX/h); h=MAX; }
     const c=document.createElement('canvas'); c.width=w; c.height=h;
     c.getContext('2d').drawImage(img,0,0,w,h);
-    try{ cb(c.toDataURL('image/jpeg',0.62)); }catch(e){ cb(null); }
+    try{ cb(c.toDataURL('image/jpeg',0.62),w,h); }catch(e){ cb(null); }
   };
   img.onerror=()=>{ URL.revokeObjectURL(url); cb(null); };
   img.src=url;
@@ -1435,8 +1436,8 @@ function addPhotos(did,files){
   const arr=[...files].filter(f=>/^image\//.test(f.type)).slice(0,20);
   if(!arr.length) return;
   let done=0;
-  arr.forEach(f=>compressImg(f,uri=>{
-    if(uri) d.photos.push({id:uid(),d:uri,cap:''});
+  arr.forEach(f=>compressImg(f,(uri,w,h)=>{
+    if(uri) d.photos.push({id:uid(),d:uri,cap:'',w:w||0,h:h||0});
     if(++done===arr.length){
       renderDepts();
       if(!saveOK()){ toast('พื้นที่จัดเก็บในเครื่องเต็ม — ลบรูปเก่าบางส่วน หรือย่อ/ลดจำนวนรูป'); }
@@ -1450,6 +1451,17 @@ function setPhotoCap(did,pid,v){ const d=findDept(did); const p=d&&(d.photos||[]
 function saveOK(){ try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); return true; }catch(e){ return false; } }
 function stripPhotos(st){ return {...st, depts:(st.depts||[]).map(d=>{ const c={...d}; delete c.photos; return c; })}; }
 function allPhotos(){ const out=[]; (S.depts||[]).forEach(d=>(d.photos||[]).forEach(p=>out.push({dept:d.name||d.en||'',p}))); return out; }
+/* เติมขนาด (w/h) ให้ภาพเก่าที่ยังไม่มี — วัดจาก data URL แล้วบันทึกครั้งเดียว (ใช้ตัดสินแนวตั้ง/แนวนอนในสไลด์) */
+function ensurePhotoDims(){
+  const miss=[]; (S.depts||[]).forEach(d=>(d.photos||[]).forEach(p=>{ if(p&&p.d&&(!p.w||!p.h)) miss.push(p); }));
+  if(!miss.length) return Promise.resolve(false);
+  return Promise.all(miss.map(p=>new Promise(res=>{
+    const im=new Image();
+    im.onload=()=>{ p.w=im.naturalWidth||0; p.h=im.naturalHeight||0; res(); };
+    im.onerror=()=>{ p.w=p.w||0; p.h=p.h||0; res(); };
+    im.src=p.d;
+  }))).then(()=>{ try{ save(); pushFull(); }catch(e){} return true; });
+}
 
 /* ============================================================
    PANEL 2 — RISK ASSESSMENT
@@ -2305,6 +2317,8 @@ const SLIDE_ZH={
   /* ประเมินความเสี่ยง */
   'ผลประเมินความเสี่ยงตามแผนก':'各部门风险评估结果','ประเมินความเสี่ยง':'风险评估',
   'ไม่สามารถระบุระดับความเสี่ยงได้ เนื่องจากไม่มีผลตรวจวัดสิ่งแวดล้อม (อยู่ในแผนงาน)':'因缺少作业环境检测结果，暂无法判定风险等级（已列入计划）',
+  '※ เฉพาะรายการที่แสดง “ไม่ทราบความเสี่ยง” คือปัจจัยที่ยังไม่มีผลตรวจวัดสิ่งแวดล้อมมาประเมิน (อยู่ในแผนงาน) — ไม่รวมรายการอื่นในตาราง':'※ 仅标注「无法判定」的项目为尚无作业环境检测结果可评估的因素（已列入计划）— 不含表中其他项目',
+  'ความเข้มข้น (1–5)':'浓度 (1–5)','ความเข้มข้น':'浓度',
   'ยังไม่ได้ระบุสิ่งคุกคาม':'尚未指定危害因素','รายละเอียดแต่ละแผนก':'各部门详情',
   /* รสส. */
   'ผลตรวจวัดสภาพแวดล้อมในการทำงาน':'作业环境检测结果','ผลตรวจวัดสภาพแวดล้อม (รสส.1/2/3)':'作业环境检测结果 (รสส.1/2/3)','ผลตรวจวัดสภาพแวดล้อม':'作业环境检测结果',
@@ -2720,6 +2734,22 @@ const SLIDE_RUNTIME=`(function(){
 /* หัวข้อที่เลือกเปิด/ปิดในไฟล์นำเสนอได้ (ปกและปิดท้ายแสดงเสมอ) */
 const SLIDE_SECTIONS=[['company','ข้อมูลบริษัท'],['workforce','กำลังคน & เวลาทำงาน'],['safety','ความปลอดภัย & อาชีวอนามัย'],['walkthrough','การเดินสำรวจ'],['overview','ภาพรวมความเสี่ยง'],['measure','ผลการตรวจวัด'],['risk','ประเมินความเสี่ยง'],['deptDetail','รายละเอียดแต่ละแผนก'],['machines','โปสเตอร์เครื่องจักร'],['rss','ผลตรวจวัดสภาพแวดล้อม (รสส.)'],['health','ตรวจสุขภาพ'],['clinical','สรุปเชิงคลินิก'],['notes','บันทึกภาคสนาม'],['recommend','ข้อเสนอแนะ'],['appendix','ภาคผนวก (เครื่องจักร/ค่าอ้างอิง)'],['photos','รูปภาพหน้างาน'],['exec','บทสรุปผู้บริหาร']];
 function SO(k){ return !(S.slideOpts&&S.slideOpts[k]===false); }
+/* แบ่งข้อความยาวลงหลายสไลด์แบบอิงบรรทัด — เคารพการเว้นบรรทัดที่ผู้ใช้พิมพ์เอง,
+   ดันข้อที่ขึ้นต้นด้วย (1) (2) … หรือ 1. 2. … ให้ขึ้นบรรทัดใหม่, ตัดหน้าตามจำนวนบรรทัดที่แสดงจริง (กันตกขอบ) */
+function slidePaginate(txt, rowsMax, cpl){
+  txt=String(txt||'').replace(/\r/g,'');
+  // ดันรายการข้อ (N) หรือ N) หรือ N. ที่อยู่กลางบรรทัดให้ขึ้นบรรทัดใหม่
+  txt=txt.replace(/[ \t]*(\((?:\d+|[ก-ฮ])\)|\d+[.)](?=\s))/g, '\n$1');
+  const lines=txt.split('\n').map(s=>s.replace(/[ \t]+/g,' ').trim());
+  // ลบบรรทัดว่างซ้อนต้น
+  while(lines.length && !lines[0]) lines.shift();
+  const rowsOf=ln=>ln?Math.max(1,Math.ceil(ln.length/cpl)):1;
+  const chunks=[]; let cur=[], rows=0;
+  lines.forEach(ln=>{ const r=rowsOf(ln); if(cur.length && rows+r>rowsMax){ while(cur.length && !cur[cur.length-1]) cur.pop(); chunks.push(cur.join('\n')); cur=[]; rows=0; if(!ln) return; } cur.push(ln); rows+=r; });
+  while(cur.length && !cur[cur.length-1]) cur.pop();
+  if(cur.length) chunks.push(cur.join('\n'));
+  return chunks.length?chunks:[''];
+}
 function buildSlides(){
   const g=S.general, c=S.conclusion, f=highRiskFindings();
   const uniq=a=>[...new Set(a)];
@@ -2908,7 +2938,7 @@ function buildSlides(){
     <h2 class="s-h2">แผนก &amp; สิ่งคุกคามที่ต้องเฝ้าระวัง</h2>
     ${top.length?`<table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับ</th></tr></thead><tbody>
     ${top.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td style="text-align:center">${esc(x.hr)||'—'}</td><td style="text-align:center">${esc(x.ef)||'—'}</td><td><span class="rb ${x.r==='สูงมาก'?'vh':x.r==='สูง'?'h':'m'}">${x.r}</span></td></tr>`).join('')}
-    </tbody></table><div class="s-note" style="font-size:.8em">HR = ระดับความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${unknownCnt?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_NOENV} (${unknownCnt} รายการ)</div>`:''}${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
+    </tbody></table><div class="s-note" style="font-size:.8em">HR = ระดับความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${unknownCnt?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_UNKNOWN} (${unknownCnt} รายการ)</div>`:''}${risks.length>top.length?`<div class="s-more">และอีก ${risks.length-top.length} รายการ</div>`:''}`
     :riskEmpty}`});
 
   // 4a) รายละเอียดแต่ละแผนก (ดึงจากข้อมูลรายงาน)
@@ -2936,9 +2966,9 @@ function buildSlides(){
             <h2 class="s-h2">${titleHtml}${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
             ${pi===0&&(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
             ${pi===0&&info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
-            <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th title="Hazard rating">HR</th><th title="Exposure frequency">EF</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
-            ${chunk.map(h=>{const r=effRisk(h);return `<tr><td>${esc(h.name)||'—'}</td><td style="white-space:nowrap">${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td style="white-space:nowrap"><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
-            </tbody></table><div class="s-note" style="font-size:.78em">HR = ความรุนแรง (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${hasUnknown?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_NOENV}</div>`:''}`});
+            <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th title="Hazard rating">HR</th><th title="Concentration rating">CR</th><th title="Exposure frequency">EF</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
+            ${chunk.map(h=>{const r=effRisk(h);const e=erInfo(h);return `<tr><td>${esc(h.name)||'—'}</td><td style="white-space:nowrap">${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${e.cr||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td style="white-space:nowrap"><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
+            </tbody></table><div class="s-note" style="font-size:.78em">HR = ความรุนแรง (1–5) · CR = ความเข้มข้น (1–5) · EF = ความถี่การสัมผัส (1–5)</div>${hasUnknown?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_UNKNOWN}</div>`:''}`});
         });
       }
     }
@@ -3051,10 +3081,20 @@ function buildSlides(){
   const nt=S.notes||{};
   const noteRows=['general','depts','risk','health','summary'].map(k=>[NOTE_LABELS[k],nt[k]]).filter(x=>x[1]&&x[1].trim());
   if(noteRows.length && SO('notes')){
-    slides.push({cls:'rec',html:`
-      <div class="s-kick">11 · บันทึกภาคสนาม</div>
-      <h2 class="s-h2">บันทึกภาคสนาม (Field Notes)</h2>
-      <div class="s-body">${noteRows.map(x=>`<div style="margin-bottom:10px"><b style="color:#0B2545">${esc(x[0])}:</b> ${esc(x[1])}</div>`).join('')}</div>`});
+    // แบ่งหน้าเพื่อไม่ให้ข้อความถูกตัด — โน้ตยาวแตกเป็นหลายท่อน (คงหัวข้อ) แล้วจัดลงหน้าตามงบตัวอักษร
+    const NLIM=520, NPAGE=600;
+    const splitNote=txt=>{ txt=String(txt||'').replace(/\s+/g,' ').trim(); const out=[]; let i=0; while(i<txt.length){ if(txt.length-i<=NLIM){ out.push(txt.slice(i).trim()); break; } let end=i+NLIM; const sp=txt.lastIndexOf(' ',end); if(sp>i+NLIM*0.55) end=sp; out.push(txt.slice(i,end).trim()); i=end; } return out.length?out:['']; };
+    const blocks=[]; noteRows.forEach(x=>splitNote(x[1]).forEach((p,k)=>blocks.push({label:x[0],text:p,cont:k>0})));
+    const npages=[]; let cur=[],acc=0;
+    blocks.forEach(b=>{ const w=b.label.length+b.text.length+18; if(cur.length&&acc+w>NPAGE){ npages.push(cur); cur=[]; acc=0; } cur.push(b); acc+=w; });
+    if(cur.length) npages.push(cur);
+    const np=npages.length;
+    npages.forEach((pg,pi)=>{
+      slides.push({cls:'rec',html:`
+        <div class="s-kick">11 · บันทึกภาคสนาม${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
+        <h2 class="s-h2">บันทึกภาคสนาม (Field Notes)${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+        <div class="s-body">${pg.map(b=>`<div style="margin-bottom:10px"><b style="color:#0B2545">${esc(b.label)}${b.cont?' (ต่อ)':''}:</b> ${esc(b.text)}</div>`).join('')}</div>`});
+    });
   }
 
   // 9) ข้อเสนอแนะ (สไลด์ละหัวข้อ)
@@ -3062,24 +3102,13 @@ function buildSlides(){
     .concat((c.items||[]).map(it=>[it.label||'ข้อเสนอแนะ',it.text]))
     .concat([['ข้อเสนอแนะเพิ่มเติม',c.extra]]).filter(x=>x[1]&&x[1].trim());
   if(SO('recommend')&&recs.length){
-    const paginateText=(txt,lim)=>{
-      txt=String(txt||'').replace(/\s+/g,' ').trim(); if(!txt) return [''];
-      const pages=[]; let i=0;
-      while(i<txt.length){
-        if(txt.length-i<=lim){ pages.push(txt.slice(i).trim()); break; }
-        let end=i+lim; const sp=txt.lastIndexOf(' ',end);
-        if(sp>i+lim*0.55) end=sp;
-        pages.push(txt.slice(i,end).trim()); i=end;
-      }
-      return pages;
-    };
     recs.forEach((r,idx)=>{
-      const pgs=paginateText(r[1],480); const np=pgs.length;
+      const pgs=slidePaginate(r[1],13,46); const np=pgs.length;
       pgs.forEach((body,pi)=>{
         slides.push({cls:'rec',html:`
           <div class="s-kick">12 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
           <h2 class="s-h2">${esc(r[0])}${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
-          <div class="s-body">${esc(body)}</div>`});
+          <div class="s-body" style="white-space:pre-wrap">${esc(body)}</div>`});
       });
     });
   } else if(SO('recommend')) {
@@ -3110,14 +3139,24 @@ function buildSlides(){
       </tbody></table>`});
   }
 
-  // ภาพประกอบการเดินสำรวจ (4 รูป/สไลด์)
-  const ph=allPhotos();
-  for(let i=0; SO('photos') && i<ph.length; i+=4){
-    const grp=ph.slice(i,i+4);
-    slides.push({html:`
-      <div class="s-kick">ภาพประกอบการเดินสำรวจ${ph.length>4?` (${Math.floor(i/4)+1}/${Math.ceil(ph.length/4)})`:''}</div>
-      <h2 class="s-h2">ภาพหน้างาน</h2>
-      <div class="s-photos">${grp.map(x=>`<figure class="s-photo"><img src="${x.p.d}" alt=""><figcaption>${esc(x.p.cap||x.dept)}</figcaption></figure>`).join('')}</div>`});
+  // ภาพประกอบการเดินสำรวจ — แนวนอน 1 ภาพ/หน้า · แนวตั้ง 2 ภาพ/หน้า · ภาพเดี่ยวจัดกึ่งกลาง (ภาพใหญ่ แสดงเต็มไม่ครอป)
+  if(SO('photos')){
+    const ph=allPhotos();
+    const isPort=x=>{ const p=x.p; return (p.w&&p.h)?(p.h>p.w):false; };  // ไม่รู้ขนาด = ถือว่าแนวนอน
+    const groups=[]; let i=0;
+    while(i<ph.length){
+      if(isPort(ph[i]) && i+1<ph.length && isPort(ph[i+1])){ groups.push([ph[i],ph[i+1]]); i+=2; }
+      else { groups.push([ph[i]]); i+=1; }  // แนวนอน หรือแนวตั้งเดี่ยว = 1 ภาพ/หน้า (กึ่งกลาง)
+    }
+    const ng=groups.length;
+    groups.forEach((grp,gi)=>{
+      const one=grp.length===1;
+      const cls='s-photos'+(one?' one':' two')+(one&&isPort(grp[0])?' port':'');
+      slides.push({html:`
+        <div class="s-kick">ภาพประกอบการเดินสำรวจ${ng>1?` (${gi+1}/${ng})`:''}</div>
+        <h2 class="s-h2">ภาพหน้างาน</h2>
+        <div class="${cls}">${grp.map(x=>`<figure class="s-photo"><img src="${x.p.d}" alt=""><figcaption>${esc(x.p.cap||x.dept)}</figcaption></figure>`).join('')}</div>`});
+    });
   }
 
   // หัวข้อสุดท้าย · บทสรุปผู้บริหาร (Executive Summary)
@@ -3129,17 +3168,8 @@ function buildSlides(){
         <h2 class="s-h2">บทสรุปสำหรับผู้บริหาร</h2>
         <div class="s-empty">ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”</div>`});
     } else {
-      // แบ่งหน้าโดยรักษาย่อหน้า — ถ้าไม่พอขึ้นหน้าใหม่
-      const paginateExec=(txt,lim)=>{
-        const paras=String(txt||'').split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
-        const norm=[];
-        paras.forEach(p=>{ let s=p; while(s.length>lim){ let end=lim; const sp=s.lastIndexOf(' ',end); if(sp>lim*0.6) end=sp; norm.push(s.slice(0,end).trim()); s=s.slice(end).trim(); } if(s) norm.push(s); });
-        const chunks=[]; let cur='';
-        norm.forEach(p=>{ const add=(cur?'\n\n':'')+p; if(cur&&(cur+add).length>lim){ chunks.push(cur); cur=p; } else cur+=add; });
-        if(cur.trim()) chunks.push(cur);
-        return chunks.length?chunks:[''];
-      };
-      const pgs=paginateExec(execTxt,560); const np=pgs.length;
+      // แบ่งหน้าแบบอิงบรรทัด — เคารพย่อหน้า/การเว้นบรรทัดที่พิมพ์เอง + ดันข้อ (1)(2)… ขึ้นบรรทัดใหม่ กันตกขอบ
+      const pgs=slidePaginate(execTxt,13,46); const np=pgs.length;
       pgs.forEach((body,pi)=>{
         slides.push({cls:'rec',html:`
           <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
@@ -3207,10 +3237,16 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun','Noto Sans SC','
 .s-empty{color:#8a97a8;font-size:clamp(14px,2vw,20px);font-style:italic}
 .s-poster{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;width:100%;margin-top:4px}
 .s-poster svg{height:100%;width:auto;max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 4px 18px rgba(11,37,69,.12)}
-.s-photos{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%}
-.s-photo{margin:0;background:#f2f5fa;border-radius:10px;overflow:hidden;border:1px solid #e3e8f0}
-.s-photo img{width:100%;height:clamp(90px,17vh,210px);object-fit:cover;display:block}
-.s-photo figcaption{font-size:clamp(10px,1.3vw,14px);color:#3a4657;padding:6px 10px;line-height:1.3}
+/* พื้นที่ภาพ = เติมส่วนที่เหลือของสไลด์ (flex:1) → ยึดขนาดสไลด์จริง ไม่ผูก viewport กันตกขอบทุกจอ */
+.s-photos{display:flex;flex:1;min-height:0;width:100%;gap:18px;margin-top:4px;justify-content:center;align-items:stretch}
+.s-photo{margin:0;background:#eef2f8;border-radius:10px;overflow:hidden;border:1px solid #e3e8f0;display:flex;flex-direction:column;min-height:0}
+.s-photo img{width:100%;flex:1;min-height:0;object-fit:contain;display:block}
+.s-photo figcaption{flex:none;font-size:clamp(11px,1.4vw,15px);color:#3a4657;padding:7px 12px;line-height:1.3;text-align:center}
+/* 1 ภาพ/หน้า (แนวนอน หรือแนวตั้งเดี่ยว) — ใหญ่ กึ่งกลาง */
+.s-photos.one .s-photo{max-width:90%}
+.s-photos.one.port .s-photo{max-width:56%}
+/* แนวตั้ง 2 ภาพ/หน้า */
+.s-photos.two .s-photo{width:47%}
 .nav{position:absolute;bottom:18px;right:24px;display:flex;align-items:center;gap:12px;z-index:5}
 .nav button{width:40px;height:40px;border:none;border-radius:50%;background:#0B2545;color:#C8A046;font-size:22px;cursor:pointer;display:grid;place-items:center;line-height:1}
 .nav button:hover{background:#13315C}
@@ -3240,9 +3276,12 @@ function standaloneSlides(){
 }
 function openSlides(){
   renderSlideOpts();
-  document.getElementById('slideFrame').srcdoc=standaloneSlides();
   document.getElementById('slideModal').classList.add('show');
   document.body.style.overflow='hidden';
+  const paint=()=>{ const fr=document.getElementById('slideFrame'); if(fr) fr.srcdoc=standaloneSlides(); };
+  paint();
+  // เติมขนาดภาพที่ยังไม่มี (ภาพเก่า) แล้ววาดสไลด์ใหม่ เพื่อจัด layout ตามแนวตั้ง/แนวนอนได้ถูกต้อง
+  try{ ensurePhotoDims().then(changed=>{ if(changed) paint(); }); }catch(e){}
 }
 function renderSlideOpts(){
   const el=document.getElementById('slideOptsBar'); if(!el) return;
