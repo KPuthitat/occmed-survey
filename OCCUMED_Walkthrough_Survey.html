@@ -2945,7 +2945,7 @@ function buildSlides(){
   S.depts.forEach((d,di)=>{
     const hasContent=(d.hazards&&d.hazards.length)||(d.machineRefs&&d.machineRefs.length)||(d.proc||'').trim()||(d.machines||'').trim();
     if(!hasContent) return;
-    const info=[]; if((d.machines||'').trim()) info.push('<b>เครื่องจักร:</b> '+esc(cut(d.machines,70))); if(d.staff) info.push('<b>พนักงาน</b> '+esc(d.staff)+' คน');
+    const info=[]; if((d.machines||'').trim()) info.push('<b>เครื่องจักร:</b> '+esc(d.machines.trim())); if(d.staff) info.push('<b>พนักงาน</b> '+esc(d.staff)+' คน');
     const titleHtml=`${esc(d.name)||'แผนก'}${d.en?` <span style="font-size:.6em;color:#6b7a90;font-weight:400">(${esc(d.en)})</span>`:''}`;
     const hzAll=d.hazards||[];
     if(SO('deptDetail')){
@@ -2953,18 +2953,21 @@ function buildSlides(){
         slides.push({cls:'top',html:`
           <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}</div>
           <h2 class="s-h2">${titleHtml}</h2>
-          ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
+          ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(d.proc.trim())}</div>`:''}
           ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
           <div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>`});
       } else {
-        const pages=[]; let pi0=0; while(pi0<hzAll.length){ const sz=pages.length===0?3:5; pages.push(hzAll.slice(pi0,pi0+sz)); pi0+=sz; }
+        // บทนำ (proc) + เครื่องจักร แสดงเต็มบนหน้าแรก → ลดจำนวนแถวตารางหน้าแรกตามความยาวบทนำ กันตกขอบ
+        const introRows=Math.ceil(((d.proc||'').trim().length)/90)+Math.ceil(((d.machines||'').trim().length)/90);
+        const firstSz=Math.max(1, 4-Math.max(0, introRows-1));
+        const pages=[]; let pi0=0; while(pi0<hzAll.length){ const sz=pages.length===0?firstSz:5; pages.push(hzAll.slice(pi0,pi0+sz)); pi0+=sz; }
         const npg=pages.length;
         pages.forEach((chunk,pi)=>{
           const hasUnknown=chunk.some(h=>effRisk(h)===RISK_UNKNOWN);
           slides.push({cls:'top',html:`
             <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}${npg>1?` · หน้า ${pi+1}/${npg}`:''}</div>
             <h2 class="s-h2">${titleHtml}${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
-            ${pi===0&&(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(cut(d.proc,160))}</div>`:''}
+            ${pi===0&&(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(d.proc.trim())}</div>`:''}
             ${pi===0&&info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
             <table class="s-tbl"><thead><tr><th>สิ่งคุกคาม</th><th>ประเภท</th><th title="Hazard rating">HR</th><th title="Concentration rating">CR</th><th title="Exposure frequency">EF</th><th>ระดับความเสี่ยง</th></tr></thead><tbody>
             ${chunk.map(h=>{const r=effRisk(h);const e=erInfo(h);return `<tr><td>${esc(h.name)||'—'}</td><td style="white-space:nowrap">${esc(h.cat)}</td><td style="text-align:center">${esc(h.hr)||'—'}</td><td style="text-align:center">${e.cr||'—'}</td><td style="text-align:center">${esc(h.freq)||'—'}</td><td style="white-space:nowrap"><span class="rb ${riskRB(r)}">${esc(r||'—')}</span></td></tr>`;}).join('')}
