@@ -2974,16 +2974,14 @@ function buildSlides(){
   if(SO('health')){
     const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;};
     const bd='1px solid #cbd5e3';
-    const EXAM_ROWS_PP=5, DEPT_COLS_PP=12;
-    // หัวคอลัมน์ = ชื่อแผนก (แนวตั้ง เอียงซ้าย) ไม่ย่อ · สูงคงที่ ชื่อยาวตัดขึ้นบรรทัดในแนวตั้ง กันตกขอบ
-    const vDept=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:8px 4px;text-align:center;min-width:30px;height:156px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:normal;max-height:142px;line-height:1.25;font-weight:600;font-size:.78em;margin:0 auto">${esc(t)}</div></th>`;
+    const DEPT_ROWS_PP=5, EXAM_COLS_PP=12;
+    // หัวคอลัมน์ = ชื่อรายการตรวจ (แนวตั้ง เอียงซ้าย) · สูงคงที่ ชื่อยาวตัดขึ้นบรรทัดในแนวตั้ง กันตกขอบ
+    const vExam=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:7px 4px;text-align:center;min-width:28px;height:120px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:normal;max-height:108px;line-height:1.2;font-weight:600;font-size:.75em;margin:0 auto">${esc(t)}</div></th>`;
     // ตัด prefix ชื่อกลุ่มออกจากชื่อแถว (h2 บอกกลุ่มอยู่แล้ว) — ไม่แตะชื่อจริงที่เก็บไว้
     const stripGrp=(name,gl)=>{ if(!gl) return name; const re=new RegExp('^\\s*'+gl.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+'\\s*[-–—·:]+\\s*'); return String(name||'').replace(re,''); };
-    // ชื่อแผนกในสไลด์ใช้แบบกระชับ — ตัดเอาก่อนเครื่องหมาย "/" (เช่น งานทำความสะอาด/ล้างคราบน้ำมัน → งานทำความสะอาด)
-    const shortDept=n=>String(n||'—').split('/')[0].trim()||'—';
-    const buildHcTable=(map,examRows,deptCols,gl)=>`<table style="border-collapse:collapse;font-size:.9em;margin:6px auto 0">
-        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:130px">รายการตรวจ</th>${deptCols.map(dp=>vDept(shortDept(dp.name))).join('')}</tr></thead>
-        <tbody>${examRows.map((e,ri)=>`<tr><td style="border:${bd};padding:9px 14px;white-space:nowrap;font-weight:600;background:#eef2f8;color:#0B2545">${esc(stripGrp(e,gl))||esc(e)}</td>${deptCols.map(dp=>(map[dp.id]&&map[dp.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:9px 10px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:9px 10px"></td>`).join('')}</tr>`).join('')}</tbody>
+    const buildHcTable=(map,deptRows,examCols,gl)=>`<table style="border-collapse:collapse;font-size:.9em;margin:6px auto 0">
+        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:150px">แผนก</th>${examCols.map(e=>vExam(esc(stripGrp(e,gl))||esc(e))).join('')}</tr></thead>
+        <tbody>${deptRows.map((dp,ri)=>`<tr><td style="border:${bd};padding:9px 14px;font-weight:600;background:#eef2f8;color:#0B2545;max-width:240px;line-height:1.25">${esc(dp.name||'—')}</td>${examCols.map(e=>(map[dp.id]&&map[dp.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:9px 10px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:9px 10px"></td>`).join('')}</tr>`).join('')}</tbody>
       </table>`;
     // หน้าที่ 1 = สารบัญรายการตรวจ แบ่งกลุ่ม (อธิบายว่าตรวจอะไรบ้าง)
     const groupOverview=(map,title)=>{
@@ -2994,7 +2992,7 @@ function buildSlides(){
         <div style="font-size:.86em;color:#3a4657;margin:-8px 0 12px">รายการตรวจสุขภาพที่กำหนด แบ่งเป็น ${groups.length} กลุ่ม ดังนี้</div>
         ${groups.map(g=>`<div style="margin-bottom:15px"><div style="font-weight:700;color:#0B2545;font-size:1.05em;border-left:5px solid #C8A046;padding-left:11px;margin-bottom:7px">${esc(g.gl)} <span style="color:#8a94a6;font-weight:400;font-size:.8em">${g.exams.length} รายการ</span></div><div style="display:flex;flex-wrap:wrap;gap:8px;padding-left:16px">${g.exams.map(e=>`<span style="background:#eef2f8;border:1px solid #cbd5e3;border-radius:8px;padding:6px 13px;font-size:.86em;font-weight:600;color:#0B2545">${esc(e)}</span>`).join('')}</div></div>`).join('')}`});
     };
-    // หน้าถัดไป = ตารางเมทริกซ์ แถว=รายการตรวจ · คอลัมน์=แผนก (ชื่อจริง) แยกหน้าละกลุ่ม
+    // หน้าถัดไป = ตารางเมทริกซ์ แถว=แผนก (บนลงล่าง) · คอลัมน์=รายการตรวจ (ซ้ายไปขวา) แยกหน้าละกลุ่ม
     const healthGroupSlides=(mapKey,title,eng)=>{
       const map=S[mapKey]||{};
       const exU=allExams().filter(e=>S.depts.some(d=>map[d.id]&&map[d.id][e]));
@@ -3008,18 +3006,20 @@ function buildSlides(){
       EXAM_GROUPS.forEach(([gk,gl])=>{
         const exG=exU.filter(e=>examGroupOf(e)===gk);
         if(!exG.length) return;
-        // กระจายแถวให้เท่า ๆ กันเมื่อแบ่งหลายหน้า (ไม่ให้หน้าสุดท้ายโล่ง)
-        const nRowPages=Math.max(1,Math.ceil(exG.length/EXAM_ROWS_PP));
-        const perRows=Math.ceil(exG.length/nRowPages);
-        const rowPages=chunk(exG,perRows), colPages=chunk(S.depts,DEPT_COLS_PP);
+        // กระจายทั้งคอลัมน์ (รายการตรวจ) และแถว (แผนก) ให้เท่า ๆ กันเมื่อแบ่งหลายหน้า (ไม่ให้หน้าสุดท้ายโล่ง)
+        const nColPages=Math.max(1,Math.ceil(exG.length/EXAM_COLS_PP));
+        const perCols=Math.ceil(exG.length/nColPages);
+        const nRowPages=Math.max(1,Math.ceil(S.depts.length/DEPT_ROWS_PP));
+        const perRows=Math.ceil(S.depts.length/nRowPages);
+        const colPages=chunk(exG,perCols), rowPages=chunk(S.depts,perRows);
         const total=rowPages.length*colPages.length; let pageNo=0;
-        rowPages.forEach(examRows=>{
-          colPages.forEach(deptCols=>{
+        rowPages.forEach(deptRows=>{
+          colPages.forEach(examCols=>{
             pageNo++;
-            slides.push({cls:'top',html:`
+            slides.push({cls:'top hc',html:`
               <div class="s-kick">09 · ตรวจสุขภาพ (${esc(eng)})${total>1?` · หน้า ${pageNo}/${total}`:''}</div>
               <h2 class="s-h2">${esc(title)} - ${esc(gl)}${pageNo>1?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
-              ${buildHcTable(map,examRows,deptCols,gl)}`});
+              ${buildHcTable(map,deptRows,examCols,gl)}`});
           });
         });
       });
@@ -3172,6 +3172,7 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun','Noto Sans SC','
 .deck{position:relative;width:min(96vw,1120px);aspect-ratio:16/9;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .slide{position:absolute;inset:0;padding:6% 7%;display:none;flex-direction:column;justify-content:center;animation:sf .35s ease}
 .slide.top{justify-content:flex-start;padding-top:7%;padding-bottom:7%}
+.slide.hc{padding-top:4%;padding-bottom:4%}
 .slide.on{display:flex}
 @keyframes sf{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .s-kick{color:#C8A046;font-weight:700;letter-spacing:.14em;font-size:clamp(11px,1.5vw,15px);text-transform:uppercase;margin-bottom:10px}
