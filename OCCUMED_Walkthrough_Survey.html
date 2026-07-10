@@ -362,6 +362,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .photo-del{position:absolute;top:3px;right:3px;width:20px;height:20px;border:none;border-radius:50%;background:rgba(11,37,69,.82);color:#fff;font-size:12px;line-height:1;cursor:pointer;display:grid;place-items:center}
 .photo-del:hover{background:var(--over)}
 .photo-cap{width:120px;margin-top:3px;font-size:10.5px;padding:3px 5px;border:1px solid var(--line);border-radius:6px}
+/* ---- ปุ่มจัดการแถวสิ่งคุกคาม (เลื่อนขึ้น-ลง / รูป / ลบ) ---- */
+.hz-actions{white-space:nowrap;text-align:center}
+.hz-tool{width:22px;height:22px;padding:0;margin:0 1px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--navy,#0B2545);font-size:12px;line-height:1;cursor:pointer;vertical-align:middle}
+.hz-tool:hover{background:var(--line2)}
+.hz-tool:disabled{opacity:.3;cursor:default}
+.hz-tool.on{background:var(--gold,#C8A046);border-color:var(--gold,#C8A046);color:#fff}
+.hz-photos{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
+.hz-photo{position:relative;width:78px}
+.hz-photo img{width:78px;height:58px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block;background:var(--line2)}
+.hz-photo .photo-del{width:17px;height:17px;font-size:11px;top:2px;right:2px}
+.hz-photo .photo-cap{width:78px;font-size:9.5px}
 .empty{text-align:center;padding:34px 20px;color:var(--acc)}
 .empty svg{opacity:.4;margin-bottom:8px}
 
@@ -1295,8 +1306,8 @@ function renderDepts(){
         <div class="subhd">สิ่งคุกคาม &amp; ผลการตรวจวัด</div>
         <div class="tbl-scroll">
           <table class="htbl">
-            <thead><tr><th style="width:116px">ประเภท</th><th>สิ่งคุกคาม</th><th style="width:96px">ค่าที่วัดได้</th><th style="width:70px">หน่วย</th><th style="width:96px">ค่ามาตรฐาน</th><th style="width:150px">ผลการประเมิน</th><th style="width:34px"></th></tr></thead>
-            <tbody>${d.hazards.map(h=>hazRow(d.id,h)).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--acc);padding:14px">ยังไม่มีสิ่งคุกคาม</td></tr>`}</tbody>
+            <thead><tr><th style="width:116px">ประเภท</th><th>สิ่งคุกคาม</th><th style="width:96px">ค่าที่วัดได้</th><th style="width:70px">หน่วย</th><th style="width:96px">ค่ามาตรฐาน</th><th style="width:150px">ผลการประเมิน</th><th style="width:96px">จัดการ</th></tr></thead>
+            <tbody>${d.hazards.map((h,hi)=>hazRow(d.id,h,hi,d.hazards.length)).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--acc);padding:14px">ยังไม่มีสิ่งคุกคาม</td></tr>`}</tbody>
           </table>
         </div>
         <div class="btnrow addrow">
@@ -1318,8 +1329,10 @@ function renderDepts(){
   el.innerHTML=html;
   mountNotes('p1','depts');
 }
-function hazRow(did,h){
+function hazRow(did,h,hi,n){
   const ev=evalStd(h.measured,h.std,h.name);
+  const ph=(h.photos||[]);
+  const first=(hi===0), last=(hi===(n-1));
   return `<tr data-h="${h.id}">
     <td><select class="catcell" data-sync="h:${did}:${h.id}:cat" onchange="setH('${did}','${h.id}','cat',this.value)">${CATS.map(c=>`<option ${c===h.cat?'selected':''}>${c}</option>`).join('')}</select></td>
     <td><input data-sync="h:${did}:${h.id}:name" value="${esc(h.name)}" oninput="setH('${did}','${h.id}','name',this.value)"></td>
@@ -1327,9 +1340,44 @@ function hazRow(did,h){
     <td><input data-sync="h:${did}:${h.id}:unit" value="${esc(h.unit)}" oninput="setH('${did}','${h.id}','unit',this.value)"></td>
     <td><input data-sync="h:${did}:${h.id}:std" value="${esc(h.std)}" oninput="setH('${did}','${h.id}','std',this.value);refreshEval('${did}','${h.id}')"></td>
     <td class="evalcell"><span class="evaltag ${ev.c}">${ev.t}</span></td>
-    <td><button class="del" onclick="delHaz('${did}','${h.id}')">×</button></td>
-  </tr>`;
+    <td class="hz-actions">
+      <button class="hz-tool" title="เลื่อนขึ้น" ${first?'disabled':''} onclick="hazMove('${did}','${h.id}',-1)">▲</button>
+      <button class="hz-tool" title="เลื่อนลง" ${last?'disabled':''} onclick="hazMove('${did}','${h.id}',1)">▼</button>
+      <label class="hz-tool${ph.length?' on':''}" title="เพิ่มรูปให้สิ่งคุกคามนี้" style="cursor:pointer;display:inline-grid;place-items:center">${ph.length?('📷'+ph.length):'📷'}<input type="file" accept="image/*" multiple style="display:none" onchange="addHazPhotos('${did}','${h.id}',this.files);this.value=''"></label>
+      <button class="hz-tool" title="ลบสิ่งคุกคามนี้" onclick="delHaz('${did}','${h.id}')">×</button>
+    </td>
+  </tr>${ph.length?`<tr class="hz-photorow" data-hp="${h.id}"><td></td><td colspan="6"><div class="hz-photos">${ph.map(p=>hazPhotoThumb(did,h.id,p)).join('')}</div></td></tr>`:''}`;
 }
+function hazPhotoThumb(did,hid,p){
+  return `<div class="hz-photo" data-p="${p.id}">
+    <img src="${p.d}" alt="" loading="lazy">
+    <button class="photo-del" title="ลบรูป" onclick="delHazPhoto('${did}','${hid}','${p.id}')">✕</button>
+    <input class="photo-cap" placeholder="คำบรรยาย" value="${esc(p.cap||'')}" oninput="setHazPhotoCap('${did}','${hid}','${p.id}',this.value)">
+  </div>`;
+}
+function hazMove(did,hid,dir){
+  const d=findDept(did); if(!d) return;
+  const i=d.hazards.findIndex(h=>h.id===hid); if(i<0) return;
+  const j=i+dir; if(j<0||j>=d.hazards.length) return;
+  const t=d.hazards[i]; d.hazards[i]=d.hazards[j]; d.hazards[j]=t;
+  renderDepts(); renderRisk(); touch(); bxFull();
+}
+function addHazPhotos(did,hid,files){
+  const h=findHaz(findDept(did),hid); if(!h) return; if(!h.photos) h.photos=[];
+  const arr=[...files].filter(f=>/^image\//.test(f.type)).slice(0,20);
+  if(!arr.length) return;
+  let done=0;
+  arr.forEach(f=>compressImg(f,(uri,w,ht)=>{
+    if(uri) h.photos.push({id:uid(),d:uri,cap:'',w:w||0,h:ht||0});
+    if(++done===arr.length){
+      renderDepts();
+      if(!saveOK()){ toast('พื้นที่จัดเก็บในเครื่องเต็ม — ลบรูปเก่าบางส่วน หรือย่อ/ลดจำนวนรูป'); }
+      pushFull();
+    }
+  }));
+}
+function delHazPhoto(did,hid,pid){ const h=findHaz(findDept(did),hid); if(!h||!h.photos) return; h.photos=h.photos.filter(p=>p.id!==pid); renderDepts(); save(); pushFull(); }
+function setHazPhotoCap(did,hid,pid,v){ const h=findHaz(findDept(did),hid); const p=h&&(h.photos||[]).find(x=>x.id===pid); if(p){ p.cap=v; clearTimeout(setHazPhotoCap._t); setHazPhotoCap._t=setTimeout(()=>{save();pushFull();},500); } }
 function refreshEval(did,hid){
   const d=findDept(did),h=findHaz(d,hid); const ev=evalStd(h.measured,h.std,h.name);
   const row=document.querySelector(`.dept[data-d="${did}"] tr[data-h="${hid}"] .evalcell`);
@@ -1449,7 +1497,7 @@ function addPhotos(did,files){
 function delPhoto(did,pid){ const d=findDept(did); if(!d||!d.photos) return; d.photos=d.photos.filter(p=>p.id!==pid); renderDepts(); save(); pushFull(); }
 function setPhotoCap(did,pid,v){ const d=findDept(did); const p=d&&(d.photos||[]).find(x=>x.id===pid); if(p){ p.cap=v; clearTimeout(setPhotoCap._t); setPhotoCap._t=setTimeout(()=>{save();pushFull();},500); } }
 function saveOK(){ try{ localStorage.setItem(LS_KEY,JSON.stringify(S)); return true; }catch(e){ return false; } }
-function stripPhotos(st){ return {...st, depts:(st.depts||[]).map(d=>{ const c={...d}; delete c.photos; return c; })}; }
+function stripPhotos(st){ return {...st, depts:(st.depts||[]).map(d=>{ const c={...d}; delete c.photos; if(Array.isArray(c.hazards)) c.hazards=c.hazards.map(h=>{ const hc={...h}; delete hc.photos; return hc; }); return c; })}; }
 function allPhotos(){ const out=[]; (S.depts||[]).forEach(d=>(d.photos||[]).forEach(p=>out.push({dept:d.name||d.en||'',p}))); return out; }
 /* เติมขนาด (w/h) ให้ภาพเก่าที่ยังไม่มี — วัดจาก data URL แล้วบันทึกครั้งเดียว (ใช้ตัดสินแนวตั้ง/แนวนอนในสไลด์) */
 function ensurePhotoDims(){
@@ -1946,12 +1994,15 @@ function buildReport(){
   });
 
   // --- ภาพประกอบการเดินสำรวจ ---
-  const photoDepts=S.depts.filter(d=>(d.photos||[]).length);
+  const photoDepts=S.depts.filter(d=>(d.photos||[]).length||(d.hazards||[]).some(hz=>(hz.photos||[]).length));
   if(photoDepts.length){
     h+=`<h2>◆ ภาพประกอบการเดินสำรวจ</h2>`;
     photoDepts.forEach(d=>{
       h+=`<h3>${esc(d.name)||'แผนก'} <span class="muted" style="font-weight:400">(${esc(d.en)})</span></h3>`;
-      h+=`<div class="rp-photos">`+d.photos.map(p=>`<figure class="rp-photo"><img src="${p.d}" alt="">${p.cap?`<figcaption>${esc(p.cap)}</figcaption>`:''}</figure>`).join('')+`</div>`;
+      const figs=[];
+      (d.photos||[]).forEach(p=>figs.push(`<figure class="rp-photo"><img src="${p.d}" alt="">${p.cap?`<figcaption>${esc(p.cap)}</figcaption>`:''}</figure>`));
+      (d.hazards||[]).forEach(hz=>(hz.photos||[]).forEach(p=>{ const cap=[esc(hz.name),esc(p.cap||'')].filter(Boolean).join(' — '); figs.push(`<figure class="rp-photo"><img src="${p.d}" alt="">${cap?`<figcaption>${cap}</figcaption>`:''}</figure>`); }));
+      h+=`<div class="rp-photos">`+figs.join('')+`</div>`;
     });
   }
 
@@ -2728,12 +2779,26 @@ const SLIDE_RUNTIME=`(function(){
     if(x0===null){return;} var dx=e.changedTouches[0].clientX-x0;
     if(Math.abs(dx)>50){show(dx<0?i+1:i-1);} x0=null;
   },{passive:true});
+  /* ย่อ/ขยายทั้งผืน (1120×630) ให้พอดีจอ — คงสัดส่วน ไม่บิดเบี้ยว ทั้งมือถือ/แท็บเล็ต/คอม */
+  var deck=document.querySelector('.deck');
+  function fit(){
+    if(!deck) return;
+    var availW=window.innerWidth, availH=window.innerHeight;
+    var s=Math.min(availW/1120, availH/630);
+    if(!(s>0)) s=1;
+    deck.style.transform='scale('+s+')';
+  }
+  window.addEventListener('resize',fit);
+  window.addEventListener('orientationchange',function(){ setTimeout(fit,120); });
+  fit();
   show(0);
 })();`;
 
 /* หัวข้อที่เลือกเปิด/ปิดในไฟล์นำเสนอได้ (ปกและปิดท้ายแสดงเสมอ) */
 const SLIDE_SECTIONS=[['company','ข้อมูลบริษัท'],['workforce','กำลังคน & เวลาทำงาน'],['safety','ความปลอดภัย & อาชีวอนามัย'],['walkthrough','การเดินสำรวจ'],['overview','ภาพรวมความเสี่ยง'],['measure','ผลการตรวจวัด'],['risk','ประเมินความเสี่ยง'],['deptDetail','รายละเอียดแต่ละแผนก'],['machines','โปสเตอร์เครื่องจักร'],['rss','ผลตรวจวัดสภาพแวดล้อม (รสส.)'],['health','ตรวจสุขภาพ'],['clinical','สรุปเชิงคลินิก'],['notes','บันทึกภาคสนาม'],['recommend','ข้อเสนอแนะ'],['appendix','ภาคผนวก (เครื่องจักร/ค่าอ้างอิง)'],['photos','รูปภาพหน้างาน'],['exec','บทสรุปผู้บริหาร']];
 function SO(k){ return !(S.slideOpts&&S.slideOpts[k]===false); }
+/* โหมดแยกสไลด์ทีละสิ่งคุกคาม (Hazard ละหน้า) — ค่าเริ่มต้นปิด (opt-in) */
+function SOhaz(){ return !!(S.slideOpts&&S.slideOpts.hazPerSlide); }
 /* แบ่งข้อความยาวลงหลายสไลด์แบบอิงบรรทัด — เคารพการเว้นบรรทัดที่ผู้ใช้พิมพ์เอง,
    ดันข้อที่ขึ้นต้นด้วย (1) (2) … หรือ 1. 2. … ให้ขึ้นบรรทัดใหม่, ตัดหน้าตามจำนวนบรรทัดที่แสดงจริง (กันตกขอบ) */
 function slidePaginate(txt, rowsMax, cpl){
@@ -2956,6 +3021,42 @@ function buildSlides(){
           ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(d.proc.trim())}</div>`:''}
           ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
           <div class="s-empty">ยังไม่ได้ระบุสิ่งคุกคาม</div>`});
+      } else if(SOhaz()){
+        // โหมด "สิ่งคุกคามละหน้า" — บทนำแผนก 1 หน้า แล้วตามด้วยสิ่งคุกคามทีละหน้า พร้อมรูปประกอบ
+        if((d.proc||'').trim()||info.length){
+          slides.push({cls:'top',html:`
+            <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'}</div>
+            <h2 class="s-h2">${titleHtml}</h2>
+            ${(d.proc||'').trim()?`<div class="s-note" style="margin-top:0">${esc(d.proc.trim())}</div>`:''}
+            ${info.length?`<div class="s-note">${info.join(' · ')}</div>`:''}
+            <div class="s-note" style="font-size:.85em;color:#6b7a90">มีสิ่งคุกคามที่ประเมิน ${hzAll.length} รายการ (แสดงหน้าละรายการ)</div>`});
+        }
+        const bd='1px solid #cdd6e4';
+        const kv=(k,v)=>`<tr><td style="border:${bd};padding:9px 14px;background:#f4f7fb;font-weight:600;white-space:nowrap">${k}</td><td style="border:${bd};padding:9px 14px">${v}</td></tr>`;
+        hzAll.forEach((h,hzi)=>{
+          const r=effRisk(h), e=erInfo(h), ev=evalStd(h.measured,h.std,h.name);
+          const hasM=h.measured&&/\d/.test(String(h.measured));
+          const evc=ev.c==='over'?'h':ev.c==='ok'?'l':'a';
+          const ph=(h.photos||[]).slice(0,4);
+          slides.push({cls:'top',html:`
+            <div class="s-kick">แผนก ${di+1} · ${esc(d.name)||'(ไม่มีชื่อ)'} · สิ่งคุกคาม ${hzi+1}/${hzAll.length}</div>
+            <h2 class="s-h2">${esc(h.name)||'(ไม่ระบุ)'} <span style="font-size:.5em;color:#6b7a90;font-weight:400">(${esc(h.cat)})</span></h2>
+            <div style="display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;width:100%">
+              <div style="flex:1 1 320px;min-width:290px">
+                <table style="border-collapse:collapse;font-size:.95em;width:100%">${
+                  kv('ระดับความเสี่ยง',`<span class="rb ${riskRB(r)}">${esc(r||'—')}</span>`)+
+                  kv('ความรุนแรง (HR)',(esc(h.hr)||'—')+' / 5')+
+                  kv('ความเข้มข้น (CR)',(e.cr||'—')+' / 5')+
+                  kv('ความถี่การสัมผัส (EF)',(esc(h.freq)||'—')+' / 5')+
+                  kv('ค่าที่วัดได้',hasM?(esc(h.measured)+' '+esc(h.unit||'')):'ไม่ได้วัด')+
+                  kv('ค่ามาตรฐาน',esc(h.std)||'—')+
+                  kv('ผลการประเมิน',`<span class="rb ${evc}">${ev.t}</span>`)
+                }</table>
+              </div>
+              ${ph.length?`<div style="flex:1 1 300px;display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start">${ph.map(p=>`<figure style="margin:0;flex:1 1 46%;min-width:150px"><img src="${p.d}" style="width:100%;border-radius:8px;border:1px solid #cdd6e4;object-fit:cover;max-height:240px;display:block">${p.cap?`<figcaption style="font-size:.72em;color:#3a4657;margin-top:4px">${esc(p.cap)}</figcaption>`:''}</figure>`).join('')}</div>`:''}
+            </div>
+            ${r===RISK_UNKNOWN?`<div class="s-note" style="font-size:.76em;color:#8a6d1f">${RISK_NOTE_UNKNOWN}</div>`:''}`});
+        });
       } else {
         // บทนำ (proc) + เครื่องจักร แสดงเต็มบนหน้าแรก → ลดจำนวนแถวตารางหน้าแรกตามความยาวบทนำ กันตกขอบ
         const introRows=Math.ceil(((d.proc||'').trim().length)/90)+Math.ceil(((d.machines||'').trim().length)/90);
@@ -3201,50 +3302,52 @@ function buildSlides(){
 }
 
 function slidesCSS(){return `*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun','Noto Sans SC','Microsoft YaHei',sans-serif;background:#0a1a30;color:#0B2545;display:grid;place-items:center;min-height:100vh;padding:16px}
-.deck{position:relative;width:min(96vw,1120px);aspect-ratio:16/9;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun','Noto Sans SC','Microsoft YaHei',sans-serif;background:#0a1a30;color:#0B2545;display:grid;place-items:center;min-height:100vh;height:100vh;overflow:hidden;padding:0}
+/* Deck = ผืนออกแบบขนาดคงที่ 1120×630 (16:9) แล้วย่อ/ขยายทั้งผืนด้วย transform:scale ให้พอดีทุกจอ
+   → ทุกตัวอักษร/ตารางเป็น px คงที่ ไม่ผูก viewport จึงแสดงเหมือนกันเป๊ะทั้งมือถือ/แท็บเล็ต/คอม (letterbox ไม่บิดเบี้ยว) */
+.deck{position:relative;width:1120px;height:630px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);transform:scale(var(--s,1));transform-origin:center center}
 .slide{position:absolute;inset:0;padding:6% 7%;display:none;flex-direction:column;justify-content:center;animation:sf .35s ease}
 .slide.top{justify-content:flex-start;padding-top:7%;padding-bottom:7%}
 .slide.hc{padding-top:4%;padding-bottom:4%}
 .slide.on{display:flex}
 @keyframes sf{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.s-kick{color:#C8A046;font-weight:700;letter-spacing:.14em;font-size:clamp(11px,1.5vw,15px);text-transform:uppercase;margin-bottom:10px}
-.s-h1{font-size:clamp(26px,5vw,54px);line-height:1.1;color:#0B2545}
-.s-h2{font-size:clamp(20px,3.4vw,38px);color:#0B2545;border-bottom:3px solid #C8A046;padding-bottom:12px;margin-bottom:22px;align-self:flex-start}
+.s-kick{color:#C8A046;font-weight:700;letter-spacing:.14em;font-size:15px;text-transform:uppercase;margin-bottom:10px}
+.s-h1{font-size:54px;line-height:1.1;color:#0B2545}
+.s-h2{font-size:38px;color:#0B2545;border-bottom:3px solid #C8A046;padding-bottom:12px;margin-bottom:22px;align-self:flex-start}
 .slide.cover{align-items:center;text-align:center;background:linear-gradient(150deg,#0B2545,#13315C 60%,#1b4a86)}
 .slide.cover .s-h1{color:#fff}
-.slide.cover .s-company{color:#C8A046;font-size:clamp(20px,3.2vw,34px);font-weight:700;margin-top:18px}
-.slide.cover .s-sub{color:#dfe6f2;font-size:clamp(13px,1.8vw,19px);margin-top:14px}
-.slide.cover .s-foot{color:#8fa6c4;font-size:clamp(11px,1.4vw,14px);margin-top:34px}
-.badge{width:clamp(52px,7vw,84px);aspect-ratio:1;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#C8A046,#e0be63);color:#0B2545;font-weight:800;font-size:clamp(22px,3.4vw,38px);margin-bottom:22px}
+.slide.cover .s-company{color:#C8A046;font-size:34px;font-weight:700;margin-top:18px}
+.slide.cover .s-sub{color:#dfe6f2;font-size:19px;margin-top:14px}
+.slide.cover .s-foot{color:#8fa6c4;font-size:14px;margin-top:34px}
+.badge{width:84px;aspect-ratio:1;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#C8A046,#e0be63);color:#0B2545;font-weight:800;font-size:38px;margin-bottom:22px}
 .s-kv{display:grid;grid-template-columns:1fr 1fr;gap:14px 34px}
 .s-kv>div{display:flex;flex-direction:column;gap:4px;border-left:3px solid #C8A046;padding-left:14px}
-.s-kv span{color:#6b7a90;font-size:clamp(11px,1.4vw,14px)}
-.s-kv b{color:#0B2545;font-size:clamp(14px,1.9vw,21px);font-weight:700}
+.s-kv span{color:#6b7a90;font-size:14px}
+.s-kv b{color:#0B2545;font-size:21px;font-weight:700}
 .s-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .stat{background:#f2f5fa;border-radius:14px;padding:18px 16px;text-align:center;border-top:4px solid #0B2545}
-.stat b{display:block;font-size:clamp(26px,4.4vw,46px);color:#0B2545;line-height:1}
-.stat span{color:#6b7a90;font-size:clamp(10px,1.3vw,14px);margin-top:8px;display:block}
+.stat b{display:block;font-size:46px;color:#0B2545;line-height:1}
+.stat span{color:#6b7a90;font-size:14px;margin-top:8px;display:block}
 .stat.hi{border-top-color:#c0392b}.stat.hi b{color:#c0392b}
 .stat.warn{border-top-color:#C8A046}.stat.warn b{color:#b8860b}
-.s-tbl{width:100%;border-collapse:collapse;font-size:clamp(12px,1.6vw,18px)}
+.s-tbl{width:100%;border-collapse:collapse;font-size:18px}
 .s-tbl th{background:#0B2545;color:#fff;text-align:left;padding:10px 14px}
 .s-tbl td{padding:9px 14px;border-bottom:1px solid #e3e8f0}
 .rb{font-weight:700;padding:3px 12px;border-radius:20px;font-size:.82em;white-space:nowrap}
 .rb.h{background:#fbe6e2;color:#c0392b}.rb.vh{background:#7a1420;color:#fff}.rb.u{background:#efe9f5;color:#6a4a86}.rb.m{background:#fdf1dd;color:#c9820a}.rb.l{background:#e7f3ec;color:#2e7d54}.rb.a{background:#eef1f6;color:#516079}
-.s-more{color:#6b7a90;margin-top:14px;font-size:clamp(11px,1.4vw,15px)}
+.s-more{color:#6b7a90;margin-top:14px;font-size:15px}
 .s-chips{display:flex;flex-wrap:wrap;gap:10px}
-.chip{background:#0B2545;color:#fff;padding:8px 16px;border-radius:24px;font-size:clamp(12px,1.6vw,17px);font-weight:600}
-.s-note,.s-body{color:#3a4657;font-size:clamp(13px,1.8vw,20px);line-height:1.6;margin-top:12px}
+.chip{background:#0B2545;color:#fff;padding:8px 16px;border-radius:24px;font-size:17px;font-weight:600}
+.s-note,.s-body{color:#3a4657;font-size:20px;line-height:1.6;margin-top:12px}
 .slide.rec .s-body{background:#f2f5fa;border-left:5px solid #C8A046;padding:18px 22px;border-radius:0 12px 12px 0;overflow:hidden;max-height:70%}
-.s-empty{color:#8a97a8;font-size:clamp(14px,2vw,20px);font-style:italic}
+.s-empty{color:#8a97a8;font-size:20px;font-style:italic}
 .s-poster{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;width:100%;margin-top:4px}
 .s-poster svg{height:100%;width:auto;max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 4px 18px rgba(11,37,69,.12)}
 /* พื้นที่ภาพ = เติมส่วนที่เหลือของสไลด์ (flex:1) → ยึดขนาดสไลด์จริง ไม่ผูก viewport กันตกขอบทุกจอ */
 .s-photos{display:flex;flex:1;min-height:0;width:100%;gap:18px;margin-top:4px;justify-content:center;align-items:stretch}
 .s-photo{margin:0;background:#eef2f8;border-radius:10px;overflow:hidden;border:1px solid #e3e8f0;display:flex;flex-direction:column;min-height:0}
 .s-photo img{width:100%;flex:1;min-height:0;object-fit:contain;display:block}
-.s-photo figcaption{flex:none;font-size:clamp(11px,1.4vw,15px);color:#3a4657;padding:7px 12px;line-height:1.3;text-align:center}
+.s-photo figcaption{flex:none;font-size:15px;color:#3a4657;padding:7px 12px;line-height:1.3;text-align:center}
 /* 1 ภาพ/หน้า (แนวนอน หรือแนวตั้งเดี่ยว) — ใหญ่ กึ่งกลาง */
 .s-photos.one .s-photo{max-width:90%}
 .s-photos.one.port .s-photo{max-width:56%}
@@ -3260,8 +3363,8 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun','Noto Sans SC','
 @media print{
   @page{size:338.67mm 190.5mm;margin:0}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  html,body{background:#fff!important;display:block!important;padding:0!important;margin:0!important;min-height:0}
-  .deck{width:338.67mm!important;aspect-ratio:auto!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;background:none!important}
+  html,body{background:#fff!important;display:block!important;padding:0!important;margin:0!important;min-height:0;height:auto!important;overflow:visible!important}
+  .deck{width:338.67mm!important;height:auto!important;aspect-ratio:auto!important;transform:none!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;background:none!important}
   .slide{position:relative!important;inset:auto!important;display:flex!important;width:338.67mm;height:190.5mm;page-break-after:always;break-after:page;animation:none!important;overflow:hidden}
   .slide:last-child{page-break-after:auto;break-after:auto}
   .nav,.dots{display:none!important}
@@ -3291,8 +3394,11 @@ function renderSlideOpts(){
   el.innerHTML=`<div class="slidelangbar"><span class="langseg"><button class="langbtn${SLIDE_LANG==='th'?' on':''}" onclick="setSlideLang('th')">ไทย</button><button class="langbtn${SLIDE_LANG==='zh'?' on':''}" onclick="setSlideLang('zh')">中文</button></span>${SLIDE_LANG==='zh'?`<span class="slidelanghint">แปลหัวข้อ + ใช้คำแปลที่บันทึกไว้ (จัดการคำแปลในหน้ารายงาน → 译)</span>`:''}</div>`+
     `<details class="slideopts"><summary>เลือกหัวข้อที่จะขึ้นในไฟล์นำเสนอ (${SLIDE_SECTIONS.filter(s=>SO(s[0])).length}/${SLIDE_SECTIONS.length})</summary>`+
     `<div class="slideopts-grid">`+SLIDE_SECTIONS.map(s=>`<label><input type="checkbox" ${SO(s[0])?'checked':''} onchange="toggleSlideOpt('${s[0]}',this.checked)"> ${esc(s[1])}</label>`).join('')+
-    `<div class="slideopts-act"><button class="btn ghost sm" onclick="allSlideOpts(true)">เลือกทั้งหมด</button><button class="btn ghost sm" onclick="allSlideOpts(false)">ไม่เลือกเลย</button></div></div></details>`;
+    `<div class="slideopts-act"><button class="btn ghost sm" onclick="allSlideOpts(true)">เลือกทั้งหมด</button><button class="btn ghost sm" onclick="allSlideOpts(false)">ไม่เลือกเลย</button></div></div>`+
+    `<label class="slideopts-mode" style="display:flex;align-items:center;gap:7px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px"><input type="checkbox" ${SOhaz()?'checked':''} onchange="toggleHazPerSlide(this.checked)"> แยกสไลด์ทีละสิ่งคุกคาม (Hazard ละหน้า · แสดงรูปประกอบ)</label>`+
+    `</details>`;
 }
+function toggleHazPerSlide(on){ S.slideOpts=S.slideOpts||{}; if(on) S.slideOpts.hazPerSlide=true; else delete S.slideOpts.hazPerSlide; touch(); bxFull(); refreshSlides(); }
 function toggleSlideOpt(k,on){ S.slideOpts=S.slideOpts||{}; if(on) delete S.slideOpts[k]; else S.slideOpts[k]=false; touch(); bxFull(); refreshSlides(); }
 function allSlideOpts(on){ S.slideOpts=S.slideOpts||{}; if(on){ S.slideOpts={}; } else { SLIDE_SECTIONS.forEach(s=>S.slideOpts[s[0]]=false); } touch(); bxFull(); refreshSlides(); }
 function refreshSlides(){ renderSlideOpts(); const fr=document.getElementById('slideFrame'); if(fr) fr.srcdoc=standaloneSlides(); }
@@ -3690,7 +3796,7 @@ function applyRemote(p){
   if(!p) return;
   CB.applying=true;
   try{
-    if(p.k==='full'){ if(p.state){ const keep={}; (S.depts||[]).forEach(d=>{ if(d.photos&&d.photos.length) keep[d.id]=d.photos; }); (p.state.depts||[]).forEach(d=>{ if(!d.photos&&keep[d.id]) d.photos=keep[d.id]; }); S=p.state; syncHealth(S); renderAll(); save(); } }
+    if(p.k==='full'){ if(p.state){ const keep={},keepH={}; (S.depts||[]).forEach(d=>{ if(d.photos&&d.photos.length) keep[d.id]=d.photos; (d.hazards||[]).forEach(h=>{ if(h.photos&&h.photos.length) keepH[h.id]=h.photos; }); }); (p.state.depts||[]).forEach(d=>{ if(!d.photos&&keep[d.id]) d.photos=keep[d.id]; (d.hazards||[]).forEach(h=>{ if(!h.photos&&keepH[h.id]) h.photos=keepH[h.id]; }); }); S=p.state; syncHealth(S); renderAll(); save(); } }
     else if(p.k==='g'){ S.general[p.path]=p.v; setWidget('g:'+p.path,p.v); save(); }
     else if(p.k==='d'){ const d=findDept(p.did); if(d){ d[p.key]=p.v; setWidget('d:'+p.did+':'+p.key,p.v);
         if(p.key==='name'){ const b=document.querySelector('.dept[data-d="'+p.did+'"] .dt b'); if(b) b.textContent=p.v||'(ไม่มีชื่อแผนก)'; } save(); } }
