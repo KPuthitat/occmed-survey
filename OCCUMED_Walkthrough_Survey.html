@@ -2829,7 +2829,8 @@ function buildSlides(){
     <div class="s-foot">กลุ่มงานอาชีวเวชศาสตร์</div>`});
 
   // 2) ข้อมูลทั่วไป — แตกเป็นหลายหัวข้อ
-  const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n-1)+'…':s;};
+  /* แสดงข้อความเต็ม ไม่ตัดอัตโนมัติ (ตามที่ผู้ใช้ต้องการ) — คงพารามิเตอร์ n ไว้เพื่อไม่กระทบจุดเรียกใช้เดิม */
+  const cut=(s,n)=>String(s||'');
   const nlines=v=>String(v||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
   // 01 · ข้อมูลบริษัท
   if(SO('company')) slides.push({html:`
