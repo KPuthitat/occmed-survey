@@ -75,6 +75,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .tbtn:hover{background:rgba(255,255,255,.09);color:#fff}
 .tbtn.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700}
 .tbtn.gold:hover{background:var(--gold-lt)}
+.tbback{flex:0 0 auto;background:none;font:inherit;cursor:pointer}
 .savedot{font-size:11px;color:#9fb3cc;display:flex;align-items:center;gap:5px}
 .savedot i{width:7px;height:7px;border-radius:50%;background:#3ecb7a;display:inline-block}
 /* toolbar overflow menu (มือถือ) */
@@ -595,6 +596,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 </div>
 
 <div class="topbar">
+  <button class="tbtn tbback" onclick="showLanding()" title="กลับหน้าหลัก / เปลี่ยนโปรเจคต์" aria-label="กลับหน้าหลัก">←<span class="lbl"> หน้าหลัก</span></button>
   <div class="brand" style="cursor:pointer" onclick="showLanding()" title="หน้าแรก / เปลี่ยนห้อง">
     <div class="t">
       <b>ระบบเดินสำรวจสถานประกอบการ</b>
