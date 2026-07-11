@@ -598,7 +598,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 </div>
 
 <div class="topbar">
-  <button class="tbtn tbback" onclick="showLanding()" title="กลับหน้าหลัก / เปลี่ยนโปรเจคต์" aria-label="กลับหน้าหลัก"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg></button>
+  <button class="tbtn tbback" onclick="backHome()" title="บันทึกแล้วกลับหน้าหลัก / เปลี่ยนโปรเจคต์" aria-label="บันทึกแล้วกลับหน้าหลัก"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg></button>
   <div class="brand" style="cursor:pointer" onclick="showLanding()" title="หน้าแรก / เปลี่ยนห้อง">
     <div class="t">
       <b>ระบบเดินสำรวจสถานประกอบการ</b>
@@ -3934,6 +3934,7 @@ document.getElementById('collabModal').addEventListener('click',e=>{ if(e.target
 function lval(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
 function showLanding(){ const el=document.getElementById('landing'); if(!el) return; renderLandingRooms(); prefillLanding(); landingMode(landingModeCur); el.classList.add('show'); document.body.style.overflow='hidden'; }
 function hideLanding(){ const el=document.getElementById('landing'); if(!el) return; el.classList.remove('show'); document.body.style.overflow=''; }
+async function backHome(){ try{ await hardSave(); }catch(e){} showLanding(); }   /* ปุ่มบ้าน: เซฟก่อนแล้วค่อยกลับหน้าหลัก */
 function prefillLanding(){
   const lr=lastRoom(); if(!lr) return;
   const id=document.getElementById('lId'), nm=document.getElementById('lName'), rl=document.getElementById('lRole');
