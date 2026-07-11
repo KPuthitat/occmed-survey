@@ -2911,7 +2911,7 @@ function buildSlides(){
     slides.push({html:`
       <div class="s-kick">06 · ผลการตรวจวัด</div>
       <h2 class="s-h2">ผลการตรวจวัดสิ่งคุกคาม (Hazard Monitoring)</h2>
-      <table class="s-tbl"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>วัดได้</th><th>มาตรฐาน</th><th>ผล</th></tr></thead><tbody>
+      <table class="s-tbl" style="font-size:15px;white-space:nowrap"><thead><tr><th>แผนก</th><th>สิ่งคุกคาม</th><th>วัดได้</th><th>มาตรฐาน</th><th>ผล</th></tr></thead><tbody>
       ${tm.map(x=>`<tr><td>${esc(x.d)}</td><td>${esc(x.h)}</td><td>${esc(x.m)} ${esc(x.u||'')}</td><td>${esc(x.s)||'—'}</td><td><span class="rb ${rbc(x.ev.c)}">${rbt(x.ev.c)}</span></td></tr>`).join('')}
       </tbody></table>${meas.length>8?`<div class="s-more">และอีก ${meas.length-8} รายการ</div>`:''}`});
   }
@@ -3111,7 +3111,7 @@ function buildSlides(){
     const bd='1px solid #cbd5e3';
     const DEPT_ROWS_PP=5, EXAM_COLS_PP=12;
     // หัวคอลัมน์ = ชื่อรายการตรวจ (แนวตั้ง เอียงซ้าย) · สูงคงที่ ชื่อยาวตัดขึ้นบรรทัดในแนวตั้ง กันตกขอบ
-    const vExam=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:7px 4px;text-align:center;min-width:28px;height:120px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:normal;max-height:108px;line-height:1.2;font-weight:600;font-size:.75em;margin:0 auto">${esc(t)}</div></th>`;
+    const vExam=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:7px 4px;text-align:center;min-width:26px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:nowrap;line-height:1.15;font-weight:600;font-size:.72em;margin:0 auto">${esc(t)}</div></th>`;
     // ตัด prefix ชื่อกลุ่มออกจากชื่อแถว (h2 บอกกลุ่มอยู่แล้ว) — ไม่แตะชื่อจริงที่เก็บไว้
     const stripGrp=(name,gl)=>{ if(!gl) return name; const re=new RegExp('^\\s*'+gl.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+'\\s*[-–—·:]+\\s*'); return String(name||'').replace(re,''); };
     const buildHcTable=(map,deptRows,examCols,gl)=>`<table style="border-collapse:collapse;font-size:.9em;margin:6px auto 0">
