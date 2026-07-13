@@ -2897,6 +2897,86 @@ function slidePaginate(txt, rowsMax, cpl){
   if(cur.length) chunks.push(cur.join('\n'));
   return chunks.length?chunks:[''];
 }
+/* ============================================================
+   HEALTH RESULTS → DONUT DASHBOARD
+   อ่านโน้ตผลตรวจสุขภาพ (S.notes.health) แล้วแปลงเป็นชุดโดนัท (1 วง/รายการ)
+   รูปแบบที่รองรับ: "• ชื่อรายการ (N คน): ปกติ X (%) · ผิดปกติ Y (%) …"
+   และแบบกลุ่มย่อย: "• กลุ่ม (N คน): TestA ผิดปกติ x (%) · TestB ปกติ y (%) …"
+   ============================================================ */
+function healthSegNums(sg){
+  const s=String(sg);
+  let pct=null; const pm=s.match(/([\d.]+)\s*%/); if(pm) pct=parseFloat(pm[1]);
+  let s2=s.replace(/\([^)]*\)/g,' ').replace(/[\d.]+\s*%/g,' ');
+  const eq=s2.split(/[=＝]/); let tail=eq.length>1?eq[eq.length-1]:s2;
+  tail=tail.replace(/[<>≥≤]?\s*\d+(?:\.\d+)?(?:\s*[-–\/]\s*\d+(?:\.\d+)?)+/g,' ');   // ตัดช่วงตัวเลข เช่น 121-139/81-89
+  const cm=tail.replace(/[<>≥≤]/g,' ').match(/-?\d+(?:\.\d+)?/);
+  return {count:cm?parseFloat(cm[0]):null, pct};
+}
+function healthLabel(raw,stripStatus){
+  let s=String(raw).replace(/\([^)]*\)/g,' ').split(/[=＝<>≥≤]/)[0];
+  s=s.replace(/\s*\d[\d.\/\-–]*.*$/,'').trim();
+  if(stripStatus) s=s.replace(/(ผิดปกติ|ปกติ|เสี่ยง)\s*$/,'').trim();
+  return s||'—';
+}
+function healthColor(lab){
+  const s=String(lab);
+  if(/สูงมาก|อันตราย|รุนแรงมาก/.test(s)) return '#7a1420';
+  if(/เสี่ยง|น้ำหนักเกิน|เฝ้าระวัง|risk/i.test(s)) return '#c9820a';
+  if(/ผิดปกติ|เกิน|โรคอ้วน|abnormal/i.test(s)) return '#c0392b';
+  if(/สูง/.test(s)) return '#d1495b';
+  if(/ปกติ|normal/i.test(s)) return '#2e7d54';
+  return '#3b5b86';
+}
+function parseHealthDonuts(text){
+  text=String(text||'').replace(/\r/g,''); if(!text.trim()) return [];
+  const donuts=[];
+  text.split('•').forEach(bullet=>{ try{
+    const ci=bullet.indexOf(':'); if(ci<0) return;
+    let label=bullet.slice(0,ci).trim();
+    const body=bullet.slice(ci+1).split('\n')[0].split('→')[0].trim();
+    if(!body) return;
+    let N=null; const nm=label.match(/\((\d+)\s*คน\)/); if(nm) N=parseInt(nm[1]);
+    label=label.replace(/\s*\(\d+\s*คน\)/,'').trim();
+    const segs=body.split('·').map(x=>x.split('—')[0].trim()).filter(Boolean);
+    if(!segs.length) return;
+    const parsed=segs.map(sg=>Object.assign({raw:sg},healthSegNums(sg))).filter(p=>p.count!=null||p.pct!=null);
+    if(!parsed.length) return;
+    if(N==null){ const p0=parsed.find(p=>p.count!=null&&p.pct); if(p0) N=Math.round(p0.count/p0.pct*100); }
+    parsed.forEach(p=>{ if(p.count==null&&p.pct!=null&&N!=null) p.count=Math.round(N*p.pct/100); });
+    const sum=parsed.reduce((a,p)=>a+(p.count||0),0);
+    if(N!=null && Math.abs(sum-N)<=1){
+      const slices=parsed.map(p=>{ const l=healthLabel(p.raw,false); return {label:l,value:p.count||0,pct:p.pct,color:healthColor(l)}; });
+      donuts.push({title:label,total:N,slices});
+    } else {
+      parsed.forEach(p=>{
+        const isNormal=/ปกติ/.test(p.raw)&&!/ผิดปกติ/.test(p.raw);
+        const cnt=p.count||0;
+        const nn=(N!=null)?N:(p.pct?Math.round(cnt/p.pct*100):cnt);
+        const nor=isNormal?cnt:Math.max(0,nn-cnt);
+        const abn=isNormal?Math.max(0,nn-cnt):cnt;
+        const title=(parsed.length===1)?label:healthLabel(p.raw,true);
+        donuts.push({title,total:nn,slices:[{label:'ปกติ',value:nor,color:'#2e7d54'},{label:'ผิดปกติ',value:abn,color:'#c0392b'}]});
+      });
+    }
+  }catch(e){} });
+  return donuts;
+}
+function donutSVG(spec,size){
+  const slices=(spec.slices||[]).filter(s=>(s.value||0)>0);
+  const total=slices.reduce((a,s)=>a+(s.value||0),0)||1;
+  const cx=size/2,cy=size/2,R=size*0.46,r=size*0.28;
+  let ang=-Math.PI/2, paths='';
+  if(slices.length===1){
+    paths=`<circle cx="${cx}" cy="${cy}" r="${((R+r)/2).toFixed(2)}" fill="none" stroke="${slices[0].color}" stroke-width="${(R-r).toFixed(2)}"/>`;
+  } else {
+    slices.forEach(s=>{ const frac=(s.value||0)/total; const a0=ang,a1=ang+frac*2*Math.PI; ang=a1; const lg=(a1-a0)>Math.PI?1:0;
+      const x0=cx+R*Math.cos(a0),y0=cy+R*Math.sin(a0),x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1);
+      const xi1=cx+r*Math.cos(a1),yi1=cy+r*Math.sin(a1),xi0=cx+r*Math.cos(a0),yi0=cy+r*Math.sin(a0);
+      paths+=`<path d="M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R.toFixed(2)} ${R.toFixed(2)} 0 ${lg} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} L ${xi1.toFixed(2)} ${yi1.toFixed(2)} A ${r.toFixed(2)} ${r.toFixed(2)} 0 ${lg} 0 ${xi0.toFixed(2)} ${yi0.toFixed(2)} Z" fill="${s.color}"/>`;
+    });
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="${(size*0.26).toFixed(0)}" font-weight="800" fill="#0B2545">${total}</text><text x="${cx}" y="${(cy+size*0.19).toFixed(0)}" text-anchor="middle" font-size="${(size*0.11).toFixed(0)}" fill="#6b7a90">คน</text></svg>`;
+}
 function buildSlides(){
   const g=S.general, c=S.conclusion, f=highRiskFindings();
   const uniq=a=>[...new Set(a)];
@@ -3266,9 +3346,22 @@ function buildSlides(){
     });
   }
 
-  // 8) บันทึกภาคสนาม
+  // 8) ผลตรวจสุขภาพ (Dashboard โดนัท) + บันทึกภาคสนาม
   const nt=S.notes||{};
-  const noteRows=['general','depts','risk','health','summary'].map(k=>[NOTE_LABELS[k],nt[k]]).filter(x=>x[1]&&x[1].trim());
+  const healthDonuts=(nt.health&&nt.health.trim())?parseHealthDonuts(nt.health):[];
+  const useHealthDash=healthDonuts.length>0;
+  if(useHealthDash && SO('notes')){
+    const PER=6; const dpages=[]; for(let i=0;i<healthDonuts.length;i+=PER) dpages.push(healthDonuts.slice(i,i+PER));
+    dpages.forEach((pg,pi)=>{ slides.push({cls:'top',html:`
+      <div class="s-kick">11 · ผลตรวจสุขภาพ (Dashboard)${dpages.length>1?` · หน้า ${pi+1}/${dpages.length}`:''}</div>
+      <h2 class="s-h2">สรุปผลตรวจสุขภาพ${pi>0?' <span style="font-size:.5em;color:#6b7a90;font-weight:400">(ต่อ)</span>':''}</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:16px 2%;width:100%;align-content:flex-start">${pg.map(spec=>`<div style="flex:0 0 31.3%;max-width:31.3%;display:flex;flex-direction:column;align-items:center;text-align:center">
+        <div style="font-weight:700;color:#0B2545;font-size:14px;line-height:1.15;margin-bottom:2px;min-height:33px;display:flex;align-items:flex-end;justify-content:center">${esc(spec.title)}</div>
+        ${donutSVG(spec,116)}
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2px 9px;margin-top:4px">${spec.slices.map(s=>`<span style="font-size:11px;color:#3a4657;white-space:nowrap"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${s.color};vertical-align:middle;margin-right:3px"></span>${esc(s.label)} ${s.value}${s.pct!=null?` (${s.pct}%)`:''}</span>`).join('')}</div>
+      </div>`).join('')}</div>`}); });
+  }
+  const noteRows=(useHealthDash?['general','depts','risk','summary']:['general','depts','risk','health','summary']).map(k=>[NOTE_LABELS[k],nt[k]]).filter(x=>x[1]&&x[1].trim());
   if(noteRows.length && SO('notes')){
     // แบ่งหน้าเพื่อไม่ให้ข้อความถูกตัด — โน้ตยาวแตกเป็นหลายท่อน (คงหัวข้อ) แล้วจัดลงหน้าตามงบตัวอักษร
     const NLIM=520, NPAGE=600;
