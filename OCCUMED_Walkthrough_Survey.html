@@ -3455,8 +3455,9 @@ function buildSlides(){
         <h2 class="s-h2">บทสรุปสำหรับผู้บริหาร</h2>
         <div class="s-empty">ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”</div>`});
     } else {
-      // แบ่งหน้าแบบอิงบรรทัด — เคารพย่อหน้า/การเว้นบรรทัดที่พิมพ์เอง + ดันข้อ (1)(2)… ขึ้นบรรทัดใหม่ กันตกขอบ
-      const pgs=slidePaginate(execTxt,13,68); const np=pgs.length;
+      // ขึ้นสไลด์ใหม่ทุกย่อหน้า (\n\n) — เคารพการแบ่งย่อหน้าที่พิมพ์เอง · ย่อหน้ายาวค่อยแบ่งหน้าย่อย · ในย่อหน้าไม่มีบรรทัดว่างเกิน + ข้อ (1)(2)… อยู่ด้วยกัน
+      const _paras=String(execTxt).split(/\n[ \t]*\n+/).map(s=>s.trim()).filter(Boolean);
+      const pgs=[]; _paras.forEach(p=>slidePaginate(p,13,68).forEach(ch=>pgs.push(ch))); const np=pgs.length;
       pgs.forEach((body,pi)=>{
         slides.push({cls:'rec',html:`
           <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
