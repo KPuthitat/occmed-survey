@@ -374,6 +374,19 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .hz-tool:hover{background:var(--line2)}
 .hz-tool:disabled{opacity:.3;cursor:default}
 .hz-tool.on{background:var(--gold,#C8A046);border-color:var(--gold,#C8A046);color:#fff}
+/* Dashboard สรุปแผนการตรวจสุขภาพ (หน้าตรวจสุขภาพ) */
+.hdash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:10px;margin-bottom:12px}
+.hstat{background:var(--line2);border-radius:12px;padding:13px 10px;text-align:center;border-top:3px solid var(--navy)}
+.hstat b{display:block;font-size:28px;color:var(--navy);line-height:1;font-weight:800}
+.hstat span{color:var(--navy2);font-size:11.5px;margin-top:6px;display:block;line-height:1.2}
+.hstat.gold{border-top-color:var(--gold)}.hstat.gold b{color:var(--gold-dk)}
+.hbar-row{display:flex;align-items:center;gap:9px;margin:5px 0;font-size:12.5px}
+.hbar-lbl{width:158px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.hbar-track{flex:1;min-width:60px;background:var(--line2);border-radius:6px;height:15px;overflow:hidden;display:block}
+.hbar-fill{display:block;background:var(--navy);height:100%;border-radius:6px;min-width:2px}
+.hbar-fill.gold{background:linear-gradient(90deg,var(--gold),var(--gold-dk))}
+.hbar-val{width:86px;flex:none;text-align:right;color:var(--navy2);font-weight:600;font-size:11.5px}
+@media(max-width:520px){.hbar-lbl{width:98px}.hbar-val{width:66px}}
 .hz-photos{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 4px}
 .hz-photo{position:relative;width:78px}
 .hz-photo img{width:78px;height:58px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block;background:var(--line2)}
@@ -1625,6 +1638,32 @@ function refreshRiskBadge(hid){
 /* ============================================================
    PANEL 3 — HEALTH SURVEILLANCE
    ============================================================ */
+/* Dashboard สรุป "แผนการตรวจสุขภาพ" จากตารางที่ติ๊กไว้ (ไม่มีข้อมูลผลตรวจจริง จึงสรุปเป็นความครอบคลุมของแผน) */
+function healthDashboardCard(){
+  const depts=S.depts||[]; if(!depts.length) return '';
+  const per=S.health||{}, pre=S.healthPre||{}, exams=allExams();
+  const usedIn=(map,e)=>depts.filter(d=>map[d.id]&&map[d.id][e]).length;
+  const usedPer=exams.filter(e=>usedIn(per,e)>0), usedPre=exams.filter(e=>usedIn(pre,e)>0);
+  let h=`<div class="card"><div class="hd"><span class="eyebrow">Dashboard · สรุปแผนการตรวจสุขภาพ</span></div><div class="bd">`;
+  if(!usedPer.length && !usedPre.length){ return h+`<div class="empty">ยังไม่ได้เลือกรายการตรวจ — ติ๊กในตารางด้านล่างเพื่อดูสรุปเป็น Dashboard</div></div></div>`; }
+  const grp=EXAM_GROUPS.map(([gk,gl])=>[gl, usedPer.filter(e=>examGroupOf(e)===gk).length]);
+  const tiles=[['แผนกที่สำรวจ',depts.length,''],['รายการตรวจ (ตามระยะ)',usedPer.length,'gold'],['รายการตรวจ (ก่อนเริ่มงาน)',usedPre.length,'']]
+    .concat(grp.map(([gl,n])=>[gl,n,'']));
+  h+=`<div class="hdash-stats">${tiles.map(t=>`<div class="hstat${t[2]?' '+t[2]:''}"><b>${t[1]}</b><span>${esc(t[0])}</span></div>`).join('')}</div>`;
+  // ความครอบคลุมต่อรายการตรวจ (ตามระยะ) — กี่แผนกต้องตรวจ
+  const cov=usedPer.map(e=>({e,n:usedIn(per,e)})).sort((a,b)=>b.n-a.n);
+  if(cov.length){ const mx=Math.max(1,...cov.map(x=>x.n));
+    h+=`<div class="subhd" style="margin-top:4px">รายการตรวจ (ตามระยะ) · เรียงตามจำนวนแผนกที่ต้องตรวจ</div>`;
+    h+=cov.map(x=>`<div class="hbar-row"><span class="hbar-lbl" title="${esc(x.e)}">${esc(x.e)}</span><span class="hbar-track"><span class="hbar-fill" style="width:${Math.round(x.n/mx*100)}%"></span></span><span class="hbar-val">${x.n}/${depts.length} แผนก</span></div>`).join('');
+  }
+  // ภาระการตรวจต่อแผนก — จำนวนรายการตรวจ (ตามระยะ)
+  const load=depts.map(d=>({name:d.name||'(ไม่มีชื่อ)',n:exams.filter(e=>per[d.id]&&per[d.id][e]).length})).sort((a,b)=>b.n-a.n);
+  if(load.some(x=>x.n)){ const mx=Math.max(1,...load.map(x=>x.n));
+    h+=`<div class="subhd" style="margin-top:14px">ภาระการตรวจต่อแผนก · จำนวนรายการตรวจ (ตามระยะ)</div>`;
+    h+=load.map(x=>`<div class="hbar-row"><span class="hbar-lbl" title="${esc(x.name)}">${esc(x.name)}</span><span class="hbar-track"><span class="hbar-fill gold" style="width:${Math.round(x.n/mx*100)}%"></span></span><span class="hbar-val">${x.n} รายการ</span></div>`).join('');
+  }
+  return h+`</div></div>`;
+}
 function renderHealth(){
   syncHealth(S);
   const el=document.getElementById('p3');
@@ -1635,6 +1674,8 @@ function renderHealth(){
     <p>เลือกรายการตรวจสุขภาพที่เหมาะสมกับปัจจัยเสี่ยงของแต่ละแผนก ตารางนี้จะแสดงเป็น “ตารางการตรวจสุขภาพตามปัจจัยเสี่ยง” ในรายงาน</p>
   </div>`;
   if(!S.depts.length){ el.innerHTML=html+`<div class="card"><div class="empty">ยังไม่มีแผนก</div></div>`; mountNotes('p3','health'); return; }
+
+  html+=healthDashboardCard();
 
   // ตารางแนะนำการตรวจสุขภาพตามสิ่งคุกคามที่พบ (ปัจจัยเสี่ยง) — ดึงจากฐานความรู้
   const kbH=kbForSurvey();
@@ -1901,7 +1942,7 @@ function renderSummary(){
     <div class="field"><label>1. ความร้อน (Heat)</label><textarea data-sync="c:heat" oninput="setC('heat',this.value)" placeholder="เช่น ควบคุมตามหลัก Hierarchy of control, ตรวจ Fit for work ...">${esc(c.heat)}</textarea></div>
     <div class="field" style="margin-top:11px"><label>2. เสียงดัง (Noise)</label><textarea data-sync="c:noise" oninput="setC('noise',this.value)" placeholder="เช่น จัดทำโครงการอนุรักษ์การได้ยิน, ใช้ปลั๊กอุดหู NRR ≥ 19 ...">${esc(c.noise)}</textarea></div>
     <div class="field" style="margin-top:11px"><label>3. สารเคมีอันตราย (Chemical)</label><textarea data-sync="c:chem" oninput="setC('chem',this.value)" placeholder="เช่น ตรวจวัดปริมาณ silica dust ในอากาศ ...">${esc(c.chem)}</textarea></div>
-    ${conclItems().map((it,i)=>`<div class="field" style="margin-top:11px" data-citem="${it.id}"><label style="display:flex;align-items:center;gap:8px"><span style="white-space:nowrap">${i+4}.</span><input class="citem-label" data-sync="citemL:${it.id}" value="${esc(it.label)}" placeholder="หัวข้อข้อเสนอแนะ เช่น การยศาสตร์ (Ergonomics)" oninput="setConclItemLabel('${it.id}',this.value)" style="flex:1;font-weight:600;padding:7px 10px"><button type="button" class="btn ghost sm" onclick="delConclItem('${it.id}')" title="ลบข้อเสนอแนะนี้">✕</button></label><textarea data-sync="citem:${it.id}" oninput="setConclItemText('${it.id}',this.value)" placeholder="รายละเอียดข้อเสนอแนะ ...">${esc(it.text)}</textarea></div>`).join('')}
+    ${(()=>{const items=conclItems();return items.map((it,i)=>`<div class="field" style="margin-top:11px" data-citem="${it.id}"><label style="display:flex;align-items:center;gap:8px"><span style="white-space:nowrap">${i+4}.</span><input class="citem-label" data-sync="citemL:${it.id}" value="${esc(it.label)}" placeholder="หัวข้อข้อเสนอแนะ เช่น การยศาสตร์ (Ergonomics)" oninput="setConclItemLabel('${it.id}',this.value)" style="flex:1;font-weight:600;padding:7px 10px"><button type="button" class="hz-tool" title="เลื่อนขึ้น (สำคัญกว่า)" ${i===0?'disabled':''} onclick="conclItemMove('${it.id}',-1)">▲</button><button type="button" class="hz-tool" title="เลื่อนลง" ${i===items.length-1?'disabled':''} onclick="conclItemMove('${it.id}',1)">▼</button><button type="button" class="btn ghost sm" onclick="delConclItem('${it.id}')" title="ลบข้อเสนอแนะนี้">✕</button></label><textarea data-sync="citem:${it.id}" oninput="setConclItemText('${it.id}',this.value)" placeholder="รายละเอียดข้อเสนอแนะ ...">${esc(it.text)}</textarea></div>`).join('');})()}
     <div style="margin-top:11px"><button type="button" class="btn ghost sm" onclick="addConclItem()">＋ เพิ่มข้อเสนอแนะ</button></div>
     <div class="field" style="margin-top:11px"><label>ข้อเสนอแนะเพิ่มเติม</label><textarea data-sync="c:extra" oninput="setC('extra',this.value)">${esc(c.extra)}</textarea></div>
   </div></div>
@@ -1919,6 +1960,7 @@ function setC(k,v){S.conclusion[k]=v;touch(); bx({k:'c',key:k,v})}
 function conclItems(){ S.conclusion.items=S.conclusion.items||[]; return S.conclusion.items; }
 function addConclItem(){ const items=conclItems(); const id='ci'+Date.now().toString(36)+Math.floor(Math.random()*1000); items.push({id,label:'',text:''}); renderSummary(); touch(); bxFull(); const inp=document.querySelector('[data-citem="'+id+'"] .citem-label'); if(inp) inp.focus(); }
 function delConclItem(id){ S.conclusion.items=conclItems().filter(x=>x.id!==id); renderSummary(); touch(); bxFull(); }
+function conclItemMove(id,dir){ const items=conclItems(); const i=items.findIndex(x=>x.id===id); if(i<0) return; const j=i+dir; if(j<0||j>=items.length) return; const t=items[i]; items[i]=items[j]; items[j]=t; renderSummary(); touch(); bxFull(); }
 function setConclItemLabel(id,v){ const it=conclItems().find(x=>x.id===id); if(it){ it.label=v; touch(); bx({k:'citemL',id,v}); } }
 function setConclItemText(id,v){ const it=conclItems().find(x=>x.id===id); if(it){ it.text=v; touch(); bx({k:'citem',id,v}); } }
 function autoConclusion(){
