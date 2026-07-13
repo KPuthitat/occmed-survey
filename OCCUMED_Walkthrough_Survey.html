@@ -1939,9 +1939,9 @@ function renderSummary(){
   <div class="card kbcard"><div class="hd"><span class="eyebrow">สรุปเชิงคลินิก · อิงฐานความรู้ (Knowledge Base v1)</span></div><div class="bd">${buildKBInner()}</div></div>
 
   <div class="card"><div class="hd"><span class="eyebrow">ข้อเสนอแนะ</span><div class="sp"></div><button class="btn ghost sm" onclick="autoConclusion()">ร่างอัตโนมัติ</button></div><div class="bd">
-    <div class="field"><label>1. ความร้อน (Heat)</label><textarea data-sync="c:heat" oninput="setC('heat',this.value)" placeholder="เช่น ควบคุมตามหลัก Hierarchy of control, ตรวจ Fit for work ...">${esc(c.heat)}</textarea></div>
-    <div class="field" style="margin-top:11px"><label>2. เสียงดัง (Noise)</label><textarea data-sync="c:noise" oninput="setC('noise',this.value)" placeholder="เช่น จัดทำโครงการอนุรักษ์การได้ยิน, ใช้ปลั๊กอุดหู NRR ≥ 19 ...">${esc(c.noise)}</textarea></div>
-    <div class="field" style="margin-top:11px"><label>3. สารเคมีอันตราย (Chemical)</label><textarea data-sync="c:chem" oninput="setC('chem',this.value)" placeholder="เช่น ตรวจวัดปริมาณ silica dust ในอากาศ ...">${esc(c.chem)}</textarea></div>
+    <div class="field" data-cfix="heat"><label style="display:flex;align-items:center;gap:8px"><span style="white-space:nowrap">1.</span><input class="citem-label" data-sync="clabel:heat" value="${esc(conclLabel('heat','ความร้อน (Heat)'))}" placeholder="หัวข้อข้อเสนอแนะ" oninput="setConclLabel('heat',this.value)" style="flex:1;font-weight:600;padding:7px 10px"></label><textarea data-sync="c:heat" oninput="setC('heat',this.value)" placeholder="เช่น ควบคุมตามหลัก Hierarchy of control, ตรวจ Fit for work ...">${esc(c.heat)}</textarea></div>
+    <div class="field" style="margin-top:11px" data-cfix="noise"><label style="display:flex;align-items:center;gap:8px"><span style="white-space:nowrap">2.</span><input class="citem-label" data-sync="clabel:noise" value="${esc(conclLabel('noise','เสียงดัง (Noise)'))}" placeholder="หัวข้อข้อเสนอแนะ" oninput="setConclLabel('noise',this.value)" style="flex:1;font-weight:600;padding:7px 10px"></label><textarea data-sync="c:noise" oninput="setC('noise',this.value)" placeholder="เช่น จัดทำโครงการอนุรักษ์การได้ยิน, ใช้ปลั๊กอุดหู NRR ≥ 19 ...">${esc(c.noise)}</textarea></div>
+    <div class="field" style="margin-top:11px" data-cfix="chem"><label style="display:flex;align-items:center;gap:8px"><span style="white-space:nowrap">3.</span><input class="citem-label" data-sync="clabel:chem" value="${esc(conclLabel('chem','สารเคมีอันตราย (Chemical)'))}" placeholder="หัวข้อข้อเสนอแนะ" oninput="setConclLabel('chem',this.value)" style="flex:1;font-weight:600;padding:7px 10px"></label><textarea data-sync="c:chem" oninput="setC('chem',this.value)" placeholder="เช่น ตรวจวัดปริมาณ silica dust ในอากาศ ...">${esc(c.chem)}</textarea></div>
     ${(()=>{const items=conclItems();return items.map((it,i)=>`<div class="field" style="margin-top:11px" data-citem="${it.id}"><label style="display:flex;align-items:center;gap:8px"><span style="white-space:nowrap">${i+4}.</span><input class="citem-label" data-sync="citemL:${it.id}" value="${esc(it.label)}" placeholder="หัวข้อข้อเสนอแนะ เช่น การยศาสตร์ (Ergonomics)" oninput="setConclItemLabel('${it.id}',this.value)" style="flex:1;font-weight:600;padding:7px 10px"><button type="button" class="hz-tool" title="เลื่อนขึ้น (สำคัญกว่า)" ${i===0?'disabled':''} onclick="conclItemMove('${it.id}',-1)">▲</button><button type="button" class="hz-tool" title="เลื่อนลง" ${i===items.length-1?'disabled':''} onclick="conclItemMove('${it.id}',1)">▼</button><button type="button" class="btn ghost sm" onclick="delConclItem('${it.id}')" title="ลบข้อเสนอแนะนี้">✕</button></label><textarea data-sync="citem:${it.id}" oninput="setConclItemText('${it.id}',this.value)" placeholder="รายละเอียดข้อเสนอแนะ ...">${esc(it.text)}</textarea></div>`).join('');})()}
     <div style="margin-top:11px"><button type="button" class="btn ghost sm" onclick="addConclItem()">＋ เพิ่มข้อเสนอแนะ</button></div>
     <div class="field" style="margin-top:11px"><label>ข้อเสนอแนะเพิ่มเติม</label><textarea data-sync="c:extra" oninput="setC('extra',this.value)">${esc(c.extra)}</textarea></div>
@@ -1957,6 +1957,9 @@ function renderSummary(){
   mountNotes('p4','summary');
 }
 function setC(k,v){S.conclusion[k]=v;touch(); bx({k:'c',key:k,v})}
+/* หัวข้อข้อเสนอแนะ 3 อันแรก (heat/noise/chem) แก้ได้ — เก็บ label กำหนดเองใน conclusion.labels */
+function conclLabel(k,def){ const L=(S.conclusion&&S.conclusion.labels)||{}; return (L[k]&&L[k].trim())?L[k]:def; }
+function setConclLabel(k,v){ S.conclusion.labels=S.conclusion.labels||{}; if((v||'').trim()) S.conclusion.labels[k]=v; else delete S.conclusion.labels[k]; touch(); bx({k:'clabel',key:k,v}); }
 function conclItems(){ S.conclusion.items=S.conclusion.items||[]; return S.conclusion.items; }
 function addConclItem(){ const items=conclItems(); const id='ci'+Date.now().toString(36)+Math.floor(Math.random()*1000); items.push({id,label:'',text:''}); renderSummary(); touch(); bxFull(); const inp=document.querySelector('[data-citem="'+id+'"] .citem-label'); if(inp) inp.focus(); }
 function delConclItem(id){ S.conclusion.items=conclItems().filter(x=>x.id!==id); renderSummary(); touch(); bxFull(); }
@@ -2144,9 +2147,9 @@ function buildReport(){
   // --- สรุป ---
   const c=S.conclusion;
   h+=`<h2>◆ บทสรุปและข้อเสนอแนะ</h2>`;
-  if(c.heat) h+=`<h3>1. ความร้อน</h3><p>${esc(c.heat)}</p>`;
-  if(c.noise) h+=`<h3>2. เสียงดัง</h3><p>${esc(c.noise)}</p>`;
-  if(c.chem) h+=`<h3>3. สารเคมีอันตราย</h3><p>${esc(c.chem)}</p>`;
+  if(c.heat) h+=`<h3>1. ${esc(conclLabel('heat','ความร้อน'))}</h3><p>${esc(c.heat)}</p>`;
+  if(c.noise) h+=`<h3>2. ${esc(conclLabel('noise','เสียงดัง'))}</h3><p>${esc(c.noise)}</p>`;
+  if(c.chem) h+=`<h3>3. ${esc(conclLabel('chem','สารเคมีอันตราย'))}</h3><p>${esc(c.chem)}</p>`;
   const cItems=(c.items||[]).filter(it=>(it.label||'').trim()||(it.text||'').trim());
   cItems.forEach((it,i)=>{ h+=`<h3>${i+4}. ${esc(it.label)||'ข้อเสนอแนะ'}</h3><p>${esc(it.text)}</p>`; });
   if(c.extra) h+=`<h3>ข้อเสนอแนะเพิ่มเติม</h3><p>${esc(c.extra)}</p>`;
@@ -3382,7 +3385,7 @@ function buildSlides(){
   }
 
   // 9) ข้อเสนอแนะ (สไลด์ละหัวข้อ)
-  const recs=[['ความร้อน (Heat)',c.heat],['เสียงดัง (Noise)',c.noise],['สารเคมีอันตราย (Chemical)',c.chem]]
+  const recs=[[conclLabel('heat','ความร้อน (Heat)'),c.heat],[conclLabel('noise','เสียงดัง (Noise)'),c.noise],[conclLabel('chem','สารเคมีอันตราย (Chemical)'),c.chem]]
     .concat((c.items||[]).map(it=>[it.label||'ข้อเสนอแนะ',it.text]))
     .concat([['ข้อเสนอแนะเพิ่มเติม',c.extra]]).filter(x=>x[1]&&x[1].trim());
   if(SO('recommend')&&recs.length){
@@ -3994,6 +3997,7 @@ function applyRemote(p){
     else if(p.k==='c'){ S.conclusion[p.key]=p.v; setWidget('c:'+p.key,p.v); save(); }
     else if(p.k==='citem'){ const it=conclItems().find(x=>x.id===p.id); if(it){ it.text=p.v; setWidget('citem:'+p.id,p.v); } save(); }
     else if(p.k==='citemL'){ const it=conclItems().find(x=>x.id===p.id); if(it){ it.label=p.v; setWidget('citemL:'+p.id,p.v); } save(); }
+    else if(p.k==='clabel'){ S.conclusion.labels=S.conclusion.labels||{}; if((p.v||'').trim()) S.conclusion.labels[p.key]=p.v; else delete S.conclusion.labels[p.key]; setWidget('clabel:'+p.key,p.v); save(); }
     else if(p.k==='note'){ S.notes=S.notes||{}; S.notes[p.sec]=p.v; setWidget('note:'+p.sec,p.v); save(); }
     else if(p.k==='exec'){ S.execSummary=p.v; setWidget('exec',p.v); save(); }
     else if(p.k==='rssplan'){ const R=rssEnsure(); R.plan[p.type]=p.v; setWidget('rssplan:'+p.type,p.v); save(); }
