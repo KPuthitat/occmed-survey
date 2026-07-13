@@ -186,6 +186,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 /* เผื่อพื้นที่ให้ลูกศร dropdown ไม่ทับข้อความ + ตัดข้อความยาวด้วย ... */
 .htbl select{padding-right:26px;text-overflow:ellipsis;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%230B2545' stroke-width='1.6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
 .htbl .catcell{font-weight:700;color:var(--navy2);font-size:12px;min-width:104px;padding-right:4px}
+.htbl .stdcell{white-space:nowrap;min-width:140px}
+.htbl .stdcell input.stdmm{width:56px;min-width:0;display:inline-block;padding:7px 5px;text-align:center}
+.htbl .stdcell .stddash{margin:0 4px;color:var(--acc)}
 /* กันคำไทยตกบรรทัดกลางคำ (เช่น การยศาสตร์) ในป้าย/คอลัมน์สั้น */
 .catcell,td.catcell{white-space:nowrap}
 .htbl .del{color:var(--over);padding:6px 8px;border-radius:7px;font-size:15px;line-height:1}
@@ -869,14 +872,45 @@ function maxNum(str){
 // แสงสว่าง (illuminance) เป็นแบบ "ยิ่งมากยิ่งดี" — วัดได้ต้อง ≥ มาตรฐาน ถึงจะผ่าน (ตรงข้ามกับเสียง/สารเคมี/ความร้อน)
 // ยกเว้น UV/IR/รังสี/แสงจ้าจากการเชื่อม ซึ่งยิ่งมากยิ่งอันตราย
 function isLightHz(name){ const s=(name||'').toLowerCase(); return /แสงสว่าง|lighting|illumin|\blux\b/.test(s) && !/uv|ir|รังสี|เชื่อม|arc|weld|จ้า/.test(s); }
-function evalStd(measured,standard,name){
+function numOrNull(v){ if(v===null||v===undefined) return null; const s=String(v).trim(); if(!s||!/\d/.test(s)) return null; const m=s.match(/-?\d+(\.\d+)?/); if(!m) return null; const n=Number(m[0]); return isNaN(n)?null:n; }
+/* ย้ายค่ามาตรฐานเดิม (ช่องเดียว) → ช่วง ต่ำสุด/สูงสุด · ทำครั้งเดียวเมื่อ stdMin/stdMax ยังไม่ถูกกำหนด
+   - แสงสว่าง (ยิ่งมากยิ่งดี) → เป็นค่าต่ำสุด (ต้องไม่น้อยกว่า)
+   - อื่น ๆ (เสียง/ความร้อน/เคมี) → เป็นค่าสูงสุด (ต้องไม่เกิน) */
+function migrateHazStd(h){
+  if(!h) return h;
+  if(h.stdMin===undefined && h.stdMax===undefined){
+    const sv=(h.std!=null && /\d/.test(String(h.std))) ? maxNum(h.std) : null;
+    if(sv!==null){ if(isLightHz(h.name)){ h.stdMin=String(sv); h.stdMax=''; } else { h.stdMin=''; h.stdMax=String(sv); } }
+    else { h.stdMin=''; h.stdMax=''; }
+    h.std='';   // ใช้ stdMin/stdMax เป็นแหล่งเดียวหลังย้าย
+  }
+  return h;
+}
+/* ข้อความค่ามาตรฐานสำหรับแสดงผล (รายงาน/สไลด์) */
+function stdText(h){
+  const lo=String(h&&h.stdMin!=null?h.stdMin:'').trim(), hi=String(h&&h.stdMax!=null?h.stdMax:'').trim();
+  if(lo&&hi) return lo+'–'+hi;
+  if(hi) return '≤ '+hi;
+  if(lo) return '≥ '+lo;
+  return String(h&&h.std!=null?h.std:'').trim();   // เผื่อข้อมูลที่ยังไม่ได้ย้าย
+}
+function evalStd(h){
+  const measured=h&&h.measured, name=h&&h.name;
   const t=String(measured==null?'':measured).trim();
   const notMeasured=!t || /^[-–]$/.test(t) || /not\s*measure|ไม่ได้วัด|^n\/?a$|^na$/i.test(t) || !/\d/.test(t);
-  if(notMeasured||!standard||!/\d/.test(String(standard))) return {t:'-',c:'na'};
-  const mv=maxNum(measured), sv=maxNum(standard);
-  if(mv===null||sv===null) return {t:'-',c:'na'};
-  if(isLightHz(name)) return mv<sv ? {t:'ต่ำกว่าเกณฑ์ (แสงสว่างไม่พอ)',c:'over'} : {t:'อยู่ในเกณฑ์ที่กฎหมายกำหนด',c:'ok'};
-  return mv>sv ? {t:'เกินเกณฑ์ที่กฎหมายกำหนด',c:'over'} : {t:'อยู่ในเกณฑ์ที่กฎหมายกำหนด',c:'ok'};
+  if(notMeasured) return {t:'-',c:'na'};
+  const mv=maxNum(measured);
+  if(mv===null) return {t:'-',c:'na'};
+  let lo=numOrNull(h&&h.stdMin), hi=numOrNull(h&&h.stdMax);
+  if(lo===null && hi===null){                       // เผื่อข้อมูลเก่าที่ยังไม่ได้ย้าย → อ่านจาก std เดิม
+    const sv=(h&&h.std!=null&&/\d/.test(String(h.std)))?maxNum(h.std):null;
+    if(sv!==null){ if(isLightHz(name)) lo=sv; else hi=sv; }
+  }
+  if(lo===null && hi===null) return {t:'-',c:'na'};
+  if(lo!==null && hi!==null && lo>hi){ const tmp=lo; lo=hi; hi=tmp; }   // กันกรอกสลับ
+  if(lo!==null && mv<lo) return { t: isLightHz(name)?'ต่ำกว่าเกณฑ์ (แสงสว่างไม่พอ)':'ต่ำกว่าเกณฑ์ที่กฎหมายกำหนด', c:'over' };
+  if(hi!==null && mv>hi) return {t:'เกินเกณฑ์ที่กฎหมายกำหนด',c:'over'};
+  return {t:'อยู่ในเกณฑ์ที่กฎหมายกำหนด',c:'ok'};
 }
 
 /* ---- Buddhist Era date formatting ---- */
@@ -890,7 +924,7 @@ function beDate(iso){
 function beYear(iso){const d=new Date((iso||new Date().toISOString().slice(0,10))+'T00:00:00');return (isNaN(d)?new Date():d).getFullYear()+543}
 
 /* ---- helper builders ---- */
-function haz(cat,name,std,unit){return {id:uid(),cat,name,measured:'',std:std||'',unit:unit||'',hr:3,cr:3,freq:3,riskOverride:''}}
+function haz(cat,name,std,unit){return migrateHazStd({id:uid(),cat,name,measured:'',std:std||'',unit:unit||'',hr:3,cr:3,freq:3,riskOverride:''})}
 
 /* ============================================================
    PRE-LOADED TEMPLATE — โรงงาน machining ชิ้นส่วนไฮดรอลิก
@@ -1101,6 +1135,8 @@ function syncHealth(st){
     delete st.examOrderPre; delete st.customExamsPre; delete st.examSamplingPre;
   }
   (st.depts||[]).forEach(d=>{ if(!st.health[d.id]) st.health[d.id]={}; if(!st.healthPre[d.id]) st.healthPre[d.id]={}; });
+  // migrate: ค่ามาตรฐานช่องเดียว → ช่วง ต่ำสุด/สูงสุด
+  (st.depts||[]).forEach(d=>(d.hazards||[]).forEach(h=>migrateHazStd(h)));
 }
 let saveTimer=null;
 function setSaveDot(color,label){ const dot=document.getElementById('saveDot'); if(!dot) return; const i=dot.querySelector('i'); if(i&&color) i.style.background=color; const l=document.getElementById('saveLbl'); if(l&&label) l.textContent=label; }
@@ -1286,7 +1322,7 @@ function renderDepts(){
   }
 
   S.depts.forEach((d,i)=>{
-    const overCount=d.hazards.filter(h=>evalStd(h.measured,h.std,h.name).c==='over').length;
+    const overCount=d.hazards.filter(h=>evalStd(h).c==='over').length;
     html+=`
     <div class="dept ${d.open?'open':''}" data-d="${d.id}">
       <div class="dhd" onclick="toggleDept('${d.id}')">
@@ -1310,7 +1346,7 @@ function renderDepts(){
         <div class="subhd">สิ่งคุกคาม &amp; ผลการตรวจวัด</div>
         <div class="tbl-scroll">
           <table class="htbl">
-            <thead><tr><th style="width:116px">ประเภท</th><th>สิ่งคุกคาม</th><th style="width:96px">ค่าที่วัดได้</th><th style="width:70px">หน่วย</th><th style="width:96px">ค่ามาตรฐาน</th><th style="width:150px">ผลการประเมิน</th><th style="width:96px">จัดการ</th></tr></thead>
+            <thead><tr><th style="width:116px">ประเภท</th><th>สิ่งคุกคาม</th><th style="width:96px">ค่าที่วัดได้</th><th style="width:70px">หน่วย</th><th style="width:150px">ค่ามาตรฐาน<br><span style="font-weight:400;font-size:.9em;opacity:.85">ต่ำสุด – สูงสุด</span></th><th style="width:150px">ผลการประเมิน</th><th style="width:96px">จัดการ</th></tr></thead>
             <tbody>${d.hazards.map((h,hi)=>hazRow(d.id,h,hi,d.hazards.length)).join('')||`<tr><td colspan="7" style="text-align:center;color:var(--acc);padding:14px">ยังไม่มีสิ่งคุกคาม</td></tr>`}</tbody>
           </table>
         </div>
@@ -1334,7 +1370,7 @@ function renderDepts(){
   mountNotes('p1','depts');
 }
 function hazRow(did,h,hi,n){
-  const ev=evalStd(h.measured,h.std,h.name);
+  const ev=evalStd(h);
   const ph=(h.photos||[]);
   const first=(hi===0), last=(hi===(n-1));
   return `<tr data-h="${h.id}">
@@ -1342,7 +1378,7 @@ function hazRow(did,h,hi,n){
     <td><input data-sync="h:${did}:${h.id}:name" value="${esc(h.name)}" oninput="setH('${did}','${h.id}','name',this.value)"></td>
     <td><input data-sync="h:${did}:${h.id}:measured" value="${esc(h.measured)}" placeholder="—" oninput="setH('${did}','${h.id}','measured',this.value);refreshEval('${did}','${h.id}')"></td>
     <td><input data-sync="h:${did}:${h.id}:unit" value="${esc(h.unit)}" oninput="setH('${did}','${h.id}','unit',this.value)"></td>
-    <td><input data-sync="h:${did}:${h.id}:std" value="${esc(h.std)}" oninput="setH('${did}','${h.id}','std',this.value);refreshEval('${did}','${h.id}')"></td>
+    <td class="stdcell"><input class="stdmm" data-sync="h:${did}:${h.id}:stdMin" value="${esc(h.stdMin||'')}" placeholder="ต่ำสุด" inputmode="decimal" title="ค่าต่ำสุดที่ยอมรับได้ (เว้นว่างถ้าไม่มี เช่น เสียง/ความร้อน)" oninput="setH('${did}','${h.id}','stdMin',this.value);refreshEval('${did}','${h.id}')"><span class="stddash">–</span><input class="stdmm" data-sync="h:${did}:${h.id}:stdMax" value="${esc(h.stdMax||'')}" placeholder="สูงสุด" inputmode="decimal" title="ค่าสูงสุดที่ยอมรับได้ (เว้นว่างถ้าไม่มี เช่น แสงสว่าง)" oninput="setH('${did}','${h.id}','stdMax',this.value);refreshEval('${did}','${h.id}')"></td>
     <td class="evalcell"><span class="evaltag ${ev.c}">${ev.t}</span></td>
     <td class="hz-actions">
       <button class="hz-tool" title="เลื่อนขึ้น" ${first?'disabled':''} onclick="hazMove('${did}','${h.id}',-1)">▲</button>
@@ -1383,7 +1419,7 @@ function addHazPhotos(did,hid,files){
 function delHazPhoto(did,hid,pid){ const h=findHaz(findDept(did),hid); if(!h||!h.photos) return; h.photos=h.photos.filter(p=>p.id!==pid); renderDepts(); save(); pushFull(); }
 function setHazPhotoCap(did,hid,pid,v){ const h=findHaz(findDept(did),hid); const p=h&&(h.photos||[]).find(x=>x.id===pid); if(p){ p.cap=v; clearTimeout(setHazPhotoCap._t); setHazPhotoCap._t=setTimeout(()=>{save();pushFull();},500); } }
 function refreshEval(did,hid){
-  const d=findDept(did),h=findHaz(d,hid); const ev=evalStd(h.measured,h.std,h.name);
+  const d=findDept(did),h=findHaz(d,hid); const ev=evalStd(h);
   const row=document.querySelector(`.dept[data-d="${did}"] tr[data-h="${hid}"] .evalcell`);
   if(row) row.innerHTML=`<span class="evaltag ${ev.c}">${ev.t}</span>`;
 }
@@ -1695,7 +1731,7 @@ function highRiskFindings(){
         else if(/เสียง|noise/.test(nm)) out.noise.push(d.name);
         else if(/ซิลิกา|silica/.test(nm)) out.silica.push(d.name);
       }
-      if(evalStd(h.measured,h.std,h.name).c==='over') out.chemOver.push({d:d.name,h:h.name});
+      if(evalStd(h).c==='over') out.chemOver.push({d:d.name,h:h.name});
     });
   });
   return out;
@@ -1793,8 +1829,8 @@ function fillStdFromKB(){
     const e=kbMatch(h.name); if(!e) return;
     const std=KB_STD[e.hz];
     if(!std){ needManual++; return; }                 // มีใน KB แต่ไม่มีค่าเดี่ยว
-    if((h.std||'').trim()){ kept++; return; }          // มีค่าอยู่แล้ว ไม่ทับ
-    h.std=std.v; if(!(h.unit||'').trim()||h.unit==='-') h.unit=std.u;
+    if((''+(h.stdMax==null?'':h.stdMax)).trim()||(''+(h.stdMin==null?'':h.stdMin)).trim()){ kept++; return; }   // มีค่าอยู่แล้ว ไม่ทับ
+    h.stdMax=std.v; h.std=''; if(!(h.unit||'').trim()||h.unit==='-') h.unit=std.u;   // ค่ามาตรฐานเคมี = ขีดจำกัดสูงสุด
     filled++;
   }));
   if(filled){ renderDepts(); touch(); bxFull(); }
@@ -1988,9 +2024,9 @@ function buildReport(){
     // group by category preserving order
     let lastCat='';
     d.hazards.forEach(hz=>{
-      const ev=evalStd(hz.measured,hz.std,hz.name);
+      const ev=evalStd(hz);
       const mv=(hz.measured?esc(hz.measured)+(hz.unit&&hz.unit!=='-'?' '+esc(hz.unit):''):'<span class="muted">ไม่ได้วัด</span>');
-      const sv=(hz.std?esc(hz.std)+(hz.unit&&hz.unit!=='-'?' '+esc(hz.unit):''):'—');
+      const _st=stdText(hz); const sv=(_st?esc(_st)+(hz.unit&&hz.unit!=='-'?' '+esc(hz.unit):''):'—');
       h+=`<tr><td>${hz.cat!==lastCat?esc(hz.cat):''}</td><td>${esc(hz.name)}</td><td>${mv}</td><td>${sv}</td><td class="${ev.c==='over'?'r-over':ev.c==='ok'?'r-ok':'muted'}">${ev.t}</td></tr>`;
       lastCat=hz.cat;
     });
@@ -2194,8 +2230,8 @@ function buildCombinedTable(){
     S.depts.forEach(d=>{
       const hz=d.hazards.find(x=>x.name.trim()===nm);
       if(!hz){h+=`<td style="text-align:center;color:#bbb">–</td>`;return;}
-      const ev=evalStd(hz.measured,hz.std,hz.name);
-      const val=(hz.measured?esc(hz.measured):'–')+(hz.std?'/'+esc(hz.std):'');
+      const ev=evalStd(hz);
+      const _st=stdText(hz); const val=(hz.measured?esc(hz.measured):'–')+(_st?'/'+esc(_st):'');
       const cls=ev.c==='over'?'hi':(ev.c==='ok'?'':'');
       h+=`<td class="${cls}" style="text-align:center">${val==='–'?'–':val}</td>`;
     });
@@ -2909,7 +2945,7 @@ function buildSlides(){
 
   // 3b) ผลการตรวจวัดสิ่งคุกคาม (Hazard Monitoring)
   const meas=[];
-  S.depts.forEach(d=>d.hazards.forEach(h=>{ if(h.measured&&/\d/.test(String(h.measured))){ const ev=evalStd(h.measured,h.std,h.name); meas.push({d:d.name,h:h.name,m:h.measured,u:h.unit,s:h.std,ev}); }}));
+  S.depts.forEach(d=>d.hazards.forEach(h=>{ if(h.measured&&/\d/.test(String(h.measured))){ const ev=evalStd(h); meas.push({d:d.name,h:h.name,m:h.measured,u:h.unit,s:stdText(h),ev}); }}));
   if(meas.length && SO('measure')){
     meas.sort((a,b)=>(a.ev.c==='over'?0:1)-(b.ev.c==='over'?0:1));
     const tm=meas.slice(0,8);
@@ -3041,7 +3077,7 @@ function buildSlides(){
         const bd='1px solid #cdd6e4';
         const kv=(k,v)=>`<tr><td style="border:${bd};padding:9px 14px;background:#f4f7fb;font-weight:600;white-space:nowrap">${k}</td><td style="border:${bd};padding:9px 14px">${v}</td></tr>`;
         hzAll.forEach((h,hzi)=>{
-          const r=effRisk(h), e=erInfo(h), ev=evalStd(h.measured,h.std,h.name);
+          const r=effRisk(h), e=erInfo(h), ev=evalStd(h);
           const hasM=h.measured&&/\d/.test(String(h.measured));
           const evc=ev.c==='over'?'h':ev.c==='ok'?'l':'a';
           const ph=(h.photos||[]).slice(0,4);
@@ -3056,7 +3092,7 @@ function buildSlides(){
                   (e.cr?kv('ความเข้มข้น (CR)',e.cr+' / 5'):'')+
                   (h.freq?kv('ความถี่การสัมผัส (EF)',esc(h.freq)+' / 5'):'')+
                   kv('ค่าที่วัดได้',hasM?(esc(h.measured)+' '+esc(h.unit||'')):'ไม่ได้วัด')+
-                  (String(h.std||'').trim()?kv('ค่ามาตรฐาน',esc(h.std)):'')+
+                  (stdText(h)?kv('ค่ามาตรฐาน',esc(stdText(h))):'')+
                   kv('ผลการประเมิน',`<span class="rb ${evc}">${ev.t}</span>`)
                 }</table>
               </div>
@@ -3809,8 +3845,8 @@ function applyRemote(p){
         if(p.key==='name'){ const b=document.querySelector('.dept[data-d="'+p.did+'"] .dt b'); if(b) b.textContent=p.v||'(ไม่มีชื่อแผนก)'; } save(); } }
     else if(p.k==='h'){ const d=findDept(p.did), h=d&&findHaz(d,p.hid);
         if(h){ h[p.field]=(p.field==='hr'||p.field==='freq')?Number(p.v):p.v;
-          if(['cat','name','measured','unit','std'].indexOf(p.field)>=0) setWidget('h:'+p.did+':'+p.hid+':'+p.field,p.v);
-          if(p.field==='measured'||p.field==='std') refreshEval(p.did,p.hid);
+          if(['cat','name','measured','unit','std','stdMin','stdMax'].indexOf(p.field)>=0) setWidget('h:'+p.did+':'+p.hid+':'+p.field,p.v);
+          if(p.field==='measured'||p.field==='std'||p.field==='stdMin'||p.field==='stdMax') refreshEval(p.did,p.hid);
           if(['hr','cr','freq','riskOverride'].indexOf(p.field)>=0 && document.querySelector('#p2 tr[data-h="'+p.hid+'"]')) refreshRisk(p.did,p.hid);
           save(); } }
     else if(p.k==='hc'){ S.health[p.did]=S.health[p.did]||{}; if(p.v) S.health[p.did][p.ex]=true; else delete S.health[p.did][p.ex]; setWidget('hc:'+p.did+':'+p.ex,p.v,'check'); save(); }
