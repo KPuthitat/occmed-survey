@@ -2836,17 +2836,19 @@ function buildSlides(){
   /* แสดงข้อความเต็ม ไม่ตัดอัตโนมัติ (ตามที่ผู้ใช้ต้องการ) — คงพารามิเตอร์ n ไว้เพื่อไม่กระทบจุดเรียกใช้เดิม */
   const cut=(s,n)=>String(s||'');
   const nlines=v=>String(v||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  /* แถว key-value: แสดงเฉพาะเมื่อมีค่า (ไม่กรอก = ไม่แสดง) · suffix ต่อท้ายเฉพาะเมื่อมีค่า */
+  const kvRow=(label,val,suffix='')=>{ const v=String(val==null?'':val).trim(); return v?`<div><span>${esc(label)}</span><b>${esc(v)}${suffix}</b></div>`:''; };
   // 01 · ข้อมูลบริษัท
   if(SO('company')) slides.push({html:`
     <div class="s-kick">01 · ข้อมูลบริษัท</div>
     <h2 class="s-h2">ข้อมูลสถานประกอบการ</h2>
     <div class="s-kv">
-      <div><span>ประเภท / ชนิดกิจการ</span><b>${esc(g.type)||'—'}</b></div>
-      <div><span>ที่อยู่</span><b>${esc(cut(g.address,90))||'—'}</b></div>
-      <div><span>ขนาดพื้นที่</span><b>${esc(g.area)||'—'} ตร.ม.</b></div>
-      <div><span>ก่อตั้ง</span><b>${esc(g.founded)||'—'}</b></div>
-      <div><span>เริ่มการผลิต</span><b>${esc(g.prodStart)||'—'}</b></div>
-      <div><span>ผู้ติดต่อ</span><b>${esc(g.contact)||'—'}</b></div>
+      ${kvRow('ประเภท / ชนิดกิจการ',g.type)}
+      ${kvRow('ที่อยู่',g.address)}
+      ${kvRow('ขนาดพื้นที่',g.area,' ตร.ม.')}
+      ${kvRow('ก่อตั้ง',g.founded)}
+      ${kvRow('เริ่มการผลิต',g.prodStart)}
+      ${kvRow('ผู้ติดต่อ',g.contact)}
     </div>
     ${g.mgmt?`<div class="s-note"><b>โครงสร้าง/ผู้บริหาร:</b> ${esc(cut(g.mgmt,170))}</div>`:''}`});
   // 02 · กำลังคน & เวลาทำงาน
@@ -2854,12 +2856,12 @@ function buildSlides(){
     <div class="s-kick">02 · กำลังคน & เวลาทำงาน</div>
     <h2 class="s-h2">กำลังคนและเวลาทำงาน</h2>
     <div class="s-kv">
-      <div><span>บุคลากรทั้งหมด</span><b>${esc(g.workers)||'—'} คน</b></div>
-      <div><span>พนักงานประจำ</span><b>${esc(g.workersFull)||'—'} คน</b></div>
-      <div><span>รับเหมาช่วง</span><b>${esc(g.workersSub)||'—'} คน</b></div>
-      <div><span>อัตราการลาออก (Turnover)</span><b>${esc(g.turnover)||'—'}</b></div>
-      <div><span>วันทำงาน</span><b>${esc(g.days)||'—'}</b></div>
-      <div><span>ระบบกะ</span><b>${esc(g.shifts)||'—'}</b></div>
+      ${kvRow('บุคลากรทั้งหมด',g.workers,' คน')}
+      ${kvRow('พนักงานประจำ',g.workersFull,' คน')}
+      ${kvRow('รับเหมาช่วง',g.workersSub,' คน')}
+      ${kvRow('อัตราการลาออก (Turnover)',g.turnover)}
+      ${kvRow('วันทำงาน',g.days)}
+      ${kvRow('ระบบกะ',g.shifts)}
     </div>
     ${g.shiftDetail?`<div class="s-note"><b>รายละเอียดกะ:</b> ${esc(cut(g.shiftDetail,170))}</div>`:''}`});
   // 03 · ความปลอดภัย & อาชีวอนามัย
@@ -2867,10 +2869,10 @@ function buildSlides(){
     <div class="s-kick">03 · ความปลอดภัย & อาชีวอนามัย</div>
     <h2 class="s-h2">ความปลอดภัยและอาชีวอนามัย</h2>
     <div class="s-kv">
-      <div><span>เจ้าหน้าที่ความปลอดภัย (จป.)</span><b>${esc(cut(g.safetyOfficer,70))||'—'}</b></div>
-      <div><span>การตรวจสุขภาพตามปัจจัยเสี่ยง</span><b>${esc(cut(g.healthCheckup,70))||'—'}</b></div>
-      <div><span>ห้องพยาบาล / คลินิก</span><b>${esc(cut(g.clinic,70))||'—'}</b></div>
-      <div><span>แผนฉุกเฉิน</span><b>${esc(cut(g.emergency,70))||'—'}</b></div>
+      ${kvRow('เจ้าหน้าที่ความปลอดภัย (จป.)',g.safetyOfficer)}
+      ${kvRow('การตรวจสุขภาพตามปัจจัยเสี่ยง',g.healthCheckup)}
+      ${kvRow('ห้องพยาบาล / คลินิก',g.clinic)}
+      ${kvRow('แผนฉุกเฉิน',g.emergency)}
     </div>
     ${g.accidentStats?`<div class="s-note"><b>สถิติอุบัติเหตุ/บาดเจ็บ:</b> ${esc(cut(g.accidentStats,150))}</div>`:''}
     ${g.ppe?`<div class="s-note"><b>PPE ที่จัดให้:</b> ${esc(cut(g.ppe,150))}</div>`:''}`});
@@ -2883,10 +2885,10 @@ function buildSlides(){
       <div class="s-kick">04 · การเดินสำรวจ</div>
       <h2 class="s-h2">การเดินสำรวจสถานประกอบการ</h2>
       <div class="s-kv">
-        <div><span>วันที่เดินสำรวจ</span><b>${beDate(g.surveyDate)||'—'}</b></div>
-        <div><span>เวลา</span><b>${esc(g.surveyTime)||'—'}</b></div>
-        <div><span>ผู้ควบคุมการสำรวจ</span>${nameList(g.controllers)}</div>
-        <div><span>ผู้สังเกตการณ์</span>${nameList(g.observers)}</div>
+        ${kvRow('วันที่เดินสำรวจ',beDate(g.surveyDate))}
+        ${kvRow('เวลา',g.surveyTime)}
+        ${nlines(g.controllers).length?`<div><span>ผู้ควบคุมการสำรวจ</span>${nameList(g.controllers)}</div>`:''}
+        ${nlines(g.observers).length?`<div><span>ผู้สังเกตการณ์</span>${nameList(g.observers)}</div>`:''}
       </div>`});
   }
 
@@ -3050,11 +3052,11 @@ function buildSlides(){
               <div style="flex:1 1 320px;min-width:290px">
                 <table style="border-collapse:collapse;font-size:.95em;width:100%">${
                   kv('ระดับความเสี่ยง',`<span class="rb ${riskRB(r)}">${esc(r||'—')}</span>`)+
-                  kv('ความรุนแรง (HR)',(esc(h.hr)||'—')+' / 5')+
-                  kv('ความเข้มข้น (CR)',(e.cr||'—')+' / 5')+
-                  kv('ความถี่การสัมผัส (EF)',(esc(h.freq)||'—')+' / 5')+
+                  (h.hr?kv('ความรุนแรง (HR)',esc(h.hr)+' / 5'):'')+
+                  (e.cr?kv('ความเข้มข้น (CR)',e.cr+' / 5'):'')+
+                  (h.freq?kv('ความถี่การสัมผัส (EF)',esc(h.freq)+' / 5'):'')+
                   kv('ค่าที่วัดได้',hasM?(esc(h.measured)+' '+esc(h.unit||'')):'ไม่ได้วัด')+
-                  kv('ค่ามาตรฐาน',esc(h.std)||'—')+
+                  (String(h.std||'').trim()?kv('ค่ามาตรฐาน',esc(h.std)):'')+
                   kv('ผลการประเมิน',`<span class="rb ${evc}">${ev.t}</span>`)
                 }</table>
               </div>
