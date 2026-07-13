@@ -3280,13 +3280,15 @@ function buildSlides(){
     const bd='1px solid #cbd5e3';
     const DEPT_ROWS_PP=5, EXAM_COLS_PP=12;
     // หัวคอลัมน์ = ชื่อรายการตรวจ (แนวตั้ง เอียงซ้าย) · สูงคงที่ ชื่อยาวตัดขึ้นบรรทัดในแนวตั้ง กันตกขอบ
-    const vExam=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:7px 4px;text-align:center;min-width:26px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:nowrap;line-height:1.15;font-weight:600;font-size:.72em;margin:0 auto">${esc(t)}</div></th>`;
+    const vExam=t=>`<th style="border:${bd};background:#0B2545;color:#fff;vertical-align:bottom;padding:9px 6px;text-align:center;min-width:34px"><div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);white-space:nowrap;line-height:1.15;font-weight:600;font-size:.86em;margin:0 auto">${esc(t)}</div></th>`;
     // ตัด prefix ชื่อกลุ่มออกจากชื่อแถว (h2 บอกกลุ่มอยู่แล้ว) — ไม่แตะชื่อจริงที่เก็บไว้
     const stripGrp=(name,gl)=>{ if(!gl) return name; const re=new RegExp('^\\s*'+gl.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+'\\s*[-–—·:]+\\s*'); return String(name||'').replace(re,''); };
-    const buildHcTable=(map,deptRows,examCols,gl)=>`<table style="border-collapse:collapse;font-size:.9em;margin:6px auto 0">
-        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:8px 14px;text-align:left;vertical-align:bottom;min-width:150px">แผนก</th>${examCols.map(e=>vExam(esc(stripGrp(e,gl))||esc(e))).join('')}</tr></thead>
-        <tbody>${deptRows.map((dp,ri)=>`<tr><td style="border:${bd};padding:9px 14px;font-weight:600;background:#eef2f8;color:#0B2545;max-width:240px;line-height:1.25">${esc(dp.name||'—')}</td>${examCols.map(e=>(map[dp.id]&&map[dp.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:9px 10px">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:9px 10px"></td>`).join('')}</tr>`).join('')}</tbody>
-      </table>`;
+    // padding แนวตั้งของแถว = ยิ่งแถวน้อยยิ่งสูง เพื่อเติมพื้นที่ (2 แถว→28px, 5 แถว→12px)
+    const rowPad=(rn)=>Math.max(12, Math.round(64/Math.max(1,rn)));
+    const buildHcTable=(map,deptRows,examCols,gl)=>{ const rp=rowPad(deptRows.length); return `<table style="border-collapse:collapse;font-size:1.18em;width:96%;margin:16px auto 0">
+        <thead><tr><th style="border:${bd};background:#0B2545;color:#fff;padding:12px 18px;text-align:left;vertical-align:bottom;min-width:230px">แผนก</th>${examCols.map(e=>vExam(esc(stripGrp(e,gl))||esc(e))).join('')}</tr></thead>
+        <tbody>${deptRows.map((dp,ri)=>`<tr><td style="border:${bd};padding:${rp}px 18px;font-weight:600;background:#eef2f8;color:#0B2545;max-width:300px;line-height:1.25">${esc(dp.name||'—')}</td>${examCols.map(e=>(map[dp.id]&&map[dp.id][e])?`<td style="border:${bd};text-align:center;background:#C8A046;color:#fff;font-weight:700;padding:${rp}px 10px;font-size:1.3em">✓</td>`:`<td style="border:${bd};background:${ri%2?'#f6f9fc':'#fff'};padding:${rp}px 10px"></td>`).join('')}</tr>`).join('')}</tbody>
+      </table>`; };
     // หน้าที่ 1 = สารบัญรายการตรวจ แบ่งกลุ่ม (อธิบายว่าตรวจอะไรบ้าง)
     const groupOverview=(map,title)=>{
       const groups=EXAM_GROUPS.map(([gk,gl])=>({gl,exams:allExams().filter(e=>examGroupOf(e)===gk && S.depts.some(d=>map[d.id]&&map[d.id][e]))})).filter(g=>g.exams.length);
