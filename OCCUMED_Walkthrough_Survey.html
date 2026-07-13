@@ -3390,7 +3390,7 @@ function buildSlides(){
     .concat([['ข้อเสนอแนะเพิ่มเติม',c.extra]]).filter(x=>x[1]&&x[1].trim());
   if(SO('recommend')&&recs.length){
     recs.forEach((r,idx)=>{
-      const pgs=slidePaginate(r[1],13,62); const np=pgs.length;
+      const pgs=slidePaginate(r[1],11,62); const np=pgs.length;
       pgs.forEach((body,pi)=>{
         slides.push({cls:'rec',html:`
           <div class="s-kick">12 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
@@ -3457,7 +3457,7 @@ function buildSlides(){
     } else {
       // ขึ้นสไลด์ใหม่ทุกย่อหน้า (\n\n) — เคารพการแบ่งย่อหน้าที่พิมพ์เอง · ย่อหน้ายาวค่อยแบ่งหน้าย่อย · ในย่อหน้าไม่มีบรรทัดว่างเกิน + ข้อ (1)(2)… อยู่ด้วยกัน
       const _paras=String(execTxt).split(/\n[ \t]*\n+/).map(s=>s.trim()).filter(Boolean);
-      const pgs=[]; _paras.forEach(p=>slidePaginate(p,13,68).forEach(ch=>pgs.push(ch))); const np=pgs.length;
+      const pgs=[]; _paras.forEach(p=>slidePaginate(p,12,68).forEach(ch=>pgs.push(ch))); const np=pgs.length;
       pgs.forEach((body,pi)=>{
         slides.push({cls:'rec',html:`
           <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
@@ -3523,7 +3523,8 @@ body{font-family:'LINE Seed Sans TH','Noto Sans Thai','Sarabun','Noto Sans SC','
 .s-chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{background:#0B2545;color:#fff;padding:8px 16px;border-radius:24px;font-size:17px;font-weight:600}
 .s-note,.s-body{color:#3a4657;font-size:20px;line-height:1.6;margin-top:12px}
-.slide.rec .s-body{background:#f2f5fa;border-left:5px solid #C8A046;padding:18px 22px;border-radius:0 12px 12px 0;overflow:hidden;max-height:70%}
+.slide.rec{padding-top:40px;padding-bottom:36px}   /* ลดขอบบน-ล่างเฉพาะสไลด์ข้อความ (ข้อเสนอแนะ/บทสรุป) เพื่อให้กล่องเนื้อหาสูงขึ้น กันบรรทัดตก */
+.slide.rec .s-body{background:#f2f5fa;border-left:5px solid #C8A046;padding:16px 22px;border-radius:0 12px 12px 0;overflow:hidden;max-height:470px}
 .s-empty{color:#8a97a8;font-size:20px;font-style:italic}
 .s-poster{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;width:100%;margin-top:4px}
 .s-poster svg{height:100%;width:auto;max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 4px 18px rgba(11,37,69,.12)}
