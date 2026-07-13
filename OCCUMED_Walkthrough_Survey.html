@@ -2885,6 +2885,8 @@ function SOhaz(){ return !!(S.slideOpts&&S.slideOpts.hazPerSlide); }
    ดันข้อที่ขึ้นต้นด้วย (1) (2) … หรือ 1. 2. … ให้ขึ้นบรรทัดใหม่, ตัดหน้าตามจำนวนบรรทัดที่แสดงจริง (กันตกขอบ) */
 function slidePaginate(txt, rowsMax, cpl){
   txt=String(txt||'').replace(/\r/g,'');
+  // ยุบบรรทัดว่าง (ย่อหน้าคู่ \n\n) ให้เหลือขึ้นบรรทัดเดียว — ไม่ให้เกิดบรรทัดเว้นเกินในสไลด์
+  txt=txt.replace(/\n[ \t]*\n+/g,'\n');
   // ดันรายการข้อ (N) หรือ N) หรือ N. ที่อยู่กลางบรรทัดให้ขึ้นบรรทัดใหม่
   txt=txt.replace(/[ \t]*(\((?:\d+|[ก-ฮ])\)|\d+[.)](?=\s))/g, '\n$1');
   const lines=txt.split('\n').map(s=>s.replace(/[ \t]+/g,' ').trim());
@@ -3385,7 +3387,7 @@ function buildSlides(){
     .concat([['ข้อเสนอแนะเพิ่มเติม',c.extra]]).filter(x=>x[1]&&x[1].trim());
   if(SO('recommend')&&recs.length){
     recs.forEach((r,idx)=>{
-      const pgs=slidePaginate(r[1],13,46); const np=pgs.length;
+      const pgs=slidePaginate(r[1],13,62); const np=pgs.length;
       pgs.forEach((body,pi)=>{
         slides.push({cls:'rec',html:`
           <div class="s-kick">12 · ข้อเสนอแนะ${recs.length>1?` (${idx+1}/${recs.length})`:''}${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
@@ -3451,7 +3453,7 @@ function buildSlides(){
         <div class="s-empty">ยังไม่ได้สร้างบทสรุปผู้บริหาร — ไปแท็บ “สรุป” กด “สร้างอัตโนมัติ”</div>`});
     } else {
       // แบ่งหน้าแบบอิงบรรทัด — เคารพย่อหน้า/การเว้นบรรทัดที่พิมพ์เอง + ดันข้อ (1)(2)… ขึ้นบรรทัดใหม่ กันตกขอบ
-      const pgs=slidePaginate(execTxt,13,46); const np=pgs.length;
+      const pgs=slidePaginate(execTxt,13,68); const np=pgs.length;
       pgs.forEach((body,pi)=>{
         slides.push({cls:'rec',html:`
           <div class="s-kick">บทสรุปผู้บริหาร · Executive Summary${np>1?` · หน้า ${pi+1}/${np}`:''}</div>
