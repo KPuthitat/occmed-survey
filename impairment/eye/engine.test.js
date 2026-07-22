@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   ACUITY, vasFor, functionalScore, vsiToWpi, visionResult, combineValues, acuityByEn,
   VF_MERIDIANS, meridianPoints, visualFieldScore,
+  ADNEXA_6_7, adnexaResult, ORBIT_6_9, globeLossVsi,
 } from './engine.js';
 
 // ---------- VAS lookup (ตาราง 6-3) ----------
@@ -106,4 +107,46 @@ test('VFS ป้อนเข้า FVF ได้ (ลานสายตาลด
   assert.equal(r.fvf, 75);
   assert.equal(r.fvs, 75);
   assert.equal(r.vsi, 25);
+});
+
+// ---------- ตาราง 6-7 การสูญเสียอื่นๆ (ภาพซ้อน/หนังตา/น้ำตา) ----------
+test('6-7: มี 7 รายการ · ค่า loss ตรงตาราง', () => {
+  assert.equal(ADNEXA_6_7.length, 7);
+  assert.deepEqual(ADNEXA_6_7.find(a => a.id === 'dip-central').loss, [100, 100]);
+  assert.deepEqual(ADNEXA_6_7.find(a => a.id === 'dip-upper').loss, [40, 40]);
+  assert.deepEqual(ADNEXA_6_7.find(a => a.id === 'dip-lower').loss, [60, 60]);
+  assert.deepEqual(ADNEXA_6_7.find(a => a.id === 'lid-symb').loss, [11, 15]);
+});
+test('6-7 ภาพซ้อนกลาง (loss 100, ตาอีกข้างปกติ) → VSI 25, WPI 25', () => {
+  const r = adnexaResult(100, 100);
+  assert.equal(r.vasAffected, 0);
+  assert.equal(r.fva, 75);       // (2·100 + 0 + 100)/4
+  assert.equal(r.vsi, 25);
+  assert.equal(r.wpi, 25);
+});
+test('6-7 ภาพซ้อนครึ่งบน (loss 40) → VSI 10', () => {
+  const r = adnexaResult(40, 100);
+  assert.equal(r.vasAffected, 60);
+  assert.equal(r.fva, 90);       // (2·100 + 60 + 100)/4
+  assert.equal(r.vsi, 10);
+});
+test('6-7 หนังตา/น้ำตา เพดาน VSI ≤ 15', () => {
+  // ปกติ loss เล็ก → ไม่ชน cap
+  const small = adnexaResult(10, 100, 15);
+  assert.equal(small.capped, false);
+  assert.ok(small.vsi < 15);
+  // กรณีสมมติที่ VSI จะเกิน → ถูก cap ที่ 15
+  const big = adnexaResult(100, 0, 15);   // ทั้งสองตาเสีย → VSI 100 → cap 15
+  assert.equal(big.capped, true);
+  assert.equal(big.vsi, 15);
+  assert.equal(big.wpi, 15);
+});
+
+// ---------- ตาราง 6-9 เบ้าตา + รวมกับสูญเสียลูกตา ----------
+test('6-9: 3 ช่วง (11-14/15-19/20-23) · เลือกหัวข้อรุนแรงสุด', () => {
+  assert.deepEqual(ORBIT_6_9.map(o => o.range), [[11, 14], [15, 19], [20, 23]]);
+});
+test('ตัวอย่างหน้า 497: สูญเสียลูกตาขวา (VSI 25) + เบ้าตา 19 → รวม 39', () => {
+  assert.equal(globeLossVsi(100), 25);
+  assert.equal(Math.round(combineValues([25, 19])), 39);   // 25 + 19·0.75 = 39.25 → 39
 });
