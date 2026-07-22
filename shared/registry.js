@@ -1,6 +1,6 @@
-// shared/registry.js — จุดเดียวที่ประกาศโมดูล + กลุ่มของ OCCMED
-// โครงสร้าง 2 ชั้น: หน้าแรก (/) แสดง "กลุ่ม" → กดเข้ากลุ่มประเมินการสูญเสียฯ (/impairment/) ค่อยแยกเป็นระบบอวัยวะ
-// เพิ่มโมดูลใหม่ = เพิ่ม object ใน MODULES ที่เดียว (ระบุ group) · เพิ่มกลุ่มใหม่ = เพิ่มใน GROUPS
+// shared/registry.js — จุดเดียวที่ประกาศโมดูล + กลุ่ม + บท (chapter) ของ OCCMED
+// โครงสร้าง: หน้าแรก (/) แสดง "กลุ่ม" → กลุ่มประเมินฯ (/impairment/) แสดงการ์ด "รายโรค" จัดกลุ่มตามบท (ระบบอวัยวะ)
+// เพิ่มโรคใหม่ = เพิ่ม object ใน MODULES ที่เดียว (ระบุ group + chapter)
 // status: 'ready' = พร้อมใช้ · 'wip' = กำลังพัฒนา
 
 // ---------- ไอคอน SVG (เส้น navy · ไม่ใช้อิโมจิ) ----------
@@ -11,6 +11,7 @@ const IC = {
   eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
   ear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M6.5 12.5a3.5 3.5 0 1 1 7 0c0 1.6-1 2.2-1 3.5"/></svg>',
   heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg>',
+  combine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><circle cx="12" cy="12" r="3"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -33,62 +34,108 @@ export const GROUPS = [
   },
 ];
 
-// ---------- โมดูลทั้งหมด (แต่ละโมดูลระบุ group) ----------
+// ---------- บท (ระบบอวัยวะ) ในกลุ่มประเมินการสูญเสียฯ — ใช้เป็นหัวข้อ section ในหน้า /impairment/ ----------
+export const CHAPTERS = [
+  { id: 'eye', nameTh: 'ระบบจักษุ', ref: 'บทที่ 6', icon: IC.eye },
+  { id: 'ent', nameTh: 'โสต ศอ นาสิก', ref: 'บทที่ 7', icon: IC.ear },
+  { id: 'cardio', nameTh: 'ระบบหัวใจและหลอดเลือด', ref: 'บทที่ 10', icon: IC.heart },
+  { id: 'gi', nameTh: 'ระบบทางเดินอาหาร', ref: 'บทที่ 11', icon: IC.stomach },
+  { id: 'tools', nameTh: 'เครื่องมือร่วม', ref: '', icon: IC.combine },
+];
+
+// ---------- โมดูลทั้งหมด (group = กลุ่มหน้าแรก · chapter = บท/ระบบอวัยวะ) ----------
 export const MODULES = [
   {
-    id: 'walkthrough',
-    group: 'survey',
+    id: 'walkthrough', group: 'survey',
     nameTh: 'เดินสำรวจสถานประกอบการ',
     desc: 'Walk-through survey — ประเมินสิ่งคุกคาม ความเสี่ยง และวางแผนตรวจสุขภาพ ทำงานร่วมกันแบบเรียลไทม์',
-    path: '/walkthrough/',
-    icon: IC.factory,
-    status: 'ready',
-    requiresLogin: false, // เข้าห้องด้วยรหัสสำรวจ + รหัสทีม (ในตัวโมดูลเอง)
+    path: '/walkthrough/', icon: IC.factory, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบจักษุ (บท 6) ----
+  {
+    id: 'impairment-eye', group: 'impairment', chapter: 'eye',
+    nameTh: 'ระดับสายตา + ลานสายตา',
+    desc: 'ระดับสายตา + ลานสายตา → VSI → WPI (ตาราง 6-1..6-8) พร้อมไดอะแกรมลานสายตาแบบแตะ',
+    path: '/impairment/eye/', icon: IC.eye, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- โสต ศอ นาสิก (บท 7) ----
+  {
+    id: 'impairment-ent', group: 'impairment', chapter: 'ent',
+    nameTh: 'การได้ยิน (Hearing)',
+    desc: 'audiogram → DSHL → Binaural → WPI (ตาราง 7-1..7-3)',
+    path: '/impairment/ent/', icon: IC.ear, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบหัวใจและหลอดเลือด (บท 10) ----
+  {
+    id: 'impairment-cardio', group: 'impairment', chapter: 'cardio',
+    nameTh: 'โรคหลอดเลือดหัวใจ (CAD)',
+    desc: 'NYHA + ขั้น 0–5 → WPI (ตาราง 10-1/10-4/10-5)',
+    path: '/impairment/cardio/', icon: IC.heart, status: 'ready', requiresLogin: false,
   },
   {
-    id: 'impairment-gi',
-    group: 'impairment',
+    id: 'impairment-cardio-htn', group: 'impairment', chapter: 'cardio',
+    nameTh: 'ภาวะความดันโลหิตสูง',
+    desc: 'ขั้น 0–3 (การควบคุมความดัน) → WPI (ตาราง 10-8)',
+    path: '/impairment/cardio-htn/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-cardio-pvd-arm', group: 'impairment', chapter: 'cardio',
+    nameTh: 'หลอดเลือดส่วนปลาย — แขน',
+    desc: 'ขั้น 0–4 → ร้อยละของแขน (ตาราง 10-10)',
+    path: '/impairment/cardio-pvd-arm/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-cardio-pvd-leg', group: 'impairment', chapter: 'cardio',
+    nameTh: 'หลอดเลือดส่วนปลาย — ขา',
+    desc: 'ขั้น 0–4 (ABI) → ร้อยละของขา (ตาราง 10-11)',
+    path: '/impairment/cardio-pvd-leg/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-cardio-valve', group: 'impairment', chapter: 'cardio',
+    nameTh: 'โรคลิ้นหัวใจ',
+    desc: 'ขั้น 0–4 (echo/BNP) → WPI (ตาราง 10-12)',
+    path: '/impairment/cardio-valve/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-cardio-hf', group: 'impairment', chapter: 'cardio',
+    nameTh: 'หัวใจล้มเหลว / กล้ามเนื้อหัวใจ',
+    desc: 'ขั้น 0–4 (LVEF/BNP) → WPI (ตาราง 10-13)',
+    path: '/impairment/cardio-hf/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-cardio-pericard', group: 'impairment', chapter: 'cardio',
+    nameTh: 'โรคเยื่อหุ้มหัวใจ',
+    desc: 'ขั้น 0–4 → WPI (ตาราง 10-14)',
+    path: '/impairment/cardio-pericard/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-cardio-arrhythmia', group: 'impairment', chapter: 'cardio',
+    nameTh: 'หัวใจเต้นผิดจังหวะ',
+    desc: 'ขั้น 0–4 (ECG/Holter) → WPI (ตาราง 10-15)',
+    path: '/impairment/cardio-arrhythmia/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-cardio-pulmhtn', group: 'impairment', chapter: 'cardio',
+    nameTh: 'โรคความดันในปอดสูง',
+    desc: 'ขั้น 0–4 (PASP/6MWD) → WPI (ตาราง 10-16)',
+    path: '/impairment/cardio-pulmhtn/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบทางเดินอาหาร (บท 11) ----
+  {
+    id: 'impairment-gi', group: 'impairment', chapter: 'gi',
     nameTh: 'ระบบทางเดินอาหาร',
-    desc: 'คำนวณร้อยละการสูญเสียสมรรถภาพอย่างถาวร ตามคู่มือฯ ฉบับ 4 บทที่ 11 (คำนวณล้วน ไม่บันทึกข้อมูล)',
-    path: '/impairment/gi/',
-    icon: IC.stomach,
-    status: 'ready',
-    requiresLogin: false,
-  },
-  {
-    id: 'impairment-eye',
-    group: 'impairment',
-    nameTh: 'ระบบจักษุ',
-    desc: 'คำนวณการสูญเสียสมรรถภาพระบบจักษุ (ระดับสายตา + ลานสายตา → VSI → WPI) ตามคู่มือฯ ฉบับ 4 บทที่ 6 (คำนวณล้วน ไม่บันทึกข้อมูล)',
-    path: '/impairment/eye/',
-    icon: IC.eye,
-    status: 'ready',
-    requiresLogin: false,
-  },
-  {
-    id: 'impairment-ent',
-    group: 'impairment',
-    nameTh: 'โสต ศอ นาสิก (การได้ยิน)',
-    desc: 'คำนวณการสูญเสียการได้ยิน (audiogram → DSHL → Binaural → WPI) ตามคู่มือฯ ฉบับ 4 บทที่ 7 (คำนวณล้วน ไม่บันทึกข้อมูล)',
-    path: '/impairment/ent/',
-    icon: IC.ear,
-    status: 'ready',
-    requiresLogin: false,
-  },
-  {
-    id: 'impairment-cardio',
-    group: 'impairment',
-    nameTh: 'ระบบหัวใจและหลอดเลือด',
-    desc: 'คำนวณการสูญเสียสมรรถภาพจากโรคหลอดเลือดหัวใจ (NYHA + ขั้น 0–5 → WPI) ตามคู่มือฯ ฉบับ 4 บทที่ 10 (คำนวณล้วน ไม่บันทึกข้อมูล)',
-    path: '/impairment/cardio/',
-    icon: IC.heart,
-    status: 'ready',
-    requiresLogin: false,
+    desc: 'ปัจจัยหลัก/รอง → ขั้น 0–4 × A–E → WPI (บทที่ 11)',
+    path: '/impairment/gi/', icon: IC.stomach, status: 'ready', requiresLogin: false,
   },
 ];
 
-// โมดูลในกลุ่มหนึ่ง (เรียงตามที่ประกาศ)
+// โมดูลในกลุ่มหนึ่ง / บทหนึ่ง (เรียงตามที่ประกาศ)
 export function modulesInGroup(groupId) { return MODULES.filter(m => m.group === groupId); }
+export function modulesInChapter(chapterId) { return MODULES.filter(m => m.chapter === chapterId); }
 
 // เผื่อหน้า HTML ที่โหลดแบบ non-module
-if (typeof window !== 'undefined') { window.OCCMED_MODULES = MODULES; window.OCCMED_GROUPS = GROUPS; }
+if (typeof window !== 'undefined') { window.OCCMED_MODULES = MODULES; window.OCCMED_GROUPS = GROUPS; window.OCCMED_CHAPTERS = CHAPTERS; }

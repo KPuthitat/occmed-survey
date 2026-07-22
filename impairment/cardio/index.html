@@ -119,6 +119,10 @@
       <summary>ดูเกณฑ์ NYHA class I–IV</summary>
       <div id="nyhaBody"></div>
     </details>
+    <details class="nyha" style="margin-top:8px">
+      <summary>ดูเกณฑ์ CCS angina class I–IV (ตาราง 10-5)</summary>
+      <div id="ccsBody"></div>
+    </details>
   </div>
 
   <div class="card sec">
@@ -147,12 +151,14 @@
 </div>
 
 <script type="module">
-import { NYHA_CLASSES, CAD_LEVELS, GRADE_LETTERS, cadResult } from './engine.js';
+import { NYHA_CLASSES, CCS_CLASSES, CAD_LEVELS, GRADE_LETTERS, cadResult } from './engine.js';
 const $ = id => document.getElementById(id);
 const state = { level: null, grade: 0 };
 
-// NYHA reference
+// NYHA + CCS reference
 $('nyhaBody').innerHTML = NYHA_CLASSES.map(n =>
+  `<div class="nyrow"><div class="cls">${n.cls}</div><div class="txt">${n.text}</div></div>`).join('');
+$('ccsBody').innerHTML = CCS_CLASSES.map(n =>
   `<div class="nyrow"><div class="cls">${n.cls}</div><div class="txt">${n.text}</div></div>`).join('');
 
 // level cards
