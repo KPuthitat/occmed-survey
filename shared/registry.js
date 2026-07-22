@@ -67,6 +67,42 @@ export const MODULES = [
     desc: 'audiogram → DSHL → Binaural → WPI (ตาราง 7-1..7-3)',
     path: '/impairment/ent/', icon: IC.ear, status: 'ready', requiresLogin: false,
   },
+  {
+    id: 'impairment-ent-vestibular', group: 'impairment', chapter: 'ent',
+    nameTh: 'การทรงตัว (Vestibular)',
+    desc: 'ปัจจัยหลัก/รอง → ขั้น 0–4 → WPI (ตาราง 7-4)',
+    path: '/impairment/ent-vestibular/', icon: IC.ear, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-ent-facial', group: 'impairment', chapter: 'ent',
+    nameTh: 'ใบหน้า / รูปลักษณ์',
+    desc: 'ความผิดปกติ/เสียรูปลักษณ์ใบหน้า → ขั้น 0–4 → WPI (ตาราง 7-5)',
+    path: '/impairment/ent-facial/', icon: IC.ear, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-ent-airway', group: 'impairment', chapter: 'ent',
+    nameTh: 'ทางเดินหายใจส่วนบน',
+    desc: 'อาการเหนื่อย → ขั้น 0–4 · เจาะคอ=25% (ตาราง 7-6)',
+    path: '/impairment/ent-airway/', icon: IC.ear, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-ent-swallow', group: 'impairment', chapter: 'ent',
+    nameTh: 'การเคี้ยว-กลืน',
+    desc: 'ชนิดอาหารที่รับได้ → WPI 5–50% (ตาราง 7-7)',
+    path: '/impairment/ent-swallow/', icon: IC.ear, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-ent-voice', group: 'impairment', chapter: 'ent',
+    nameTh: 'เสียงและการพูด',
+    desc: 'ความดัง/ชัด/คล่อง → ขั้น 0–4 → WPI (ตาราง 7-8)',
+    path: '/impairment/ent-voice/', icon: IC.ear, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-ent-other', group: 'impairment', chapter: 'ent',
+    nameTh: 'การได้กลิ่น-รส / เสียงในหู',
+    desc: 'เพดาน ≤5% ต่ออย่าง (บท 7 §ซ,ฌ)',
+    path: '/impairment/ent-other/', icon: IC.ear, status: 'ready', requiresLogin: false,
+  },
 
   // ---- ระบบหัวใจและหลอดเลือด (บท 10) ----
   {
