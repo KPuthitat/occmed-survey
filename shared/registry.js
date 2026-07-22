@@ -59,6 +59,18 @@ export const MODULES = [
     desc: 'ระดับสายตา + ลานสายตา → VSI → WPI (ตาราง 6-1..6-8) พร้อมไดอะแกรมลานสายตาแบบแตะ',
     path: '/impairment/eye/', icon: IC.eye, status: 'ready', requiresLogin: false,
   },
+  {
+    id: 'impairment-eye-adnexa', group: 'impairment', chapter: 'eye',
+    nameTh: 'ภาพซ้อน / หนังตา / น้ำตา',
+    desc: 'การสูญเสียอื่นๆ ของตา → VAS → VSI → WPI (ตาราง 6-7)',
+    path: '/impairment/eye-adnexa/', icon: IC.eye, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-eye-orbit', group: 'impairment', chapter: 'eye',
+    nameTh: 'รูปลักษณ์เบ้าตา / สูญเสียลูกตา',
+    desc: 'รูปลักษณ์เบ้าตา → WPI 11–23% + รวมสูญเสียลูกตา (ตาราง 6-9)',
+    path: '/impairment/eye-orbit/', icon: IC.eye, status: 'ready', requiresLogin: false,
+  },
 
   // ---- โสต ศอ นาสิก (บท 7) ----
   {
@@ -166,6 +178,14 @@ export const MODULES = [
     nameTh: 'ระบบทางเดินอาหาร',
     desc: 'ปัจจัยหลัก/รอง → ขั้น 0–4 × A–E → WPI (บทที่ 11)',
     path: '/impairment/gi/', icon: IC.stomach, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- เครื่องมือร่วม ----
+  {
+    id: 'impairment-combined', group: 'impairment', chapter: 'tools',
+    nameTh: 'เครื่องรวมค่า (Combined Values)',
+    desc: 'รวมการสูญเสียหลายรายการด้วยสูตร A + B(100−A)/100',
+    path: '/impairment/combined/', icon: IC.combine, status: 'ready', requiresLogin: false,
   },
 ];
 

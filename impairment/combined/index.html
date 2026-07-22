@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เครื่องรวมค่า (Combined Values) | OCCMED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/theme.css">
+<style>
+  .lead{max-width:940px;margin:0 auto;padding:16px 16px 0}
+  .lead .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+  .lead h1{font-size:21px;margin:4px 0 6px}.lead p{color:var(--muted);margin:0;font-size:14px}
+  .sec{margin-top:16px;padding:16px}.sec>h2{font-size:16px;color:var(--navy);margin-bottom:2px}.sec .hint{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .warn{background:#fff8ec;border:1px solid #ecd9a8;border-radius:12px;padding:14px 16px;margin-top:14px}
+  .warn b{color:var(--gold-dk)}.warn ul{margin:8px 0 0;padding-left:20px}.warn li{font-size:13.5px;color:#5b5030;margin:4px 0;line-height:1.5}
+  .vrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .vrow .idx{width:26px;height:26px;border-radius:7px;background:var(--line2);color:var(--navy);font-weight:700;display:grid;place-items:center;font-size:13px;flex:none}
+  .vrow input{flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:16px}
+  .vrow .rm{border:1px solid var(--line);background:#fff;border-radius:9px;width:38px;height:38px;font-size:18px;color:var(--muted);flex:none}
+  .steps{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:11px 14px;margin-top:12px;font-size:13px;line-height:1.8;color:var(--navy2)}.steps b{color:var(--navy)}
+  .result{margin-top:14px}
+  .rcard{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:12px;padding:18px;text-align:center}
+  .rcard b{display:block;font-size:38px;color:var(--gold-lt);line-height:1;font-weight:800}
+  .rcard span{color:#c8d4e4;font-size:12px;margin-top:6px;display:block}
+  .print-head{display:none}
+  @media print{@page{margin:14mm}body{background:#fff}.occ-topbar,.occ-back,#btnCopy,#btnPrint,#addRow,.vrow .rm,.warn{display:none!important}
+    .card,.sec{box-shadow:none;border-color:#ccc}.rcard{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .print-head{display:block;padding:0 0 8px;border-bottom:2px solid var(--navy);margin-bottom:10px}.print-head b{font-size:16px;color:var(--navy)}.print-head span{display:block;color:#555;font-size:12px}}
+</style>
+</head>
+<body>
+<div class="print-head" id="printHead"></div>
+<div class="occ-topbar"><div class="mark">OC</div>
+  <div><b>เครื่องรวมค่า (Combined Values)</b><small>เครื่องมือร่วม</small></div>
+  <div class="sp"></div><a class="occ-back" href="/impairment/">← เลือกระบบ</a></div>
+<div class="lead">
+  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <h1>รวมค่าการสูญเสียสมรรถภาพหลายรายการ</h1>
+  <p>ใช้สูตรตารางค่ารวม A + B(100 − A)/100 (เรียงมาก→น้อย) · <b>คำนวณล้วน ไม่บันทึกข้อมูล</b></p>
+</div>
+<div class="wrap">
+  <div class="warn"><b>ข้อควรทราบ</b><ul>
+    <li>ใช้รวมการสูญเสียหลายอวัยวะ/ระบบ ที่เป็น "ร้อยละของทั้งร่างกาย (WPI)" แล้ว</li>
+    <li>ค่ารูปแบบร้อยละของอวัยวะ (เช่น % ของแขน/ขา) ต้องแปลงเป็น % ทั้งร่างกายก่อนนำมารวม</li>
+    <li>การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</li>
+  </ul></div>
+  <div class="card sec">
+    <h2>กรอกค่าการสูญเสีย (% ทั้งร่างกาย)</h2>
+    <div class="hint">ใส่ได้หลายค่า · ลำดับไม่สำคัญ (ระบบเรียงให้เอง)</div>
+    <div id="rows"></div>
+    <button class="btn" id="addRow" style="margin-top:4px">+ เพิ่มรายการ</button>
+  </div>
+  <div class="card sec">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <h2 style="margin:0">ผลรวม</h2><div class="sp" style="flex:1"></div>
+      <button class="btn" id="btnPrint">พิมพ์ / PDF</button><button class="btn gold" id="btnCopy">คัดลอกสรุปผล</button></div>
+    <div id="resultBody" style="margin-top:10px"></div>
+  </div>
+</div>
+<script type="module">
+const $ = id => document.getElementById(id);
+let values = ['', '', ''];
+function combineSteps(vals){
+  const v = vals.map(Number).filter(x=>x>0).sort((a,b)=>b-a);
+  const steps=[]; if(!v.length) return {total:0, v, steps};
+  let acc=v[0];
+  for(let i=1;i<v.length;i++){const b=v[i];const na=acc+b*(100-acc)/100;steps.push(`${acc%1?acc.toFixed(2):acc} + ${b}×(100−${acc%1?acc.toFixed(2):acc})/100 = ${na%1?na.toFixed(2):na}`);acc=na;}
+  return {total:Math.min(100,acc), v, steps};
+}
+function renderRows(){
+  $('rows').innerHTML = values.map((val,i)=>`<div class="vrow">
+    <div class="idx">${i+1}</div>
+    <input type="number" min="0" max="100" inputmode="numeric" data-i="${i}" value="${val}" placeholder="ร้อยละ (0–100)">
+    ${values.length>1?`<button class="rm" data-rm="${i}" title="ลบ">×</button>`:''}
+  </div>`).join('');
+}
+function renderResult(){
+  const {total,v,steps}=combineSteps(values);
+  const rounded=Math.round(total);
+  $('resultBody').innerHTML = `
+    <div class="result"><div class="rcard"><b>${rounded}%</b><span>ค่ารวม (Combined Values) ของทั้งร่างกาย</span></div></div>
+    ${v.length?`<div class="steps">เรียงมาก→น้อย: <b>${v.join(', ')}</b>${steps.length?'<br>'+steps.join('<br>'):' (ค่าเดียว)'}<br>ปัดเศษ → <b>${rounded}%</b></div>`:'<div class="steps">ยังไม่มีค่าที่มากกว่า 0</div>'}`;
+}
+document.addEventListener('input',e=>{if(e.target.dataset.i!=null){values[Number(e.target.dataset.i)]=e.target.value;renderResult();}});
+document.addEventListener('click',e=>{
+  if(e.target.id==='addRow'){values.push('');renderRows();renderResult();}
+  if(e.target.dataset.rm!=null){values.splice(Number(e.target.dataset.rm),1);renderRows();renderResult();}
+});
+const THMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const beToday=()=>{const d=new Date();return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543}`;};
+$('printHead').innerHTML=`<b>สรุป — เครื่องรวมค่า (Combined Values)</b><span>คู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 · วันที่ ${beToday()}</span>`;
+async function copyText(txt,btn){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}const o=btn.textContent;btn.textContent=ok?'คัดลอกแล้ว':'ไม่สำเร็จ';setTimeout(()=>btn.textContent=o,1600);}
+$('btnCopy').addEventListener('click',e=>{const {total,v}=combineSteps(values);copyText([`สรุป — เครื่องรวมค่า (Combined Values) · วันที่ ${beToday()}`,`ค่าที่รวม: ${v.join(', ')||'—'}`,`ค่ารวมของทั้งร่างกาย = ${Math.round(total)}%`,'การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน'].join('\n'),e.currentTarget);});
+$('btnPrint').addEventListener('click',()=>window.print());
+renderRows(); renderResult();
+</script>
+</body>
+</html>

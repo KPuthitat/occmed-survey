@@ -124,3 +124,44 @@ export function combineValues(values) {
   for (let i = 1; i < v.length; i++) acc = acc + v[i] * (100 - acc) / 100;
   return Math.min(100, acc);
 }
+
+// ============================================================
+// ตารางที่ 6-7 การสูญเสียอื่นๆ ของระบบจักษุ (ภาพซ้อน/หนังตา/น้ำตา)
+//   ค่าคอลัมน์ = ร้อยละการสูญเสียของตาข้างที่ผิดปกติ → VAS ของตาข้างนั้น = 100 − ค่านั้น
+//   แล้วเข้าสูตร FVA (ร่วมกับตาอีกข้าง) → VSI → WPI
+//   หนังตา/น้ำตา: การสูญเสียสูงสุดของระบบจักษุ (VSI) ไม่เกินร้อยละ 15
+// ============================================================
+export const ADNEXA_6_7 = [
+  { id: 'dip-central', group: 'ภาพซ้อน (Diplopia)', label: 'ในรัศมี 0 ถึง 20 องศา', loss: [100, 100] },
+  { id: 'dip-upper', group: 'ภาพซ้อน (Diplopia)', label: 'ในรัศมีมากกว่า 20 องศา บริเวณครึ่งบน', loss: [40, 40] },
+  { id: 'dip-lower', group: 'ภาพซ้อน (Diplopia)', label: 'ในรัศมีมากกว่า 20 องศา บริเวณครึ่งล่าง', loss: [60, 60] },
+  { id: 'lid-loss', group: 'หนังตา / เยื่อบุตา', label: 'สูญเสียหนังตา · Entropion · Ectropion · lagophthalmos', loss: [5, 10], cap: 15 },
+  { id: 'lid-symb', group: 'หนังตา / เยื่อบุตา', label: 'Symblepharon', loss: [11, 15], cap: 15 },
+  { id: 'lac-inter', group: 'น้ำตา', label: 'น้ำตาไหลเป็นบางครั้ง (ร่วมกับพยาธิสภาพของทางเดินน้ำตา)', loss: [5, 10], cap: 15 },
+  { id: 'lac-const', group: 'น้ำตา', label: 'น้ำตาไหลเอ่อตลอดเวลา (ร่วมกับพยาธิสภาพของทางเดินน้ำตา)', loss: [11, 15], cap: 15 },
+];
+
+// lossPct = ร้อยละสูญเสียของตาที่ผิดปกติ · otherVas = VAS ของตาอีกข้าง (ปริยาย 100)
+// cap = เพดาน VSI (15 สำหรับหนังตา/น้ำตา) หรือ null
+export function adnexaResult(lossPct, otherVas = 100, cap = null) {
+  const vasAffected = clamp(100 - Number(lossPct), 0, 100);
+  const r = visionResult({ vasRE: vasAffected, vasLE: Number(otherVas) });
+  let vsi = r.vsi;
+  const capped = cap != null && vsi > cap;
+  if (capped) vsi = cap;
+  return { ...r, vasAffected, vsi, wpi: vsiToWpi(vsi), capped, cap };
+}
+
+// ============================================================
+// ตารางที่ 6-9 การสูญเสียรูปลักษณ์ของเบ้าตา — ค่า = WPI โดยตรง (เลือกหัวข้อรุนแรงสุด)
+//   สูญเสียลูกตา (enucleation/evisceration/phthisis bulbi) = สูญเสียสายตา 100% ของตาข้างนั้น (VSI 25% ถ้าตาอีกข้างปกติ)
+//   แล้วรวมกับรูปลักษณ์เบ้าตา (11–23%) ด้วยตารางค่ารวม
+// ============================================================
+export const ORBIT_6_9 = [
+  { range: [11, 14], desc: ['ต้องสังเกตจึงจะทราบว่าใส่ตาปลอม', 'ไม่มีภาวะตายุบลง', 'ไม่มีหนังตาตก', 'กลอกตาปลอมได้เกือบปกติ'] },
+  { range: [15, 19], desc: ['คนทั่วไปพอทราบว่าใส่ตาปลอม', 'ตายุบลงเล็กน้อย', 'หนังตาตกเล็กน้อย', 'กลอกตาปลอมได้บ้าง'] },
+  { range: [20, 23], desc: ['Phthisis bulbi', 'คนทั่วไปเห็นได้ชัดเจนว่าใส่ตาปลอม', 'ลูกตาดูยุบลงชัดเจน', 'มีหนังตาตกมาก', 'ไม่สามารถกลอกตาปลอมได้เลย', 'ลูกตา 2 ข้างไม่อยู่ในระดับเดียวกัน'] },
+];
+
+// การสูญเสียสายตาจากการสูญเสียลูกตา (VSI) เมื่อตาอีกข้างมี VAS = otherVas
+export function globeLossVsi(otherVas = 100) { return visionResult({ vasRE: 0, vasLE: Number(otherVas) }).vsi; }
