@@ -26,6 +26,13 @@
   .badge.ready{background:var(--ok-bg);color:var(--ok)}
   .badge.wip{background:#fdf1dd;color:var(--gold-dk)}
   .mod .go{margin-top:auto;font-size:13px;font-weight:600;color:var(--gold-dk)}
+  .chsec{margin-top:26px}
+  .chhead{display:flex;align-items:center;gap:11px;margin:0 2px 4px}
+  .chhead .ci{width:34px;height:34px;border-radius:9px;background:var(--navy);color:var(--gold-lt);display:grid;place-items:center;flex:none}
+  .chhead .ci svg{width:20px;height:20px}
+  .chhead h2{font-size:17px;color:var(--navy);margin:0}
+  .chhead small{color:var(--acc);font-size:12px;font-weight:600;letter-spacing:.3px}
+  .chsec .mods{margin-top:12px}
   .foot{max-width:940px;margin:26px auto 0;color:var(--acc);font-size:12px;line-height:1.6}
 </style>
 </head>
@@ -44,16 +51,15 @@
 </div></div>
 
 <div class="wrap">
-  <div class="mods" id="mods"></div>
+  <div id="chapters"></div>
   <div class="foot" id="foot"></div>
 </div>
 
 <script type="module">
-import { modulesInGroup } from '/shared/registry.js';
+import { CHAPTERS, modulesInGroup, modulesInChapter } from '/shared/registry.js';
 const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const statusLabel = { ready: 'พร้อมใช้', wip: 'กำลังพัฒนา' };
-const list = modulesInGroup('impairment');
-document.getElementById('mods').innerHTML = list.map(m => {
+const card = m => {
   const wip = m.status !== 'ready';
   return `<a class="card mod" href="${wip ? '#' : esc(m.path)}" ${wip ? 'aria-disabled="true"' : ''}>
     <span class="badge ${wip ? 'wip' : 'ready'}">${statusLabel[m.status] || m.status}</span>
@@ -62,9 +68,19 @@ document.getElementById('mods').innerHTML = list.map(m => {
     <span class="ds">${esc(m.desc)}</span>
     <span class="go">${wip ? 'เร็วๆ นี้' : 'เปิดใช้งาน →'}</span>
   </a>`;
+};
+document.getElementById('chapters').innerHTML = CHAPTERS.map(ch => {
+  const mods = modulesInChapter(ch.id);
+  if (!mods.length) return '';
+  return `<section class="chsec">
+    <div class="chhead"><span class="ci">${ch.icon || ''}</span>
+      <div><h2>${esc(ch.nameTh)}</h2>${ch.ref ? `<small>${esc(ch.ref)} · ${mods.length} รายการ</small>` : `<small>${mods.length} รายการ</small>`}</div></div>
+    <div class="mods">${mods.map(card).join('')}</div>
+  </section>`;
 }).join('');
-const ready = list.filter(m => m.status === 'ready').length;
-document.getElementById('foot').textContent = `มี ${list.length} ระบบ (พร้อมใช้ ${ready}) · อ้างอิงคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4`;
+const all = modulesInGroup('impairment');
+const ready = all.filter(m => m.status === 'ready').length;
+document.getElementById('foot').textContent = `มี ${all.length} รายการ (พร้อมใช้ ${ready}) · อ้างอิงคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4`;
 </script>
 </body>
 </html>
