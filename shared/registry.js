@@ -29,6 +29,15 @@ export const MODULES = [
     status: 'ready',
     requiresLogin: false,
   },
+  {
+    id: 'impairment-ent',
+    nameTh: 'ประเมินการสูญเสียการได้ยิน — โสต ศอ นาสิก',
+    desc: 'คำนวณการสูญเสียการได้ยิน (audiogram → DSHL → Binaural → WPI) ตามคู่มือฯ ฉบับ 4 บทที่ 7 (คำนวณล้วน ไม่บันทึกข้อมูล)',
+    path: '/impairment/ent/',
+    icon: '👂',
+    status: 'ready',
+    requiresLogin: false,
+  },
 ];
 
 // เผื่อหน้า HTML ที่โหลดแบบ non-module
