@@ -38,6 +38,15 @@ export const MODULES = [
     status: 'ready',
     requiresLogin: false,
   },
+  {
+    id: 'impairment-cardio',
+    nameTh: 'ประเมินการสูญเสียสมรรถภาพ — ระบบหัวใจและหลอดเลือด',
+    desc: 'คำนวณการสูญเสียสมรรถภาพจากโรคหลอดเลือดหัวใจ (NYHA + ขั้น 0–5 → WPI) ตามคู่มือฯ ฉบับ 4 บทที่ 10 (คำนวณล้วน ไม่บันทึกข้อมูล)',
+    path: '/impairment/cardio/',
+    icon: '❤️',
+    status: 'ready',
+    requiresLogin: false,
+  },
 ];
 
 // เผื่อหน้า HTML ที่โหลดแบบ non-module
