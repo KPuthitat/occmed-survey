@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ประเมินการสูญเสียสมรรถภาพ — หัวใจและหลอดเลือด | OCCMED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/theme.css">
+<style>
+  .lead{max-width:940px;margin:0 auto;padding:16px 16px 0}
+  .lead .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+  .lead h1{font-size:22px;margin:4px 0 6px}
+  .lead p{color:var(--muted);margin:0;font-size:14px}
+  .sec{margin-top:16px;padding:16px}
+  .sec > h2{font-size:16px;color:var(--navy);margin-bottom:2px}
+  .sec .hint{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .warn{background:#fff8ec;border:1px solid #ecd9a8;border-radius:12px;padding:14px 16px;margin-top:14px}
+  .warn b{color:var(--gold-dk)}
+  .warn ul{margin:8px 0 0;padding-left:20px}
+  .warn li{font-size:13.5px;color:#5b5030;margin:4px 0;line-height:1.5}
+
+  /* NYHA reference */
+  details.nyha{margin-top:6px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  details.nyha summary{padding:12px 14px;background:var(--line2);font-weight:700;color:var(--navy);cursor:pointer;list-style:none;font-size:14px}
+  details.nyha summary::-webkit-details-marker{display:none}
+  details.nyha summary::after{content:'▾';float:right;color:var(--acc)}
+  details.nyha[open] summary::after{content:'▴'}
+  .nyrow{display:flex;gap:12px;padding:11px 14px;border-top:1px solid var(--line)}
+  .nyrow .cls{flex:0 0 42px;font-weight:800;color:var(--navy);font-size:16px;text-align:center}
+  .nyrow .txt{font-size:13px;color:var(--ink);line-height:1.5}
+
+  /* level cards */
+  .levels{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .lvl{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;transition:.12s;background:#fff}
+  .lvl:hover{border-color:var(--gold)}
+  .lvl.on{border-color:var(--navy);box-shadow:0 0 0 3px rgba(11,37,69,.08)}
+  .lvl .lhead{display:flex;align-items:center;gap:10px}
+  .lvl .badge{flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:var(--line2);color:var(--navy);font-weight:800;display:grid;place-items:center;font-size:15px}
+  .lvl.on .badge{background:var(--navy);color:#fff}
+  .lvl .ltitle{font-weight:700;color:var(--navy);font-size:14.5px}
+  .lvl .lrange{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .lvl .lnyha{font-size:11.5px;color:var(--gold-dk);font-weight:700}
+  .lvl .crit{margin-top:9px;display:none;font-size:12.5px;line-height:1.55;color:#3a4557}
+  .lvl.on .crit{display:block}
+  .lvl .crit dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 8px}
+  .lvl .crit dt{color:var(--navy2);font-weight:700;white-space:nowrap}
+  .lvl .crit dd{margin:0}
+
+  /* severity grade selector */
+  #secGrade{display:none}
+  #secGrade.show{display:block}
+  .grades{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px}
+  .gbtn{border:1.5px solid var(--line);border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;background:#fff;transition:.12s}
+  .gbtn:hover{border-color:var(--gold)}
+  .gbtn.on{border-color:var(--navy);background:var(--navy);color:#fff}
+  .gbtn .gl{font-weight:800;font-size:17px;color:var(--navy);display:block}
+  .gbtn.on .gl{color:var(--gold-lt)}
+  .gbtn .gp{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .gbtn.on .gp{color:#c8d4e4}
+  .gnote{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+
+  .result{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rcard{background:var(--line2);border-radius:12px;padding:16px;text-align:center}
+  .rcard b{display:block;font-size:34px;color:var(--navy);line-height:1;font-weight:800}
+  .rcard.gold{background:linear-gradient(135deg,var(--navy),var(--navy2))}
+  .rcard.gold b{color:var(--gold-lt)}
+  .rcard.gold span{color:#c8d4e4}
+  .rcard span{color:var(--muted);font-size:12px;margin-top:6px;display:block;line-height:1.3}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:22px 10px}
+  .print-note{margin-top:12px;font-size:12px;color:var(--muted)}
+  .print-head{display:none}
+  @media(max-width:560px){.grades{grid-template-columns:repeat(5,1fr);gap:5px}.gbtn{padding:10px 2px}.gbtn .gl{font-size:15px}.gbtn .gp{font-size:11px}}
+  @media print {
+    @page { margin: 14mm; }
+    body { background:#fff; font-size:12px; }
+    .occ-topbar,.occ-back,#btnCopy,#btnPrint,.warn,details.nyha { display:none !important; }
+    .lvl:not(.on){ display:none; }
+    .card,.sec { box-shadow:none; border-color:#ccc; break-inside:avoid; }
+    .rcard.gold { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .print-head { display:block; padding:0 0 8px; border-bottom:2px solid var(--navy); margin-bottom:10px; }
+    .print-head b { font-size:16px; color:var(--navy); }
+    .print-head span { display:block; color:#555; font-size:12px; margin-top:2px; }
+  }
+</style>
+</head>
+<body>
+<div class="print-head" id="printHead"></div>
+<div class="occ-topbar">
+  <div class="mark">OC</div>
+  <div><b>ประเมินสมรรถภาพหัวใจและหลอดเลือด</b><small>โรคหลอดเลือดหัวใจ · บทที่ 10</small></div>
+  <div class="sp"></div>
+  <a class="occ-back" href="/">← หน้ารวมโมดูล</a>
+</div>
+
+<div class="lead">
+  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <h1>เครื่องคำนวณการสูญเสียสมรรถภาพ — โรคหลอดเลือดหัวใจ</h1>
+  <p>เลือกขั้นความรุนแรง (ตาราง 10-4) แล้วเลือกระดับย่อย A–E → ร้อยละการสูญเสียทั้งร่างกาย (WPI) · <b>คำนวณล้วน ไม่บันทึกข้อมูล</b></p>
+</div>
+
+<div class="wrap">
+  <div class="warn">
+    <b>⚠ ข้อควรทราบ</b>
+    <ul>
+      <li>ประเมินเมื่ออาการคงที่ ได้รับการรักษาอย่างเหมาะสมเต็มที่แล้ว (maximum medical improvement)</li>
+      <li>ขั้นความรุนแรงพิจารณาจาก <b>ประวัติ + การตรวจร่างกาย + การฉีดสีหลอดเลือด (angiography)</b> ประกอบกัน</li>
+      <li>ระดับย่อย A–E ภายในขั้น ใช้ดุลยพินิจตามความรุนแรงจริงของผู้ป่วยในช่วงร้อยละของขั้นนั้น</li>
+      <li>โมดูลรุ่นนี้ครอบคลุม “โรคหลอดเลือดหัวใจ (coronary heart disease)” — ความดันโลหิตสูง หลอดเลือดส่วนปลาย ลิ้นหัวใจ และหัวใจล้มเหลว จะเพิ่มในรอบถัดไป</li>
+      <li>การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</li>
+    </ul>
+  </div>
+
+  <div class="card sec">
+    <h2>ระดับความสามารถของหัวใจ (NYHA functional class)</h2>
+    <div class="hint">อ้างอิงประกอบการจัดขั้น (ตาราง 10-1)</div>
+    <details class="nyha">
+      <summary>ดูเกณฑ์ NYHA class I–IV</summary>
+      <div id="nyhaBody"></div>
+    </details>
+  </div>
+
+  <div class="card sec">
+    <h2>ขั้นความรุนแรงของโรคหลอดเลือดหัวใจ (ตาราง 10-4)</h2>
+    <div class="hint">แตะเลือกขั้นที่ตรงกับผู้ป่วย · แสดงเกณฑ์ประวัติ / การตรวจ / การฉีดสี</div>
+    <div class="levels" id="levels"></div>
+  </div>
+
+  <div class="card sec" id="secGrade">
+    <h2>ระดับย่อยภายในขั้น (severity grade A–E)</h2>
+    <div class="hint" id="gradeHint"></div>
+    <div class="grades" id="grades"></div>
+    <div class="gnote">A = น้อยที่สุดในขั้น · E = มากที่สุดในขั้น (ค่าตรงตามตาราง 10-4)</div>
+  </div>
+
+  <div class="card sec" id="secResult">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <h2 style="margin:0">ผลการประเมิน</h2>
+      <div class="sp" style="flex:1"></div>
+      <button class="btn" id="btnPrint">🖨 พิมพ์ / PDF</button>
+      <button class="btn gold" id="btnCopy">📋 คัดลอกสรุปผล</button>
+    </div>
+    <div id="resultBody" style="margin-top:10px"></div>
+    <div class="print-note">การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</div>
+  </div>
+</div>
+
+<script type="module">
+import { NYHA_CLASSES, CAD_LEVELS, GRADE_LETTERS, cadResult } from './engine.js';
+const $ = id => document.getElementById(id);
+const state = { level: null, grade: 0 };
+
+// NYHA reference
+$('nyhaBody').innerHTML = NYHA_CLASSES.map(n =>
+  `<div class="nyrow"><div class="cls">${n.cls}</div><div class="txt">${n.text}</div></div>`).join('');
+
+// level cards
+function renderLevels() {
+  $('levels').innerHTML = CAD_LEVELS.map(L => {
+    const on = state.level === L.level ? ' on' : '';
+    const rangeTxt = L.level === 0 ? '0%' : `${L.range[0]}–${L.range[1]}%`;
+    const crit = L.level === 0
+      ? `<dl><dt>ประวัติ</dt><dd>${L.history}</dd><dt>การตรวจ</dt><dd>${L.exam}</dd><dt>ฉีดสี</dt><dd>${L.angio}</dd></dl>`
+      : `<dl><dt>ประวัติ</dt><dd>${L.history}</dd><dt>การตรวจ</dt><dd>${L.exam}</dd><dt>ฉีดสี</dt><dd>${L.angio}</dd></dl>`;
+    return `<div class="lvl${on}" data-level="${L.level}">
+      <div class="lhead">
+        <div class="badge">${L.level}</div>
+        <div>
+          <div class="ltitle">ขั้นที่ ${L.level}${L.level === 0 ? ' — ไม่มีการสูญเสีย' : ''}</div>
+          <div class="lnyha">${L.nyha === '—' ? 'ไม่มีอาการ' : 'NYHA class ' + L.nyha}</div>
+        </div>
+        <div class="lrange">${rangeTxt}</div>
+      </div>
+      <div class="crit">${crit}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderGrades() {
+  const L = CAD_LEVELS.find(x => x.level === state.level);
+  if (!L || L.level === 0) { $('secGrade').classList.remove('show'); return; }
+  $('secGrade').classList.add('show');
+  $('gradeHint').textContent = `ขั้นที่ ${L.level} · ช่วง ${L.range[0]}–${L.range[1]}% · เลือกระดับย่อยตามความรุนแรง`;
+  $('grades').innerHTML = L.grades.map((p, i) =>
+    `<div class="gbtn${state.grade === i ? ' on' : ''}" data-grade="${i}">
+      <span class="gl">${GRADE_LETTERS[i]}</span><div class="gp">${p}%</div>
+    </div>`).join('');
+}
+
+function renderResult() {
+  if (state.level == null) { $('resultBody').innerHTML = `<div class="empty">เลือกขั้นความรุนแรงด้านบนเพื่อดูผล</div>`; return; }
+  const r = cadResult(state.level, state.grade);
+  const L = CAD_LEVELS.find(x => x.level === state.level);
+  const labelTxt = r.level === 0 ? 'ขั้นที่ 0 (ไม่มีการสูญเสีย)' : `ขั้นที่ ${r.level} · ระดับ ${r.gradeLetter} (${r.label})`;
+  const nyhaTxt = L.nyha === '—' ? 'ไม่มีอาการ' : 'NYHA class ' + L.nyha;
+  $('resultBody').innerHTML = `
+    <div class="result">
+      <div class="rcard"><b>${labelTxt.replace(/ · .*/, '')}</b><span>${nyhaTxt}</span></div>
+      <div class="rcard gold"><b>${r.percent}%</b><span>การสูญเสียทั้งร่างกาย (WPI)</span></div>
+    </div>
+    <div class="gnote" style="margin-top:12px">
+      โรคหลอดเลือดหัวใจ — ${labelTxt} → WPI = <b style="color:var(--navy)">${r.percent}%</b>
+      ${r.level === 0 ? '' : ` (อยู่ในช่วง ${r.range[0]}–${r.range[1]}% ของขั้น)`}
+    </div>`;
+}
+
+document.addEventListener('click', e => {
+  const lvl = e.target.closest('.lvl');
+  if (lvl) { state.level = Number(lvl.dataset.level); state.grade = 0; renderLevels(); renderGrades(); renderResult(); return; }
+  const g = e.target.closest('.gbtn');
+  if (g) { state.grade = Number(g.dataset.grade); renderGrades(); renderResult(); }
+});
+
+const THMON = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function beToday() { const d = new Date(); return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear() + 543}`; }
+$('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — หัวใจและหลอดเลือด</b><span>ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 10 (โรคหลอดเลือดหัวใจ) · วันที่ประเมิน ${beToday()}</span>`;
+
+function buildText() {
+  if (state.level == null) return 'ยังไม่ได้เลือกขั้นความรุนแรง';
+  const r = cadResult(state.level, state.grade);
+  const L = CAD_LEVELS.find(x => x.level === state.level);
+  const nyhaTxt = L.nyha === '—' ? 'ไม่มีอาการ' : 'NYHA class ' + L.nyha;
+  const lbl = r.level === 0 ? 'ขั้นที่ 0 (ไม่มีการสูญเสีย)' : `ขั้นที่ ${r.level} ระดับ ${r.gradeLetter} (${r.label})`;
+  const L2 = [];
+  L2.push('สรุปการประเมินการสูญเสียสมรรถภาพ — หัวใจและหลอดเลือด (คู่มือฯ บทที่ 10) · วันที่ ' + beToday());
+  L2.push('โรค: โรคหลอดเลือดหัวใจ (Coronary heart disease)');
+  L2.push(`ขั้นความรุนแรง: ${lbl} · ${nyhaTxt}`);
+  if (r.level !== 0) L2.push(`ช่วงร้อยละของขั้น: ${r.range[0]}–${r.range[1]}%`);
+  L2.push(`การสูญเสียสมรรถภาพทั้งร่างกาย (WPI) = ${r.percent}%`);
+  L2.push('การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน');
+  return L2.join('\n');
+}
+async function copyText(txt, btn) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; }
+  catch (e) { try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); document.body.removeChild(ta); } catch (e2) {} }
+  const old = btn.textContent; btn.textContent = ok ? '✓ คัดลอกแล้ว' : '✗ ไม่สำเร็จ';
+  setTimeout(() => btn.textContent = old, 1600);
+}
+$('btnCopy').addEventListener('click', e => copyText(buildText(), e.currentTarget));
+$('btnPrint').addEventListener('click', () => window.print());
+
+renderLevels(); renderGrades(); renderResult();
+</script>
+</body>
+</html>
