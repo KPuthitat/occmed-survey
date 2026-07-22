@@ -200,19 +200,34 @@ function currentResult() {
 
 function renderResult() {
   const r = currentResult();
-  const n1 = x => (x % 1 ? x.toFixed(2) : x);
+  const n = x => (x % 1 ? +x.toFixed(2) : x);
+  const frac = (num, den) => `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+  const eq = '<span class="feq">=</span>';
+  const sub = t => `<span class="fsub">${t}</span>`;
+  const res = (v, hl) => `<span class="fres${hl ? ' hl' : ''}">${v}</span>`;
+  const item = (label, def, calc) => `<div class="fitem"><div class="fdef">${def}</div><div class="fcalc"><span class="flabel">${label}</span>${calc}</div></div>`;
+
+  const wpiCalc = r.vsi <= 50
+    ? `${eq} <span class="fnote">VSI ≤ 50 → WPI = VSI</span> ${eq} ${res(r.wpi + '%', true)}`
+    : `${eq} 50 + 0.7 × (${n(r.vsi)} − 50) ${eq} ${res(r.wpi + '%', true)}`;
+
   $('resultBody').innerHTML = `
-    <div class="steps">
-      <div class="r">VAS — ขวา ${r.vasRE} · ซ้าย ${r.vasLE} · สองตา ${r.vasBE}${state.beManual ? '' : ' (ใช้ตาที่ดีกว่า)'}</div>
-      <div class="r">FVA = (2×${r.vasBE} + ${r.vasRE} + ${r.vasLE}) / 4 = <b>${n1(r.fva)}</b></div>
-      <div class="r">VFS — ขวา ${r.vfsRE} · ซ้าย ${r.vfsLE} · สองตา ${r.vfsBE}</div>
-      <div class="r">FVF = (2×${r.vfsBE} + ${r.vfsRE} + ${r.vfsLE}) / 4 = <b>${n1(r.fvf)}</b></div>
-      <div class="r">FVS = FVA × FVF / 100 = ${n1(r.fva)} × ${n1(r.fvf)} / 100 = <b>${n1(r.fvs)}</b></div>
-      <div class="r">VSI = 100 − FVS = <span class="big">${n1(r.vsi)}%</span></div>
-      <div class="r">WPI (ตาราง 6-8): VSI ${r.vsi <= 50 ? '≤ 50 → WPI = VSI' : '> 50 → 50 + 0.7(VSI−50)'} = <span class="big">${r.wpi}%</span></div>
+    <div class="fmeta">VAS: ขวา <b>${r.vasRE}</b> · ซ้าย <b>${r.vasLE}</b> · สองตา <b>${r.vasBE}</b>${state.beManual ? '' : ' (ตาที่ดีกว่า)'}
+      &nbsp;·&nbsp; VFS: ขวา <b>${n(r.vfsRE)}</b> · ซ้าย <b>${n(r.vfsLE)}</b> · สองตา <b>${n(r.vfsBE)}</b></div>
+    <div class="fsheet">
+      ${item('FVA', `<span class="fname">Functional Visual Acuity</span> = (2·VAS${sub('สองตา')} + VAS${sub('ขวา')} + VAS${sub('ซ้าย')}) ÷ 4`,
+        `${eq} ${frac(`2×${r.vasBE} + ${r.vasRE} + ${r.vasLE}`, 4)} ${eq} ${res(n(r.fva))}`)}
+      ${item('FVF', `<span class="fname">Functional Visual Field</span> = (2·VFS${sub('สองตา')} + VFS${sub('ขวา')} + VFS${sub('ซ้าย')}) ÷ 4`,
+        `${eq} ${frac(`2×${n(r.vfsBE)} + ${n(r.vfsRE)} + ${n(r.vfsLE)}`, 4)} ${eq} ${res(n(r.fvf))}`)}
+      ${item('FVS', `<span class="fname">Functional Vision Score</span> = FVA × FVF ÷ 100`,
+        `${eq} ${frac(`${n(r.fva)} × ${n(r.fvf)}`, 100)} ${eq} ${res(n(r.fvs))}`)}
+      ${item('VSI', `<span class="fname">การสูญเสียระบบจักษุ</span> = 100 − FVS`,
+        `${eq} 100 − ${n(r.fvs)} ${eq} ${res(n(r.vsi) + '%')}`)}
+      ${item('WPI', `<span class="fname">การสูญเสียทั้งร่างกาย</span> (ตาราง 6-8) · VSI ≤ 50 → WPI = VSI · VSI &gt; 50 → 50 + 0.7(VSI−50)`,
+        wpiCalc)}
     </div>
     <div class="result">
-      <div class="rcard"><b>${n1(r.vsi)}%</b><span>การสูญเสียระบบจักษุ (VSI)</span></div>
+      <div class="rcard"><b>${n(r.vsi)}%</b><span>การสูญเสียระบบจักษุ (VSI)</span></div>
       <div class="rcard gold"><b>${r.wpi}%</b><span>การสูญเสียทั้งร่างกาย (WPI)</span></div>
     </div>`;
 }
