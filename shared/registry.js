@@ -17,7 +17,7 @@ export const MODULES = [
     desc: 'คำนวณร้อยละการสูญเสียสมรรถภาพอย่างถาวร ตามคู่มือกองทุนเงินทดแทน ฉบับ 4 บทที่ 11 (คำนวณล้วน ไม่บันทึกข้อมูล)',
     path: '/impairment/gi/',
     icon: '🩺',
-    status: 'wip', // เปลี่ยนเป็น 'ready' เมื่อ UI (เฟส 3) เสร็จ
+    status: 'ready',
     requiresLogin: false,
   },
 ];
