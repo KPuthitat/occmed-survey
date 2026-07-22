@@ -66,7 +66,7 @@ function combineSteps(vals){
   const v = vals.map(Number).filter(x=>x>0).sort((a,b)=>b-a);
   const steps=[]; if(!v.length) return {total:0, v, steps};
   let acc=v[0];
-  for(let i=1;i<v.length;i++){const b=v[i];const na=acc+b*(100-acc)/100;steps.push(`${acc%1?acc.toFixed(2):acc} + ${b}×(100−${acc%1?acc.toFixed(2):acc})/100 = ${na%1?na.toFixed(2):na}`);acc=na;}
+  for(let i=1;i<v.length;i++){const b=v[i];const a=acc;const na=acc+b*(100-acc)/100;steps.push({a,b,na});acc=na;}
   return {total:Math.min(100,acc), v, steps};
 }
 function renderRows(){
@@ -79,9 +79,21 @@ function renderRows(){
 function renderResult(){
   const {total,v,steps}=combineSteps(values);
   const rounded=Math.round(total);
+  const nn=x=>(x%1?+x.toFixed(2):x);
+  const frac=(num,den)=>`<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+  const eq='<span class="feq">=</span>';
+  const res=(x,hl)=>`<span class="fres${hl?' hl':''}">${x}</span>`;
+  const item=(label,def,calc)=>`<div class="fitem"><div class="fdef">${def}</div><div class="fcalc"><span class="flabel">${label}</span>${calc}</div></div>`;
+  let sheet;
+  if(!v.length) sheet='<div class="fmeta">ยังไม่มีค่าที่มากกว่า 0</div>';
+  else if(steps.length===0) sheet=`<div class="fmeta">มีค่าเดียว: <b>${v[0]}</b>% → ค่ารวม = ${v[0]}%</div>`;
+  else sheet = `<div class="fmeta">เรียงมาก→น้อย: <b>${v.join(', ')}</b> · สูตร A + B × (100 − A) ÷ 100</div>`
+    + steps.map((s,i)=>item(i+1===steps.length?'รวม':`ขั้น ${i+1}`,
+        `A = ${nn(s.a)} · B = ${s.b}`,
+        `${eq} ${nn(s.a)} + ${frac(`${s.b} × (100 − ${nn(s.a)})`,100)} ${eq} ${res(nn(s.na)+'%', i+1===steps.length)}`)).join('');
   $('resultBody').innerHTML = `
     <div class="result"><div class="rcard"><b>${rounded}%</b><span>ค่ารวม (Combined Values) ของทั้งร่างกาย</span></div></div>
-    ${v.length?`<div class="steps">เรียงมาก→น้อย: <b>${v.join(', ')}</b>${steps.length?'<br>'+steps.join('<br>'):' (ค่าเดียว)'}<br>ปัดเศษ → <b>${rounded}%</b></div>`:'<div class="steps">ยังไม่มีค่าที่มากกว่า 0</div>'}`;
+    <div class="fsheet" style="margin-top:14px">${sheet}</div>`;
 }
 document.addEventListener('input',e=>{if(e.target.dataset.i!=null){values[Number(e.target.dataset.i)]=e.target.value;renderResult();}});
 document.addEventListener('click',e=>{

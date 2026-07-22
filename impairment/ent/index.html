@@ -117,14 +117,23 @@ function renderResult() {
   const r = hearingResult(state.R, state.L);
   $('dshlR').textContent = r.dshlR;
   $('dshlL').textContent = r.dshlL;
-  const n = x => (x % 1 ? x.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') : x);
-  const betterSide = r.monR <= r.monL ? 'ขวา' : 'ซ้าย';
+  const n = x => (x % 1 ? +x.toFixed(2) : x);
+  const frac = (num, den) => `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+  const eq = '<span class="feq">=</span>';
+  const res = (v, hl) => `<span class="fres${hl ? ' hl' : ''}">${v}</span>`;
+  const item = (label, def, calc) => `<div class="fitem"><div class="fdef">${def}</div><div class="fcalc"><span class="flabel">${label}</span>${calc}</div></div>`;
+  const betterSide = r.monR <= r.monL ? 'ขวา (RE)' : 'ซ้าย (LE)';
   $('resultBody').innerHTML = `
-    <div class="steps">
-      <div class="r">DSHL — ขวา ${r.dshlR} → ${n(r.monR)}% · ซ้าย ${r.dshlL} → ${n(r.monL)}% (ตาราง 7-1)</div>
-      <div class="r">หูข้างที่ดีกว่า = ${betterSide} (${n(r.better)}%) · ข้างที่เลวกว่า = ${n(r.worse)}%</div>
-      <div class="r">Binaural = (5 × ${n(r.better)} + ${n(r.worse)}) / 6 = <span class="big">${r.binaural1}%</span> (ตาราง 7-2)</div>
-      <div class="r">WPI = ${r.binaural1} × 0.35 = <span class="big">${r.wpi}%</span> (ตาราง 7-3)</div>
+    <div class="fsheet">
+      <div class="fmeta">DSHL = ผลรวมระดับการได้ยิน 4 ความถี่ (500 / 1000 / 2000 / 3000 Hz) · ขวา <b>${r.dshlR}</b> dB · ซ้าย <b>${r.dshlL}</b> dB</div>
+      ${item('RE', `<span class="fname">การได้ยินหูขวา (Monaural)</span> = (DSHL − 100) × 1.5 ÷ 4 &nbsp;·&nbsp; ตาราง 7-1`,
+        `${eq} ${frac(`(${r.dshlR} − 100) × 1.5`, 4)} ${eq} ${res(n(r.monR) + '%')}`)}
+      ${item('LE', `<span class="fname">การได้ยินหูซ้าย (Monaural)</span> = (DSHL − 100) × 1.5 ÷ 4 &nbsp;·&nbsp; ตาราง 7-1`,
+        `${eq} ${frac(`(${r.dshlL} − 100) × 1.5`, 4)} ${eq} ${res(n(r.monL) + '%')}`)}
+      ${item('BIN', `<span class="fname">การได้ยินสองข้าง (Binaural)</span> = (5 × หูข้างที่ดีกว่า + หูข้างที่เลวกว่า) ÷ 6 &nbsp;·&nbsp; ตาราง 7-2 &nbsp;·&nbsp; ข้างที่ดีกว่า = ${betterSide}`,
+        `${eq} ${frac(`5 × ${n(r.better)} + ${n(r.worse)}`, 6)} ${eq} ${res(r.binaural1 + '%')}`)}
+      ${item('WPI', `<span class="fname">การสูญเสียทั้งร่างกาย</span> = Binaural × 0.35 &nbsp;·&nbsp; ตาราง 7-3`,
+        `${eq} ${n(r.binaural1)} × 0.35 ${eq} ${res(r.wpi + '%', true)}`)}
     </div>
     <div class="result">
       <div class="rcard"><b>${n(r.monR)}%</b><span>หูขวา (Monaural)</span></div>
