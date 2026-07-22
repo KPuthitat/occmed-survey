@@ -20,6 +20,15 @@ export const MODULES = [
     status: 'ready',
     requiresLogin: false,
   },
+  {
+    id: 'impairment-eye',
+    nameTh: 'ประเมินการสูญเสียสมรรถภาพ — ระบบจักษุ',
+    desc: 'คำนวณการสูญเสียสมรรถภาพระบบจักษุ (ระดับสายตา + ลานสายตา → VSI → WPI) ตามคู่มือฯ ฉบับ 4 บทที่ 6 (คำนวณล้วน ไม่บันทึกข้อมูล)',
+    path: '/impairment/eye/',
+    icon: '👁',
+    status: 'ready',
+    requiresLogin: false,
+  },
 ];
 
 // เผื่อหน้า HTML ที่โหลดแบบ non-module
