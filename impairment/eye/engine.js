@@ -95,6 +95,27 @@ export function visionResult(inp) {
   return { fva, fvf, fvs, vsi, wpi, vasRE, vasLE, vasBE, vfsRE, vfsLE, vfsBE };
 }
 
+// ============================================================
+// ลานสายตา (Visual Field) — ตาราง 6-5/6-6 + รูป 6-2
+// 10 meridians · ต่อ meridian: central 0–10° = 5 คะแนน (1/2°) + peripheral 10–60° = 5 คะแนน (1/10°)
+// สูงสุด 10 คะแนน/meridian × 10 = 100 = ลานสายตาปกติ (VFS)
+// ============================================================
+export const VF_MERIDIANS = [25, 65, 115, 155, 195, 225, 255, 285, 315, 345]; // องศา (plot)
+
+// คะแนนของ meridian หนึ่ง จากรัศมีลานสายตาที่เหลือ (องศา)
+export function meridianPoints(radiusDeg) {
+  const r = Math.max(0, Number(radiusDeg) || 0);
+  const central = Math.min(r, 10) / 2;                        // 0–5 (1 คะแนน/2°)
+  const peripheral = Math.min(Math.max(r - 10, 0), 50) / 10;  // 0–5 (1 คะแนน/10°)
+  return central + peripheral;                                 // 0–10
+}
+
+// VFS (0–100) จากรัศมี 10 meridian · radii = array 10 ค่า (ตามลำดับ VF_MERIDIANS) หรือ object {25:.., ...}
+export function visualFieldScore(radii) {
+  const vals = Array.isArray(radii) ? radii : VF_MERIDIANS.map(m => radii[m]);
+  return vals.reduce((s, r) => s + meridianPoints(r), 0);
+}
+
 // ตารางค่ารวม (Combined Values) — สำหรับรวมกับการสูญเสียอื่น/บท (เช่น เบ้าตา 6-9)
 export function combineValues(values) {
   const v = values.map(Number).filter(x => x > 0).sort((a, b) => b - a);
