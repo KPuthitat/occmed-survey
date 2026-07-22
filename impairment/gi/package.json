@@ -1,0 +1,5 @@
+{
+  "type": "module",
+  "private": true,
+  "description": "โมดูลประเมินการสูญเสียสมรรถภาพ (ทางเดินอาหาร) — config type:module ให้ engine เป็น ES module (ไม่มี dependency)"
+}

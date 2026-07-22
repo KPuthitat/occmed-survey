@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCCMED — ระบบงานอาชีวเวชศาสตร์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/theme.css">
+<style>
+  .hero{background:linear-gradient(160deg,var(--navy),var(--navy2) 55%,var(--navy-soft));color:#fff;padding:34px 16px 30px}
+  .hero .inner{max-width:940px;margin:0 auto}
+  .hero .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);font-weight:600}
+  .hero h1{color:#fff;font-size:26px;margin:6px 0 8px}
+  .hero p{color:#c8d4e4;margin:0;max-width:640px}
+  .mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:20px}
+  .mod{display:flex;flex-direction:column;gap:8px;padding:18px;text-decoration:none;color:inherit;position:relative;transition:.15s}
+  .mod:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(11,37,69,.14)}
+  .mod[aria-disabled="true"]{opacity:.72;pointer-events:none}
+  .mod .ic{font-size:30px;line-height:1}
+  .mod .nm{font-weight:700;color:var(--navy);font-size:16px}
+  .mod .ds{font-size:13px;color:var(--muted);line-height:1.5}
+  .badge{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+  .badge.ready{background:var(--ok-bg);color:var(--ok)}
+  .badge.wip{background:#fdf1dd;color:var(--gold-dk)}
+  .mod .go{margin-top:auto;font-size:13px;font-weight:600;color:var(--gold-dk)}
+  .foot{max-width:940px;margin:26px auto 0;color:var(--acc);font-size:12px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="occ-topbar">
+  <div class="mark">OC</div>
+  <div><b>OCCMED</b><small>Occupational Medicine Suite</small></div>
+</div>
+
+<div class="hero"><div class="inner">
+  <div class="kick">IKIGAI MEDIHEALTH</div>
+  <h1>ระบบงานอาชีวเวชศาสตร์</h1>
+  <p>รวมเครื่องมือด้านอาชีวเวชศาสตร์ไว้ในที่เดียว เลือกโมดูลที่ต้องการใช้งานด้านล่าง</p>
+</div></div>
+
+<div class="wrap">
+  <div class="mods" id="mods"></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script type="module">
+import { MODULES } from '/shared/registry.js';
+const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const statusLabel = { ready: 'พร้อมใช้', wip: 'กำลังพัฒนา' };
+const mods = document.getElementById('mods');
+mods.innerHTML = MODULES.map(m => {
+  const wip = m.status !== 'ready';
+  return `<a class="card mod" href="${wip ? '#' : m.path}" ${wip ? 'aria-disabled="true"' : ''}>
+    <span class="badge ${m.status === 'ready' ? 'ready' : 'wip'}">${statusLabel[m.status] || m.status}</span>
+    <span class="ic">${esc(m.icon || '▧')}</span>
+    <span class="nm">${esc(m.nameTh)}</span>
+    <span class="ds">${esc(m.desc)}</span>
+    <span class="go">${wip ? 'เร็วๆ นี้' : 'เปิดใช้งาน →'}</span>
+  </a>`;
+}).join('');
+const ready = MODULES.filter(m => m.status === 'ready').length;
+document.getElementById('foot').textContent =
+  `มี ${MODULES.length} โมดูล (พร้อมใช้ ${ready}) · IKIGAI MEDIHEALTH · OMNIA HEALTH`;
+</script>
+</body>
+</html>

@@ -1,9 +1,15 @@
 # CLAUDE.md — คู่มือโปรเจกต์ OCCUMED Walkthrough Survey
 
 ## ภาพรวมโปรเจกต์
-เว็บแอปเดินสำรวจสถานประกอบการด้านอาชีวเวชศาสตร์ (occupational medicine walk-through survey) แบบ **single-file HTML** ไฟล์เดียว เปิดในเบราว์เซอร์ได้ทันที **ไม่มี build step** — ทุกอย่าง (HTML / CSS / JS) อยู่ในไฟล์เดียว
+**OCCMED** เป็นชุดเครื่องมือด้านอาชีวเวชศาสตร์แบบ **multi-module** (static site, **ไม่มี build step**) — มี shell กลางที่ root ลิสต์โมดูล แต่ละโมดูลเปิดในเบราว์เซอร์ได้ทันที
 
-- **ไฟล์หลัก:** `OCCUMED_Walkthrough_Survey.html`
+- **โครงสร้าง:**
+  - `/` = `index.html` — OCCMED hub (ลิสต์โมดูลจาก `shared/registry.js`)
+  - `/walkthrough/` = `walkthrough/index.html` — โมดูลเดินสำรวจ (single-file เดิม **ห้ามแตะไส้ใน**)
+  - `/impairment/gi/` = โมดูลประเมินการสูญเสียสมรรถภาพ ทางเดินอาหาร (logic แยกไฟล์ `engine.js` + `engine.test.js`, stateless ไม่แตะ DB)
+  - `/shared/` = `theme.css` (token กลาง) + `registry.js` (**จุดเดียวที่ประกาศโมดูล**)
+  - `/reference/` = หน้าอ้างอิง (เครื่องจักร / โลหะ)
+- **โมดูลใหม่:** เพิ่มใน `shared/registry.js` ที่เดียว
 - **Production:** https://occmed.ikigaimedihealth.com
 
 ### เจ้าของ / ผู้ใช้งาน
@@ -53,14 +59,16 @@
 1. `git add` + `git commit`
 2. `git push` ขึ้น branch **main**
 3. ผู้ใช้ SSH เข้า Droplet แล้วรัน `occmed-deploy`
-   (ดึงจาก repo → คัดลอกไป `/var/www/occmed/index.html`)
+   (`git pull origin main` ที่ `/var/www/occmed-src` → **rsync ทั้งไซต์** ไป `/var/www/occmed/`)
+   - สคริปต์ deploy อยู่ในรีโป: **`deploy/occmed-deploy.sh`** (ต้นฉบับ) → วางที่ `/usr/local/bin/occmed-deploy`
+   - มี `set -e` + เช็ค `<!doctype html>` ของ hub + walkthrough ก่อน rsync (ถ้าไฟล์พังจะหยุดก่อน เว็บเดิมไม่พัง)
 
 ---
 
 ## ข้อควรระวัง
 - ⚠️ **อย่าแตะ IKIGAI OS** หรือระบบอื่นบนเซิร์ฟเวอร์
 - ✅ **ทดสอบว่า HTML เปิดได้จริงก่อน commit** ทุกครั้ง
-- 📄 **รักษาโครงสร้าง single-file เสมอ** — ห้ามแยกไฟล์
+- 📄 **โมดูล walk-through คงเป็น single-file** (`walkthrough/index.html`) — ห้ามแยกไฟล์/แตะไส้ใน · โมดูลใหม่จัดไฟล์ได้ตามเหมาะสม (logic แยกจาก UI) แต่ยังเป็น static ไม่มี build/React
 - 🔒 **ห้ามแก้/ลบ `SB_DEFAULT`** (Supabase URL + key)
 - 🎨 **ห้ามเปลี่ยน Design System** (สี / ฟอนต์ / พ.ศ. / ปุ่มคัดลอก)
 - 🩺 **ระวังคำว่า "แพทย์อาชีวเวชศาสตร์" (occupational medicine physician):** ให้มีเป็นตัวเลือกได้ แต่ต้องมี **"แพทย์" (ธรรมดา)** ให้เลือกด้วยเสมอ — อย่าบังคับให้เป็นแพทย์เฉพาะทางอาชีวเวชศาสตร์เท่านั้น
