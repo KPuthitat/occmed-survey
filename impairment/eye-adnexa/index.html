@@ -90,10 +90,22 @@ function renderResult(){
   const a=cur(); const loss=lossVal();
   const r=adnexaResult(loss, state.other, a.cap??null);
   const n=x=>(x%1?+x.toFixed(2):x);
+  const be=Math.max(r.vasAffected, state.other);
+  const frac=(num,den)=>`<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+  const eq='<span class="feq">=</span>';
+  const res=(v,hl)=>`<span class="fres${hl?' hl':''}">${v}</span>`;
+  const item=(label,def,calc)=>`<div class="fitem"><div class="fdef">${def}</div><div class="fcalc"><span class="flabel">${label}</span>${calc}</div></div>`;
+  const wpiCalc = r.vsi<=50
+    ? `${eq} <span class="fnote">VSI ≤ 50 → WPI = VSI</span> ${eq} ${res(r.wpi+'%',true)}`
+    : `${eq} 50 + 0.7 × (${n(r.vsi)} − 50) ${eq} ${res(r.wpi+'%',true)}`;
   $('resultBody').innerHTML = `
-    <div class="steps">
-      อาการ: ${esc(a.group)} — ${esc(a.label)} · สูญเสีย <b>${loss}%</b> ของตาข้างที่ผิดปกติ → VAS = <b>${r.vasAffected}</b><br>
-      FVA = (2×${Math.max(r.vasAffected, state.other)} + ${r.vasAffected} + ${state.other}) / 4 = <b>${n(r.fva)}</b> · VSI = 100 − FVS = <b>${n(r.vsi)}%</b>${r.capped?` <b style="color:var(--gold-dk)">(ถูกจำกัดเพดาน 15%)</b>`:''}
+    <div class="fsheet">
+      <div class="fmeta">อาการ: ${esc(a.group)} — ${esc(a.label)} · สูญเสีย <b>${loss}%</b> ของตาข้างที่ผิดปกติ → VAS ตาข้างนั้น = 100 − ${loss} = <b>${r.vasAffected}</b> · VAS ตาอีกข้าง = <b>${state.other}</b>${r.capped?' · <b style="color:var(--gold-dk)">จำกัดเพดาน VSI 15%</b>':''}</div>
+      ${item('FVA', `<span class="fname">Functional Visual Acuity</span> = (2·VAS<span class="fsub">สองตา</span> + VAS<span class="fsub">ข้างเสีย</span> + VAS<span class="fsub">อีกข้าง</span>) ÷ 4 · ลานสายตาปกติ → FVS = FVA`,
+        `${eq} ${frac(`2×${be} + ${r.vasAffected} + ${state.other}`,4)} ${eq} ${res(n(r.fva))}`)}
+      ${item('VSI', `<span class="fname">การสูญเสียระบบจักษุ</span> = 100 − FVS${a.cap?` · เพดาน ≤ ${a.cap}%`:''}`,
+        `${eq} 100 − ${n(r.fva)} ${eq} ${res(n(r.vsi)+'%')}`)}
+      ${item('WPI', `<span class="fname">การสูญเสียทั้งร่างกาย</span> (ตาราง 6-8)`, wpiCalc)}
     </div>
     <div class="result">
       <div class="rcard"><b>${n(r.vsi)}%</b><span>การสูญเสียระบบจักษุ (VSI)</span></div>

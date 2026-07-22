@@ -99,13 +99,21 @@ function renderResult(){
   }
   const visVsi = globeLossVsi(state.other); const visWpi = vsiToWpi(visVsi);
   const total = Math.round(combineValues([orbit, visWpi]));
+  const A=Math.max(orbit,visWpi), B=Math.min(orbit,visWpi);
+  const frac=(num,den)=>`<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+  const eq='<span class="feq">=</span>';
+  const res=(v,hl)=>`<span class="fres${hl?' hl':''}">${v}</span>`;
+  const item=(label,def,calc)=>`<div class="fitem"><div class="fdef">${def}</div><div class="fcalc"><span class="flabel">${label}</span>${calc}</div></div>`;
   $('resultBody').innerHTML=`
+    <div class="fsheet">
+      <div class="fmeta">สูญเสียลูกตา → สายตาสูญเสีย 100% ของตาข้างนั้น (VAS 0) → VSI ${visVsi}% → WPI <b>${visWpi}%</b> · รูปลักษณ์เบ้าตา (ตาราง 6-9) = <b>${orbit}%</b></div>
+      ${item('รวม', `<span class="fname">ตารางค่ารวม (Combined Values)</span> = A + B × (100 − A) ÷ 100 · A = ค่ามากกว่า (${A}) · B = ค่าน้อยกว่า (${B})`,
+        `${eq} ${A} + ${frac(`${B} × (100 − ${A})`,100)} ${eq} ${res(total+'%',true)}`)}
+    </div>
     <div class="result">
       <div class="rcard"><b>${orbit}%</b><span>รูปลักษณ์เบ้าตา + สายตา ${visWpi}%</span></div>
       <div class="rcard gold"><b>${total}%</b><span>รวม (Combined Values)</span></div>
-    </div>
-    <div class="steps">สูญเสียลูกตา → สายตาสูญเสีย 100% ของตาข้างนั้น → VSI ${visVsi}% → WPI <b>${visWpi}%</b><br>
-      รวมกับรูปลักษณ์เบ้าตา ${orbit}% ด้วยตารางค่ารวม → <b>${total}%</b> ของทั้งร่างกาย</div>`;
+    </div>`;
 }
 document.addEventListener('click',e=>{const lv=e.target.closest('.lvl');if(lv){state.band=Number(lv.dataset.b);state.sub=null;renderLevels();renderSub();renderResult();}});
 $('sub').addEventListener('change',e=>{state.sub=Number(e.target.value);renderResult();});
