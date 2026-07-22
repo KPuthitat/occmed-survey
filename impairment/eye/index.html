@@ -196,7 +196,11 @@ function render() {
         <div class="vas">VAS = ${vasFor(state.be.en, state.be.lens)}</div></div>`
     : '';
   $('fieldOn').checked = state.fieldOn;
-  $('fieldBody').innerHTML = state.fieldOn ? `<div class="eye2">${fieldEye('RE', 'ตาขวา (RE)')}${fieldEye('LE', 'ตาซ้าย (LE)')}</div>` : '';
+  $('fieldBody').innerHTML = state.fieldOn
+    ? `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+         <button class="btn" id="fieldReset" type="button">รีเซตลานสายตา (กลับเป็นปกติ)</button></div>
+       <div class="eye2">${fieldEye('RE', 'ตาขวา (RE)')}${fieldEye('LE', 'ตาซ้าย (LE)')}</div>`
+    : '';
   renderResult();
 }
 
@@ -298,6 +302,14 @@ document.addEventListener('pointermove', e => { if (dragKey) { applyPoint(dragKe
 const endDrag = () => { dragKey = null; dragRect = null; };
 document.addEventListener('pointerup', endDrag);
 document.addEventListener('pointercancel', endDrag);
+
+// รีเซตลานสายตากลับเป็นปกติ (60° ทุก meridian ทั้งสองตา)
+document.addEventListener('click', e => {
+  if (e.target.id === 'fieldReset') {
+    VF_MERIDIANS.forEach(m => { state.fieldRadii.RE[m] = 60; state.fieldRadii.LE[m] = 60; });
+    render();
+  }
+});
 
 // วันที่ พ.ศ.
 const THMON = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
