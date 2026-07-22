@@ -26,7 +26,7 @@
   .eyebox{border:1px solid var(--line);border-radius:12px;padding:13px}
   .eyebox h3{font-size:14px;color:var(--navy);margin-bottom:2px}
   .eyebox .vas{font-size:12.5px;color:var(--gold-dk);font-weight:700;margin-top:6px}
-  .vfsvg{width:100%;max-width:230px;display:block;margin:2px auto 8px;touch-action:none;cursor:crosshair;-webkit-user-select:none;user-select:none}
+  .vfsvg{width:100%;max-width:250px;display:block;margin:2px auto 8px;touch-action:none;cursor:crosshair;-webkit-user-select:none;user-select:none}
   .vfsvg circle.hit{cursor:grab}
   .mrds{display:grid;grid-template-columns:repeat(2,1fr);gap:5px 8px}
   .mrd{display:flex;align-items:center;gap:5px;font-size:12px}
@@ -135,21 +135,31 @@ VF_MERIDIANS.forEach(m => { state.fieldRadii.RE[m] = 60; state.fieldRadii.LE[m] 
 const acuityOpts = sel => ACUITY.map(a => `<option value="${a.en}" ${a.en === sel ? 'selected' : ''}>${a.en}${a.metric ? ' (' + a.metric + ')' : ''}</option>`).join('');
 const lensOpts = sel => LENS_STATUS.map(l => `<option value="${l.id}" ${l.id === sel ? 'selected' : ''}>${l.label}</option>`).join('');
 
-// ---------- ไดอะแกรมลานสายตา (polar 10 meridian) ----------
+// ---------- ไดอะแกรมลานสายตา (polar 10 meridian ตามรูป 6-2) ----------
+// meridian ถ่วงน้ำหนักลานล่างมากกว่า (6 เส้นครึ่งล่าง · 4 เส้นครึ่งบน) — ชีวิตประจำวันใช้ลานล่างมากกว่า
+const VB = 250, CEN = 125, RMAX = 96;   // viewBox · จุดกลาง · รัศมีที่ 90°
 function polar(deg, angDeg) {
-  const R = Math.min(Math.max(Number(deg) || 0, 0), 90) / 90 * 92;
+  const R = Math.min(Math.max(Number(deg) || 0, 0), 90) / 90 * RMAX;
   const a = angDeg * Math.PI / 180;
-  return [110 + R * Math.cos(a), 110 - R * Math.sin(a)];
+  return [CEN + R * Math.cos(a), CEN - R * Math.sin(a)];
 }
 function fieldSVG(key) {
   const radii = state.fieldRadii[key];
-  const rings = [20, 40, 80].map(d => `<circle cx="110" cy="110" r="${(d / 90 * 92).toFixed(1)}" fill="none" stroke="#dfe4ec" stroke-width="1" stroke-dasharray="2 3"/>`).join('')
-    + `<circle cx="110" cy="110" r="${(60 / 90 * 92).toFixed(1)}" fill="none" stroke="#C8A046" stroke-width="1.2" stroke-dasharray="4 3"/>`;
-  const spokes = VF_MERIDIANS.map(m => { const [x, y] = polar(90, m); return `<line x1="110" y1="110" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eef1f6" stroke-width="1"/>`; }).join('');
+  const rings = [20, 40, 80].map(d => `<circle cx="${CEN}" cy="${CEN}" r="${(d / 90 * RMAX).toFixed(1)}" fill="none" stroke="#dfe4ec" stroke-width="1" stroke-dasharray="2 3"/>`).join('')
+    + `<circle cx="${CEN}" cy="${CEN}" r="${(60 / 90 * RMAX).toFixed(1)}" fill="none" stroke="#C8A046" stroke-width="1.2" stroke-dasharray="4 3"/>`;
+  // แกนอ้างอิงประ (แนวนอน 0–180° / แนวตั้ง 90–270°) เหมือนรูป 6-2
+  const ax = RMAX + 8;
+  const axes = `<line x1="${CEN - ax}" y1="${CEN}" x2="${CEN + ax}" y2="${CEN}" stroke="#b9c3d2" stroke-width="1" stroke-dasharray="3 3"/>`
+    + `<line x1="${CEN}" y1="${CEN - ax}" x2="${CEN}" y2="${CEN + ax}" stroke="#b9c3d2" stroke-width="1" stroke-dasharray="3 3"/>`;
+  const spokes = VF_MERIDIANS.map(m => { const [x, y] = polar(90, m); return `<line x1="${CEN}" y1="${CEN}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#d3dae6" stroke-width="1"/>`; }).join('');
+  const labels = VF_MERIDIANS.map(m => {
+    const a = m * Math.PI / 180, lx = CEN + (RMAX + 14) * Math.cos(a), ly = CEN - (RMAX + 14) * Math.sin(a);
+    return `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="9" fill="#8896ab" text-anchor="middle" dominant-baseline="central">${m}°</text>`;
+  }).join('');
   const pts = VF_MERIDIANS.map(m => polar(radii[m], m));
   const poly = pts.map(p => p.map(n => n.toFixed(1)).join(',')).join(' ');
   const dots = pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="#0B2545" stroke="#fff" stroke-width="1.2" class="hit"/>`).join('');
-  return `<svg viewBox="0 0 220 220" class="vfsvg" role="img" aria-label="ไดอะแกรมลานสายตา ${key}">${rings}${spokes}<polygon points="${poly}" fill="rgba(200,160,70,.22)" stroke="#0B2545" stroke-width="1.5"/>${dots}</svg>`;
+  return `<svg viewBox="0 0 ${VB} ${VB}" class="vfsvg" role="img" aria-label="ไดอะแกรมลานสายตา ${key}">${axes}${rings}${spokes}${labels}<polygon points="${poly}" fill="rgba(200,160,70,.22)" stroke="#0B2545" stroke-width="1.5"/>${dots}</svg>`;
 }
 function fieldEye(key, title) {
   const vfs = visualFieldScore(state.fieldRadii[key]);
@@ -265,10 +275,10 @@ function syncField(key) {
 // จุดที่แตะ → มุม (เลือก meridian ที่ใกล้ที่สุด) + ระยะจากจุดกลาง → รัศมี (องศา 0–90)
 let dragKey = null, dragRect = null;
 function applyPoint(key, clientX, clientY, rect) {
-  const x = (clientX - rect.left) / rect.width * 220;
-  const y = (clientY - rect.top) / rect.height * 220;
-  const dx = x - 110, dy = 110 - y;
-  const deg = Math.round(Math.min(90, Math.max(0, Math.hypot(dx, dy) / 92 * 90)));
+  const x = (clientX - rect.left) / rect.width * VB;
+  const y = (clientY - rect.top) / rect.height * VB;
+  const dx = x - CEN, dy = CEN - y;
+  const deg = Math.round(Math.min(90, Math.max(0, Math.hypot(dx, dy) / RMAX * 90)));
   let ang = Math.atan2(dy, dx) * 180 / Math.PI; if (ang < 0) ang += 360;
   let m = VF_MERIDIANS[0], best = 1e9;
   for (const mm of VF_MERIDIANS) { const d = Math.abs(((ang - mm + 540) % 360) - 180); if (d < best) { best = d; m = mm; } }
