@@ -14,14 +14,16 @@
   .hero .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-lt);font-weight:600}
   .hero h1{color:#fff;font-size:26px;margin:6px 0 8px}
   .hero p{color:#c8d4e4;margin:0;max-width:640px}
-  .mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:20px}
-  .mod{display:flex;flex-direction:column;gap:8px;padding:18px;text-decoration:none;color:inherit;position:relative;transition:.15s}
+  .mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:20px}
+  .mod{display:flex;flex-direction:column;gap:10px;padding:20px;text-decoration:none;color:inherit;position:relative;transition:.15s}
   .mod:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(11,37,69,.14)}
   .mod[aria-disabled="true"]{opacity:.72;pointer-events:none}
-  .mod .ic{font-size:30px;line-height:1}
-  .mod .nm{font-weight:700;color:var(--navy);font-size:16px}
+  .mod .ic{width:48px;height:48px;border-radius:13px;background:var(--line2);color:var(--navy);display:grid;place-items:center;flex:none}
+  .mod .ic svg{width:27px;height:27px}
+  .mod .nm{font-weight:700;color:var(--navy);font-size:17px}
   .mod .ds{font-size:13px;color:var(--muted);line-height:1.5}
-  .badge{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+  .mod .cnt{font-size:12px;font-weight:700;color:var(--gold-dk);letter-spacing:.3px}
+  .badge{position:absolute;top:16px;right:16px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
   .badge.ready{background:var(--ok-bg);color:var(--ok)}
   .badge.wip{background:#fdf1dd;color:var(--gold-dk)}
   .mod .go{margin-top:auto;font-size:13px;font-weight:600;color:var(--gold-dk)}
@@ -46,18 +48,19 @@
 </div>
 
 <script type="module">
-import { MODULES } from '/shared/registry.js';
+import { GROUPS, MODULES, modulesInGroup } from '/shared/registry.js';
 const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const statusLabel = { ready: 'พร้อมใช้', wip: 'กำลังพัฒนา' };
 const mods = document.getElementById('mods');
-mods.innerHTML = MODULES.map(m => {
-  const wip = m.status !== 'ready';
-  return `<a class="card mod" href="${wip ? '#' : m.path}" ${wip ? 'aria-disabled="true"' : ''}>
-    <span class="badge ${m.status === 'ready' ? 'ready' : 'wip'}">${statusLabel[m.status] || m.status}</span>
-    <span class="ic">${esc(m.icon || '▧')}</span>
-    <span class="nm">${esc(m.nameTh)}</span>
-    <span class="ds">${esc(m.desc)}</span>
-    <span class="go">${wip ? 'เร็วๆ นี้' : 'เปิดใช้งาน →'}</span>
+mods.innerHTML = GROUPS.map(g => {
+  const inner = modulesInGroup(g.id);
+  const cnt = g.single ? '' : `<span class="cnt">${inner.length} ระบบ</span>`;
+  const go = g.single ? 'เปิดใช้งาน →' : 'เลือกระบบ →';
+  return `<a class="card mod" href="${esc(g.path)}">
+    <span class="ic">${g.icon || ''}</span>
+    <span class="nm">${esc(g.nameTh)}</span>
+    <span class="ds">${esc(g.desc)}</span>
+    ${cnt}
+    <span class="go">${go}</span>
   </a>`;
 }).join('');
 const ready = MODULES.filter(m => m.status === 'ready').length;

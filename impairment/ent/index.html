@@ -57,7 +57,7 @@
   <div class="mark">OC</div>
   <div><b>ประเมินการสูญเสียการได้ยิน</b><small>โสต ศอ นาสิก · บทที่ 7</small></div>
   <div class="sp"></div>
-  <a class="occ-back" href="/">← หน้ารวมโมดูล</a>
+  <a class="occ-back" href="/impairment/">← เลือกระบบ</a>
 </div>
 
 <div class="lead">
@@ -68,7 +68,7 @@
 
 <div class="wrap">
   <div class="warn">
-    <b>⚠ ข้อควรทราบ</b>
+    <b>ข้อควรทราบ</b>
     <ul>
       <li>ประเมินเมื่อการได้ยินคงที่ รักษาเต็มที่แล้ว · ใช้ค่า audiogram ที่เชื่อถือได้</li>
       <li>ระดับการได้ยินที่ > 100 dB คิดเป็น 100 · ดีกว่าปกติ (เช่น −5) คิดเป็น 0</li>
@@ -91,8 +91,8 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <h2 style="margin:0">ผลการคำนวณ</h2>
       <div class="sp" style="flex:1"></div>
-      <button class="btn" id="btnPrint">🖨 พิมพ์ / PDF</button>
-      <button class="btn gold" id="btnCopy">📋 คัดลอกสรุปผล</button>
+      <button class="btn" id="btnPrint">พิมพ์ / PDF</button>
+      <button class="btn gold" id="btnCopy">คัดลอกสรุปผล</button>
     </div>
     <div id="resultBody" style="margin-top:10px"></div>
     <div class="print-note">การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</div>
@@ -158,7 +158,7 @@ async function copyText(txt, btn) {
   let ok = false;
   try { await navigator.clipboard.writeText(txt); ok = true; }
   catch (e) { try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); document.body.removeChild(ta); } catch (e2) {} }
-  const old = btn.textContent; btn.textContent = ok ? '✓ คัดลอกแล้ว' : '✗ ไม่สำเร็จ';
+  const old = btn.textContent; btn.textContent = ok ? 'คัดลอกแล้ว' : 'ไม่สำเร็จ';
   setTimeout(() => btn.textContent = old, 1600);
 }
 $('btnCopy').addEventListener('click', e => copyText(buildText(), e.currentTarget));
