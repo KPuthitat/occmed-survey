@@ -135,7 +135,7 @@ export const ADNEXA_6_7 = [
   { id: 'dip-central', group: 'ภาพซ้อน (Diplopia)', label: 'ในรัศมี 0 ถึง 20 องศา', loss: [100, 100] },
   { id: 'dip-upper', group: 'ภาพซ้อน (Diplopia)', label: 'ในรัศมีมากกว่า 20 องศา บริเวณครึ่งบน', loss: [40, 40] },
   { id: 'dip-lower', group: 'ภาพซ้อน (Diplopia)', label: 'ในรัศมีมากกว่า 20 องศา บริเวณครึ่งล่าง', loss: [60, 60] },
-  { id: 'lid-loss', group: 'หนังตา / เยื่อบุตา', label: 'สูญเสียหนังตา · Entropion · Ectropion · lagophthalmos', loss: [5, 10], cap: 15 },
+  { id: 'lid-loss', group: 'หนังตา / เยื่อบุตา', label: 'การสูญเสียหนังตา หรือภาวะหนังตาม้วนเข้า/ม้วนออก/ปิดไม่สนิท (entropion, ectropion หรือ lagophthalmos)', loss: [5, 10], cap: 15 },
   { id: 'lid-symb', group: 'หนังตา / เยื่อบุตา', label: 'Symblepharon', loss: [11, 15], cap: 15 },
   { id: 'lac-inter', group: 'น้ำตา', label: 'น้ำตาไหลเป็นบางครั้ง (ร่วมกับพยาธิสภาพของทางเดินน้ำตา)', loss: [5, 10], cap: 15 },
   { id: 'lac-const', group: 'น้ำตา', label: 'น้ำตาไหลเอ่อตลอดเวลา (ร่วมกับพยาธิสภาพของทางเดินน้ำตา)', loss: [11, 15], cap: 15 },
