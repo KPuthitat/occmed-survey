@@ -2,6 +2,7 @@
 // key = คีย์ใน CARDIO_TABLES (htn, pvdArm, pvdLeg, valve, hf, pericard, arrhythmia, pulmhtn)
 import { CARDIO_TABLES, gradeResult, GRADE_LETTERS } from './engine.js';
 import { mountExamples } from '/shared/example.js';
+import { mountPageKit } from '/shared/pagekit.js';
 import { CARDIO_EXAMPLES } from './examples.js';
 
 const CSS = `
@@ -193,6 +194,7 @@ export function mountCardioCard(key) {
   $('btnPrint').addEventListener('click', () => window.print());
 
   renderLevels(); renderGrades(); renderResult();
+  mountPageKit();
   mountExamples('#secExamples', (CARDIO_EXAMPLES && CARDIO_EXAMPLES[key]) || [], {
     title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 10)',
     source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 10',

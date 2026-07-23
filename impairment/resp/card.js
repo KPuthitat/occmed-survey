@@ -1,6 +1,7 @@
 // card.js — UI ร่วมของการ์ดระบบทางเดินหายใจ (บทที่ 9) · mountRespCard('asthma'|'cancer'|'osa')
 import { asthmaResult, asthmaLabClassFromFev1, ASTHMA_GRADES, GRADE_LETTERS, KARNOFSKY_LEVELS, OSA_LEVELS, rangeValue } from './engine.js';
 import { mountExamples } from '/shared/example.js';
+import { mountPageKit } from '/shared/pagekit.js';
 import { CARD_EXAMPLES } from './examples.js';
 
 const HISTORY_DESC = [
@@ -95,6 +96,7 @@ function shell(titleTh, ref, note, bodyHtml, key) {
   <div id="secExamples"></div>
 </div>`;
   $('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — ${esc(titleTh)}</b><span>ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 9 (ตาราง ${ref}) · วันที่ประเมิน ${beToday()}</span>`;
+  mountPageKit();
   mountExamples('#secExamples', (CARD_EXAMPLES && CARD_EXAMPLES[key]) || [], {
     title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 9)',
     source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 9',

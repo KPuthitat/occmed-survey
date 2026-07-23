@@ -2,6 +2,7 @@
 // mountStepCard('vestibular'|'facial'|'airway') · mountVoiceCard() · mountSwallowCard() · mountOtherCard()
 import { ENT_STEP_TABLES, stepAdjust, voiceResult, VOICE_VALUES, SWALLOW, CAP_OTHER } from './engine.js';
 import { mountExamples } from '/shared/example.js';
+import { mountPageKit } from '/shared/pagekit.js';
 import { CARD_EXAMPLES } from './examples.js';
 
 const CSS = `
@@ -86,6 +87,7 @@ function shell(titleTh, ref, note, bodyHtml, exampleKey) {
   <div id="secExamples"></div>
 </div>`;
   $('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — ${esc(titleTh)}</b><span>ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 7 (ตาราง ${ref}) · วันที่ประเมิน ${beToday()}</span>`;
+  mountPageKit();
   mountExamples('#secExamples', (CARD_EXAMPLES && CARD_EXAMPLES[exampleKey]) || [], {
     title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 7)',
     source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 7',
