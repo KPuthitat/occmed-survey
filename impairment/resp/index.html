@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ประเมินการสูญเสียสมรรถภาพ — โรคปอดทั่วไป | OCCMED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/theme.css">
+<style>
+  .lead{max-width:940px;margin:0 auto;padding:16px 16px 0}
+  .lead .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+  .lead h1{font-size:21px;margin:4px 0 6px}
+  .lead p{color:var(--muted);margin:0;font-size:14px}
+  .sec{margin-top:16px;padding:16px}
+  .sec>h2{font-size:16px;color:var(--navy);margin-bottom:2px}
+  .sec .hint{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .warn{background:#fff8ec;border:1px solid #ecd9a8;border-radius:12px;padding:14px 16px;margin-top:14px}
+  .warn b{color:var(--gold-dk)}.warn ul{margin:8px 0 0;padding-left:20px}
+  .warn li{font-size:13.5px;color:#5b5030;margin:4px 0;line-height:1.5}
+  label.fld{display:block;font-weight:600;font-size:13px;color:var(--navy2);margin:6px 0 5px}
+  input[type=number]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:16px}
+  .fevwrap{max-width:280px}
+  .clstable{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px}
+  .clstable th,.clstable td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+  .clstable th{background:var(--line2);color:var(--navy);font-weight:700}
+  .clstable tr.on td{background:#fdf1dd;font-weight:700;color:var(--navy)}
+  .result{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rcard{background:var(--line2);border-radius:12px;padding:16px;text-align:center}
+  .rcard b{display:block;font-size:32px;color:var(--navy);line-height:1;font-weight:800}
+  .rcard.gold{background:linear-gradient(135deg,var(--navy),var(--navy2))}
+  .rcard.gold b{color:var(--gold-lt)}.rcard.gold span{color:#c8d4e4}
+  .rcard span{color:var(--muted);font-size:12px;margin-top:6px;display:block;line-height:1.3}
+  .print-note{margin-top:12px;font-size:12px;color:var(--muted)}
+  .print-head{display:none}
+  @media(max-width:560px){.result{grid-template-columns:1fr}}
+  @media print{@page{margin:14mm}body{background:#fff;font-size:12px}
+    .occ-topbar,.occ-back,#btnCopy,#btnPrint,.warn{display:none!important}
+    .card,.sec{box-shadow:none;border-color:#ccc;break-inside:avoid}.rcard.gold{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .print-head{display:block;padding:0 0 8px;border-bottom:2px solid var(--navy);margin-bottom:10px}
+    .print-head b{font-size:16px;color:var(--navy)}.print-head span{display:block;color:#555;font-size:12px;margin-top:2px}}
+</style>
+</head>
+<body>
+<div class="print-head" id="printHead"></div>
+<div class="occ-topbar">
+  <div class="mark">OC</div>
+  <div><b>โรคปอดทั่วไป</b><small>ระบบทางเดินหายใจ · ตาราง 9-3</small></div>
+  <div class="sp"></div>
+  <a class="occ-back" href="/impairment/">← เลือกระบบ</a>
+</div>
+<div class="lead">
+  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <h1>เครื่องคำนวณการสูญเสียสมรรถภาพ — โรคปอดทั่วไป</h1>
+  <p>ป้อนค่า FEV<sub>1</sub> (% ของค่าปกติ) → จัดขั้น (ตาราง 9-3) → เทียบสัดส่วนเชิงเส้นเป็น % ทั้งร่างกาย · <b>คำนวณล้วน ไม่บันทึกข้อมูล</b></p>
+</div>
+<div class="wrap">
+  <div class="warn">
+    <b>ข้อควรทราบ</b>
+    <ul>
+      <li>ประเมินเมื่ออาการคงที่ ได้รับการรักษาอย่างเหมาะสมเต็มที่แล้ว · ใช้ค่า FEV<sub>1</sub> ที่ดีที่สุด (หลังพ่นยาขยายหลอดลม)</li>
+      <li>ตารางนี้ใช้กับโรคปอดทั่วไป รวมถึงมะเร็งปอด (เมื่อปลอดโรค) และการผ่าตัดปอดออก · โรคหอบหืดจากการทำงานใช้ตาราง 9-4 (การ์ดแยก)</li>
+      <li>ระดับอาการหอบเหนื่อยและปัจจัยรองใช้ประกอบการพิจารณา แต่ขั้นจัดตาม FEV<sub>1</sub> เป็นหลัก</li>
+      <li>การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</li>
+    </ul>
+  </div>
+  <div class="card sec">
+    <h2>ค่าสมรรถภาพปอด</h2>
+    <div class="hint">ป้อน FEV<sub>1</sub> เป็นร้อยละของค่าปกติ (predicted)</div>
+    <div class="fevwrap">
+      <label class="fld">FEV<sub>1</sub> (% ของค่าปกติ)</label>
+      <input type="number" id="fev1" min="0" max="150" step="1" inputmode="decimal" value="48">
+    </div>
+    <table class="clstable" id="clstable">
+      <tr><th>ขั้น</th><th>FEV₁ (% ปกติ)</th><th>การสูญเสีย (WPI)</th><th>อาการหอบเหนื่อย</th></tr>
+    </table>
+  </div>
+  <div class="card sec" id="secResult">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <h2 style="margin:0">ผลการคำนวณ</h2><div class="sp" style="flex:1"></div>
+      <button class="btn" id="btnPrint">พิมพ์ / PDF</button>
+      <button class="btn gold" id="btnCopy">คัดลอกสรุปผล</button>
+    </div>
+    <div id="resultBody" style="margin-top:10px"></div>
+    <div class="print-note">การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</div>
+  </div>
+  <div id="secExamples"></div>
+</div>
+
+<script type="module">
+import { lungResult, LUNG_CLASSES, DYSPNEA_LEVELS } from './engine.js';
+import { mountExamples } from '/shared/example.js';
+import { LUNG_EXAMPLES } from './examples.js';
+const $ = id => document.getElementById(id);
+const n = x => (x % 1 ? +x.toFixed(2) : x);
+const state = { fev1: 48 };
+
+function fevRangeText(L) {
+  if (L.cls === 1) return 'ตั้งแต่ 80';
+  if (L.cls === 4) return 'น้อยกว่า 40';
+  return `${L.fevLo} ถึงน้อยกว่า ${L.fevHi}`;
+}
+function impRangeText(L) { return L.cls === 1 ? '0 – 10' : `> ${L.impLo} – ${L.impHi}`; }
+
+function renderTable(curCls) {
+  const rows = LUNG_CLASSES.map(L => `<tr class="${L.cls === curCls ? 'on' : ''}">
+    <td>${L.cls}</td><td>${fevRangeText(L)}</td><td>${impRangeText(L)}%</td>
+    <td style="text-align:left">${DYSPNEA_LEVELS[L.cls - 1].text}</td></tr>`).join('');
+  $('clstable').innerHTML = `<tr><th>ขั้น</th><th>FEV₁ (% ปกติ)</th><th>การสูญเสีย (WPI)</th><th>อาการหอบเหนื่อย</th></tr>${rows}`;
+}
+
+function renderResult() {
+  const r = lungResult(state.fev1);
+  const L = LUNG_CLASSES[r.cls - 1];
+  renderTable(r.cls);
+  const eq = '<span class="feq">=</span>';
+  const res = (v, hl) => `<span class="fres${hl ? ' hl' : ''}">${v}</span>`;
+  const item = (label, def, calc) => `<div class="fitem"><div class="fdef">${def}</div><div class="fcalc"><span class="flabel">${label}</span>${calc}</div></div>`;
+  const formula = L.cls === 4
+    ? `100 − ${n(state.fev1)} × 1.25`
+    : `${L.impHi} − (${n(state.fev1)} − ${L.fevLo}) × ${L.slope}`;
+  $('resultBody').innerHTML = `
+    <div class="fsheet">
+      ${item('ขั้น', `จัดขั้นด้วย FEV<sub>1</sub> (ตาราง 9-3)`, `${eq} FEV₁ ${n(state.fev1)}% → ${res('ขั้นที่ ' + r.cls)} <span class="fnote">(${impRangeText(L)}%)</span>`)}
+      ${item('WPI', `<span class="fname">การสูญเสียทั้งร่างกาย</span> = เทียบสัดส่วนเชิงเส้นภายในขั้น`, `${eq} ${formula} ${eq} ${res(n(r.impExact))} <span class="fnote">→ ปัด ${res(r.impairment + '%', true)}</span>`)}
+    </div>
+    <div class="result">
+      <div class="rcard"><b>ขั้น ${r.cls}</b><span>ตาราง 9-3 (FEV₁ ${n(state.fev1)}%)</span></div>
+      <div class="rcard gold"><b>${r.impairment}%</b><span>การสูญเสียทั้งร่างกาย (WPI)</span></div>
+    </div>`;
+}
+
+$('fev1').addEventListener('input', e => { state.fev1 = e.target.value === '' ? 0 : Number(e.target.value); renderResult(); });
+
+const THMON = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const beToday = () => { const d = new Date(); return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear() + 543}`; };
+$('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — โรคปอดทั่วไป</b><span>ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 9 (ตาราง 9-3) · วันที่ประเมิน ${beToday()}</span>`;
+
+function buildText() {
+  const r = lungResult(state.fev1);
+  return [
+    `สรุปการประเมินการสูญเสียสมรรถภาพ — โรคปอดทั่วไป (คู่มือฯ บทที่ 9 ตาราง 9-3) · วันที่ ${beToday()}`,
+    `FEV1 = ${n(state.fev1)}% ของค่าปกติ → ขั้นที่ ${r.cls}`,
+    `การสูญเสียทั้งร่างกาย (WPI) = ${r.impairment}% (คำนวณ ${n(r.impExact)})`,
+    'การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน',
+  ].join('\n');
+}
+async function copyText(txt, btn) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; }
+  catch (e) { try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); document.body.removeChild(ta); } catch (e2) {} }
+  const old = btn.textContent; btn.textContent = ok ? 'คัดลอกแล้ว' : 'ไม่สำเร็จ';
+  setTimeout(() => btn.textContent = old, 1600);
+}
+$('btnCopy').addEventListener('click', e => copyText(buildText(), e.currentTarget));
+$('btnPrint').addEventListener('click', () => window.print());
+
+mountExamples('#secExamples', LUNG_EXAMPLES, {
+  title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 9)',
+  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 9',
+});
+renderResult();
+</script>
+</body>
+</html>
