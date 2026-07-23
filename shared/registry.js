@@ -12,6 +12,7 @@ const IC = {
   ear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M6.5 12.5a3.5 3.5 0 1 1 7 0c0 1.6-1 2.2-1 3.5"/></svg>',
   heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg>',
   combine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><circle cx="12" cy="12" r="3"/></svg>',
+  lung: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c-.6-1.4-2-2-3.3-2"/><path d="M12 11c.6-1.4 2-2 3.3-2"/><path d="M8.7 9C6.4 9 5 11 5 14.2c0 3.3.9 5.8 3.2 5.8 1.7 0 2.6-1.3 2.6-3.4V11.4C10.8 9.9 9.9 9 8.7 9Z"/><path d="M15.3 9c2.3 0 3.7 2 3.7 5.2 0 3.3-.9 5.8-3.2 5.8-1.7 0-2.6-1.3-2.6-3.4V11.4C13.2 9.9 14.1 9 15.3 9Z"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -38,6 +39,7 @@ export const GROUPS = [
 export const CHAPTERS = [
   { id: 'eye', nameTh: 'ระบบจักษุ', ref: 'บทที่ 6', icon: IC.eye },
   { id: 'ent', nameTh: 'โสต ศอ นาสิก', ref: 'บทที่ 7', icon: IC.ear },
+  { id: 'resp', nameTh: 'ระบบทางเดินหายใจ', ref: 'บทที่ 9', icon: IC.lung },
   { id: 'cardio', nameTh: 'ระบบหัวใจและหลอดเลือด', ref: 'บทที่ 10', icon: IC.heart },
   { id: 'gi', nameTh: 'ระบบทางเดินอาหาร', ref: 'บทที่ 11', icon: IC.stomach },
   { id: 'tools', nameTh: 'เครื่องมือร่วม', ref: '', icon: IC.combine },
@@ -170,6 +172,32 @@ export const MODULES = [
     nameTh: 'โรคความดันในปอดสูง',
     desc: 'ขั้น 0–4 (PASP/6MWD) → WPI (ตาราง 10-16)',
     path: '/impairment/cardio-pulmhtn/', icon: IC.heart, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบทางเดินหายใจ (บท 9) ----
+  {
+    id: 'impairment-resp', group: 'impairment', chapter: 'resp',
+    nameTh: 'โรคปอดทั่วไป (FEV1)',
+    desc: 'FEV1 (% ค่าปกติ) → ขั้น 1–4 → WPI แบบเทียบสัดส่วน (ตาราง 9-3)',
+    path: '/impairment/resp/', icon: IC.lung, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-resp-asthma', group: 'impairment', chapter: 'resp',
+    nameTh: 'โรคหอบหืดจากการทำงาน',
+    desc: 'FEV1 หลังพ่นยา/PC20 → ขั้น 0–4 × A–E → WPI (ตาราง 9-4)',
+    path: '/impairment/resp-asthma/', icon: IC.lung, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-resp-cancer', group: 'impairment', chapter: 'resp',
+    nameTh: 'มะเร็งปอด (Karnofsky)',
+    desc: 'ความสามารถทำกิจวัตร → ขั้น 0–4 → WPI (ตาราง 9-5)',
+    path: '/impairment/resp-cancer/', icon: IC.lung, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-resp-osa', group: 'impairment', chapter: 'resp',
+    nameTh: 'หยุดหายใจขณะหลับ (OSA)',
+    desc: 'อาการง่วงกลางวัน → ขั้น 0–4 → WPI (ตาราง 9-6)',
+    path: '/impairment/resp-osa/', icon: IC.lung, status: 'ready', requiresLogin: false,
   },
 
   // ---- ระบบทางเดินอาหาร (บท 11) ----
