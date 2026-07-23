@@ -2,64 +2,61 @@
 <html lang="th"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>OCCUMED · เครื่องคำนวณการสูญเสียสมรรถภาพ แขนและมือ</title>
+<link rel="stylesheet" href="/shared/theme.css">
 <style>
-@font-face{font-family:'LINESeedSansTH';src:url('https://cdn.jsdelivr.net/gh/gsccnu/line-seed-sans-th/LINESeedSansTH_W_Rg.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:'LINESeedSansTH';src:url('https://cdn.jsdelivr.net/gh/gsccnu/line-seed-sans-th/LINESeedSansTH_W_Bd.woff2') format('woff2');font-weight:700;font-display:swap}
-:root{--navy:#0B1B33;--line:#24466F;--gold:#C9A227;--gold2:#E3C15B;--ink:#EAF0F8;--mut:#9FB3CC;--bad:#E2705F}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:linear-gradient(180deg,#08152A,#0B1B33 40%,#0A1729);color:var(--ink);
- font-family:'LINESeedSansTH','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.65;padding:0 0 90px}
-header{position:sticky;top:0;z-index:20;background:rgba(8,21,42,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:13px 16px 10px}
-h1{margin:0;font-size:16.5px;font-weight:700}h1 span{color:var(--gold2)}
-.sub{margin:2px 0 9px;font-size:11px;color:var(--mut)}
-main{max-width:760px;margin:0 auto;padding:16px}
-.card{background:linear-gradient(180deg,rgba(27,58,99,.35),rgba(18,41,74,.35));border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
-.card>h2{margin:0 0 10px;font-size:12.5px;font-weight:700;color:var(--gold2);text-transform:uppercase;letter-spacing:1.1px;display:flex;gap:8px;align-items:center}
-.card>h2 i{width:21px;height:21px;border-radius:7px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-style:normal;font-size:11.5px;font-weight:700}
-label{display:block;font-size:12.5px;color:var(--mut);margin:10px 0 5px;font-weight:700}
-select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0E2340;color:var(--ink);font-family:inherit;font-size:14.5px;appearance:none}
-.seg{display:flex;gap:6px;flex-wrap:wrap}
-.seg button{flex:1 1 auto;min-width:54px;padding:9px 6px;border-radius:10px;border:1px solid var(--line);background:#0E2340;color:var(--mut);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
-.seg button.on{background:var(--gold);border-color:var(--gold);color:var(--navy)}
-.chk{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--mut)}
-.chk input{width:18px;height:18px;accent-color:var(--gold)}
-.hint{font-size:11.5px;color:var(--mut);margin-top:6px}
-.warnbox{margin-top:10px;padding:9px 11px;border-radius:9px;font-size:12px;background:rgba(232,176,75,.12);border:1px solid rgba(232,176,75,.4);color:#F0CE8A}
-.opt{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-top:7px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;background:#0E2340}
-.opt.on{border-color:var(--gold);background:rgba(201,162,39,.12)}
-.opt b{color:var(--gold2);font-size:13px;white-space:nowrap}.opt span{font-size:12.5px;line-height:1.5}
-.res{text-align:center;padding:6px 0 2px}.res .big{font-size:42px;font-weight:700;color:var(--gold2);line-height:1.1}
-.res .big small{font-size:17px;color:var(--mut);font-weight:400}.res .cap{font-size:12px;color:var(--mut)}
-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
-td{padding:7px 4px;border-bottom:1px solid rgba(36,70,111,.6);vertical-align:top}
-td:last-child{text-align:right;font-weight:700;color:var(--gold2);white-space:nowrap}
-.btn{width:100%;padding:12px;border-radius:11px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:9px}
-.btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy)}
-.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
-.item{display:flex;gap:9px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-top:7px;background:#0E2340;font-size:12.5px}
-.item .g{flex:1}.item .v{font-weight:700;color:var(--gold2);white-space:nowrap}
-.item button{background:none;border:none;color:var(--bad);font-size:17px;cursor:pointer}
-.foot{font-size:11px;color:var(--mut);text-align:center;padding:16px 16px 0;line-height:1.7}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:var(--gold);color:var(--navy);padding:11px 20px;border-radius:30px;font-weight:700;font-size:13.5px;opacity:0;transition:.28s;z-index:60}
-.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
-.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(201,162,39,.16);color:var(--gold2);border:1px solid rgba(201,162,39,.35);margin-left:6px}
-.romrow{border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-top:8px;background:#0E2340}
-.romrow b{font-size:12.5px;color:var(--ink)}
-</style>
-<style>
-  .occhub{display:flex;gap:8px;align-items:center;margin-bottom:9px;font-size:12px}
-  .occhub a{color:var(--gold2);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-weight:700}
-  .occhub a:hover{border-color:var(--gold)}
-  .occhub .oc{width:24px;height:24px;border-radius:7px;background:var(--gold);color:#0B1B33;display:grid;place-items:center;font-weight:800;font-size:11px}
-  .occhub .sp{flex:1}
+  :root{--gold2:var(--gold-lt);--mut:var(--muted);--bad:var(--over)}
+  body{padding-bottom:70px}
+  .lead{max-width:760px;margin:0 auto;padding:16px 16px 0}
+  .lead .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+  .lead h1{margin:4px 0 6px;font-size:21px;color:var(--navy)}
+  .lead .sub{margin:0 0 4px;font-size:13px;color:var(--muted)}
+  main{max-width:760px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .card>h2{margin:0 0 10px;font-size:12.5px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:1.1px;display:flex;gap:8px;align-items:center}
+  .card>h2 i{width:21px;height:21px;border-radius:7px;background:var(--gold);color:#fff;display:grid;place-items:center;font-style:normal;font-size:11.5px;font-weight:700}
+  label{display:block;font-size:12.5px;color:var(--navy2);margin:10px 0 5px;font-weight:700}
+  select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:14.5px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1 1 auto;min-width:54px;padding:9px 6px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--muted);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .seg button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .chk{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+  .chk input{width:18px;height:18px;accent-color:var(--gold)}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:6px}
+  .warnbox{margin-top:10px;padding:9px 11px;border-radius:9px;font-size:12px;background:#fff8ec;border:1px solid #ecd9a8;color:#5b5030}
+  .opt{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-top:7px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;background:#fff}
+  .opt.on{border-color:var(--navy);background:var(--line2);box-shadow:0 0 0 2px rgba(11,37,69,.07)}
+  .opt b{color:var(--navy);font-size:13px;white-space:nowrap}.opt span{font-size:12.5px;line-height:1.5;color:#3a4557}
+  .res{text-align:center;padding:6px 0 2px}.res .big{font-size:42px;font-weight:800;color:var(--navy);line-height:1.1}
+  .res .big small{font-size:17px;color:var(--muted);font-weight:400}.res .cap{font-size:12px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+  td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink)}
+  td:last-child{text-align:right;font-weight:700;color:var(--navy);white-space:nowrap}
+  .btn{width:100%;padding:12px;border-radius:11px;border:1px solid var(--line);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:9px;background:#fff;color:var(--ink)}
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--navy2)}
+  .item{display:flex;gap:9px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-top:7px;background:#fff;font-size:12.5px}
+  .item .g{flex:1}.item .v{font-weight:700;color:var(--navy);white-space:nowrap}
+  .item button{background:none;border:none;color:var(--over);font-size:17px;cursor:pointer}
+  .foot{font-size:11px;color:var(--muted);text-align:center;padding:16px 16px 0;line-height:1.7}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:11px 20px;border-radius:30px;font-weight:700;font-size:13.5px;opacity:0;transition:.28s;z-index:60}
+  .toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#fdf1dd;color:var(--gold-dk);border:1px solid #ecd9a8;margin-left:6px}
+  .romrow{border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-top:8px;background:#fff}
+  .romrow b{font-size:12.5px;color:var(--navy)}
 </style></head><body>
-<header>
-  <div class="occhub"><span class="oc">OC</span><a href="/">หน้าแรก</a><a href="/impairment/">← เลือกระบบ</a><span class="sp"></span></div>
-  <h1>OCCUMED · <span>คำนวณการสูญเสียสมรรถภาพ</span></h1>
-  <p class="sub">บทที่ 2 ระบบแขนและมือ — กองทุนเงินทดแทน สำนักงานประกันสังคม</p>
-  <div class="seg" id="segBody" style="margin-bottom:6px"></div>
-  <div class="seg" id="segMode"></div>
-</header>
+<div class="occ-topbar">
+  <div class="mark">OC</div>
+  <div><b>แขน/มือ และ ขา/เท้า</b><small>กระดูกและกล้ามเนื้อ · ตาราง 2–3</small></div>
+  <div class="sp"></div>
+  <a class="occ-back" href="/impairment/">← เลือกระบบ</a>
+</div>
+<div class="lead">
+  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <h1>เครื่องคำนวณการสูญเสียสมรรถภาพ — แขน/มือ และ ขา/เท้า</h1>
+  <p class="sub">เลือกส่วนของร่างกายและโหมดการประเมิน (ตาราง 2–3 · ค่ารวม บทที่ 19)</p>
+  <div class="seg" id="segBody" style="margin-top:10px"></div>
+  <div class="seg" id="segMode" style="margin-top:6px"></div>
+</div>
 <main>
   <div id="paneDBI">
     <div class="card"><h2><i>1</i>ส่วนและการวินิจฉัย</h2>
@@ -219,6 +216,7 @@ td:last-child{text-align:right;font-weight:700;color:var(--gold2);white-space:no
 <div class="toast" id="toast"></div>
 <script type="module">
 import { DF, round, d2h, h2u, u2w, pair, combine, sum, le2wp, capAt, buildCaps, aggregate, netAdjust } from './engine.js';
+import { mountPageKit } from '/shared/pagekit.js';
 
 const PRISTINE='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
 const D = await (await fetch('./tables.runtime.json')).json();
@@ -707,5 +705,6 @@ $('#cvIn').oninput=()=>{
   $('#cvStep').textContent=l.length?('เรียง: '+l.slice().sort((a,b)=>b-a).join(' , ')):'ใส่ตัวเลข 1–100';
 };
 renderMode();renderDBI();renderAmp();renderRom();renderNrv();renderCase();renderLDbi();renderLAmp();renderLRom();renderLNrv();renderItems();
+mountPageKit({combine:false});
 
 </script></body></html>
