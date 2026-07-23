@@ -76,7 +76,7 @@ function shell(titleTh, ref, note, bodyHtml, key) {
   <div class="sp"></div><a class="occ-back" href="/impairment/">← เลือกระบบ</a></div>
 <div class="lead"><div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
   <h1>เครื่องคำนวณการสูญเสียสมรรถภาพ — ${esc(titleTh)}</h1>
-  <p>อ้างอิงตาราง ${ref} · <b>คำนวณล้วน ไม่บันทึกข้อมูล</b></p></div>
+  <p>อ้างอิงตาราง ${ref}</p></div>
 <div class="wrap">
   <div class="warn"><b>ข้อควรทราบ</b><ul>
     <li>ประเมินเมื่ออาการคงที่ ได้รับการรักษาเต็มที่แล้ว</li>
