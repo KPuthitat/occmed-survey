@@ -108,7 +108,7 @@ function renderResult(){
       ${item('WPI', `<span class="fname">การสูญเสียทั้งร่างกาย</span> (ตาราง 6-8)`, wpiCalc)}
     </div>
     <div class="result">
-      <div class="rcard"><b>${n(r.vsi)}%</b><span>การสูญเสียระบบจักษุ (VSI)</span></div>
+      <div class="rcard"><b>${Math.round(r.vsi)}%</b><span>การสูญเสียระบบจักษุ (VSI)</span></div>
       <div class="rcard gold"><b>${r.wpi}%</b><span>การสูญเสียทั้งร่างกาย (WPI)</span></div>
     </div>`;
 }
@@ -121,7 +121,7 @@ const beToday=()=>{const d=new Date();return `${d.getDate()} ${THMON[d.getMonth(
 $('printHead').innerHTML=`<b>สรุป — การสูญเสียอื่นๆ ของระบบจักษุ (ตาราง 6-7)</b><span>คู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 6 · วันที่ ${beToday()}</span>`;
 async function copyText(txt,btn){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}const o=btn.textContent;btn.textContent=ok?'คัดลอกแล้ว':'ไม่สำเร็จ';setTimeout(()=>btn.textContent=o,1600);}
 $('btnCopy').addEventListener('click',e=>{const a=cur();const loss=lossVal();const r=adnexaResult(loss,state.other,a.cap??null);
-  copyText([`สรุป — การสูญเสียอื่นๆ ของระบบจักษุ (คู่มือฯ บทที่ 6 ตาราง 6-7) · วันที่ ${beToday()}`,`อาการ: ${a.group} — ${a.label} (สูญเสีย ${loss}% ของตาข้างที่ผิดปกติ)`,`การสูญเสียระบบจักษุ (VSI) = ${r.vsi%1?r.vsi.toFixed(2):r.vsi}%${r.capped?' (เพดาน 15%)':''}`,`การสูญเสียทั้งร่างกาย (WPI) = ${r.wpi}%`,'การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน'].join('\n'),e.currentTarget);});
+  copyText([`สรุป — การสูญเสียอื่นๆ ของระบบจักษุ (คู่มือฯ บทที่ 6 ตาราง 6-7) · วันที่ ${beToday()}`,`อาการ: ${a.group} — ${a.label} (สูญเสีย ${loss}% ของตาข้างที่ผิดปกติ)`,`การสูญเสียระบบจักษุ (VSI) = ${Math.round(r.vsi)}%${r.capped?' (เพดาน 15%)':''}`,`การสูญเสียทั้งร่างกาย (WPI) = ${r.wpi}%`,'การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน'].join('\n'),e.currentTarget);});
 $('btnPrint').addEventListener('click',()=>window.print());
 renderSub(); renderResult();
 </script>

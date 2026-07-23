@@ -122,7 +122,7 @@ export function combineValues(values) {
   if (!v.length) return 0;
   let acc = v[0];
   for (let i = 1; i < v.length; i++) acc = acc + v[i] * (100 - acc) / 100;
-  return Math.min(100, acc);
+  return Math.round(Math.min(100, acc)); // ปัดครึ่งขึ้น (<0.5 ลง · ≥0.5 ขึ้น)
 }
 
 // ============================================================

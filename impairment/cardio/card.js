@@ -27,8 +27,7 @@ const CSS = `
   .lvl .ltitle{font-weight:700;color:var(--navy);font-size:14.5px}
   .lvl .lrange{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
   .lvl .lnyha{font-size:11.5px;color:var(--gold-dk);font-weight:700}
-  .lvl .crit{margin-top:9px;display:none;font-size:12.5px;line-height:1.55;color:#3a4557}
-  .lvl.on .crit{display:block}
+  .lvl .crit{margin-top:9px;display:block;font-size:12.5px;line-height:1.55;color:#3a4557}
   .lvl .crit dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 8px}
   .lvl .crit dt{color:var(--navy2);font-weight:700;white-space:nowrap}
   .lvl .crit dt.key{color:var(--gold-dk)}
@@ -164,7 +163,12 @@ export function mountCardioCard(key) {
 
   document.addEventListener('click', e => {
     const lvl = e.target.closest('.lvl');
-    if (lvl) { state.level = Number(lvl.dataset.level); state.grade = 0; renderLevels(); renderGrades(); renderResult(); return; }
+    if (lvl) {
+      state.level = Number(lvl.dataset.level);
+      const L = T.levels.find(x => x.level === state.level);
+      state.grade = L && L.grades ? Math.floor(L.grades.length / 2) : 0; // ค่าตั้งต้น = ค่ากลาง (เช่น C ใน A–E)
+      renderLevels(); renderGrades(); renderResult(); return;
+    }
     const g = e.target.closest('.gbtn');
     if (g) { state.grade = Number(g.dataset.grade); renderGrades(); renderResult(); }
   });

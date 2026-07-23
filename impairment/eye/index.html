@@ -248,7 +248,7 @@ function renderResult() {
         wpiCalc)}
     </div>
     <div class="result">
-      <div class="rcard"><b>${n(r.vsi)}%</b><span>การสูญเสียระบบจักษุ (VSI)</span></div>
+      <div class="rcard"><b>${Math.round(r.vsi)}%</b><span>การสูญเสียระบบจักษุ (VSI)</span></div>
       <div class="rcard gold"><b>${r.wpi}%</b><span>การสูญเสียทั้งร่างกาย (WPI)</span></div>
     </div>`;
 }
@@ -330,7 +330,7 @@ function buildText() {
   L.push(`ระดับสายตา: ตาขวา ${state.re.en} (VAS ${r.vasRE}) · ตาซ้าย ${state.le.en} (VAS ${r.vasLE})`);
   if (state.fieldOn) L.push(`ลานสายตา: VFS ขวา ${r.vfsRE} · ซ้าย ${r.vfsLE}`);
   L.push(`FVA=${n1(r.fva)} · FVF=${n1(r.fvf)} · FVS=${n1(r.fvs)}`);
-  L.push(`การสูญเสียระบบจักษุ (VSI) = ${n1(r.vsi)}%`);
+  L.push(`การสูญเสียระบบจักษุ (VSI) = ${Math.round(r.vsi)}%`);
   L.push(`การสูญเสียทั้งร่างกาย (WPI) = ${r.wpi}%`);
   L.push('การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน');
   return L.join('\n');

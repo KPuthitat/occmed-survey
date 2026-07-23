@@ -65,7 +65,6 @@ const card = m => {
     <span class="badge ${wip ? 'wip' : 'ready'}">${statusLabel[m.status] || m.status}</span>
     <span class="ic">${m.icon || ''}</span>
     <span class="nm">${esc(m.nameTh)}</span>
-    <span class="ds">${esc(m.desc)}</span>
     <span class="go">${wip ? 'เร็วๆ นี้' : 'เปิดใช้งาน →'}</span>
   </a>`;
 };
@@ -74,7 +73,7 @@ document.getElementById('chapters').innerHTML = CHAPTERS.map(ch => {
   if (!mods.length) return '';
   return `<section class="chsec">
     <div class="chhead"><span class="ci">${ch.icon || ''}</span>
-      <div><h2>${esc(ch.nameTh)}</h2>${ch.ref ? `<small>${esc(ch.ref)} · ${mods.length} รายการ</small>` : `<small>${mods.length} รายการ</small>`}</div></div>
+      <div><h2>${esc(ch.nameTh)}</h2><small>${mods.length} รายการ</small></div></div>
     <div class="mods">${mods.map(card).join('')}</div>
   </section>`;
 }).join('');
