@@ -106,7 +106,7 @@ function renderResult(){
   const item=(label,def,calc)=>`<div class="fitem"><div class="fdef">${def}</div><div class="fcalc"><span class="flabel">${label}</span>${calc}</div></div>`;
   $('resultBody').innerHTML=`
     <div class="fsheet">
-      <div class="fmeta">สูญเสียลูกตา → สายตาสูญเสีย 100% ของตาข้างนั้น (VAS 0) → VSI ${visVsi}% → WPI <b>${visWpi}%</b> · รูปลักษณ์เบ้าตา (ตาราง 6-9) = <b>${orbit}%</b></div>
+      <div class="fmeta">สูญเสียลูกตา → สายตาสูญเสีย 100% ของตาข้างนั้น (VAS 0) → VSI ${Math.round(visVsi)}% → WPI <b>${visWpi}%</b> · รูปลักษณ์เบ้าตา (ตาราง 6-9) = <b>${orbit}%</b></div>
       ${item('รวม', `<span class="fname">ตารางค่ารวม (Combined Values)</span> = A + B × (100 − A) ÷ 100 · A = ค่ามากกว่า (${A}) · B = ค่าน้อยกว่า (${B})`,
         `${eq} ${A} + ${frac(`${B} × (100 − ${A})`,100)} ${eq} ${res(total+'%',true)}`)}
     </div>

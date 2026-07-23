@@ -10,7 +10,7 @@ export function combineValues(vals) {
   if (!v.length) return 0;
   let acc = v[0];
   for (let i = 1; i < v.length; i++) acc = acc + v[i] * (100 - acc) / 100;
-  return Math.min(100, acc);
+  return Math.round(Math.min(100, acc)); // ปัดครึ่งขึ้น (<0.5 ลง · ≥0.5 ขึ้น)
 }
 function combineSteps(vals) {
   const v = vals.map(Number).filter(x => x > 0).sort((a, b) => b - a);
@@ -79,7 +79,7 @@ function addCombine() {
     else sheet = `<div class="fmeta">เรียงมาก→น้อย: <b>${v.join(', ')}</b></div>`
       + steps.map((s, i) => item(i + 1 === steps.length ? 'รวม' : `ขั้น ${i + 1}`,
         `A = ${nn(s.a)} · B = ${s.b}`,
-        `${eq} ${nn(s.a)} + ${frac(`${s.b} × (100 − ${nn(s.a)})`, 100)} ${eq} ${res(nn(s.na) + '%', i + 1 === steps.length)}`)).join('');
+        `${eq} ${nn(s.a)} + ${frac(`${s.b} × (100 − ${nn(s.a)})`, 100)} ${eq} ${res((i + 1 === steps.length ? Math.round(s.na) : nn(s.na)) + '%', i + 1 === steps.length)}`)).join('');
     q('.cv-result').innerHTML = `<div class="result"><div class="rcard gold"><b>${rounded}%</b><span>ค่ารวม (Combined Values) ของทั้งร่างกาย</span></div></div><div class="fsheet" style="margin-top:12px">${sheet}</div>`;
   }
   el.addEventListener('input', e => { if (e.target.dataset.cvi != null) { values[Number(e.target.dataset.cvi)] = e.target.value; renderResult(); } });
