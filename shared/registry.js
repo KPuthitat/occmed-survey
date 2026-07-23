@@ -212,6 +212,26 @@ export const MODULES = [
     path: '/impairment/gi/', icon: IC.stomach, status: 'ready', requiresLogin: false,
   },
 
+  // ---- ระบบสืบพันธุ์ชาย (บท 13) ----
+  {
+    id: 'impairment-reprom-erectile', group: 'impairment', chapter: 'reprom',
+    nameTh: 'องคชาต / การแข็งตัว (Erectile)',
+    desc: 'แบบสอบถาม IIEF-5 → ขั้น 0–4 (0/4/11/18/25%) + ปัจจัยรอง (ตาราง 13-1/13-2)',
+    path: '/impairment/reprom-erectile/', icon: IC.malerepro, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-reprom-testes', group: 'impairment', chapter: 'reprom',
+    nameTh: 'ถุงอัณฑะ / อัณฑะ / ท่อน้ำอสุจิ',
+    desc: 'ตรวจร่างกาย/น้ำอสุจิ/ฮอร์โมน → ขั้น 0–4 (0/4/11/18/25%) + QoL (ตาราง 13-3/13-4)',
+    path: '/impairment/reprom-testes/', icon: IC.malerepro, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-reprom-prostate', group: 'impairment', chapter: 'reprom',
+    nameTh: 'ต่อมลูกหมาก / ถุงพักน้ำอสุจิ',
+    desc: 'อาการ/ประวัติรักษา → ขั้น 1–4 (3/7/11/15%) + DRE/PSA/แทรกซ้อน (ตาราง 13-5)',
+    path: '/impairment/reprom-prostate/', icon: IC.malerepro, status: 'ready', requiresLogin: false,
+  },
+
   // ---- ระบบสืบพันธุ์หญิง (บท 14) ----
   {
     id: 'impairment-reprof-vulva', group: 'impairment', chapter: 'reprof',
