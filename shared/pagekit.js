@@ -3,6 +3,7 @@
 // combine:false → ใส่เฉพาะปุ่มหน้าแรก (เช่น หน้าเครื่องรวมค่าเอง)
 
 const HOME_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.6V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.6"/></svg>';
+const RESET_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>';
 
 // สูตรตารางค่ารวม: A + B(100−A)/100 เรียงมาก→น้อย เพดาน 100
 export function combineValues(vals) {
@@ -28,6 +29,20 @@ function addHome() {
   a.innerHTML = HOME_ICON + '<span>หน้าแรก</span>';
   const back = bar.querySelector('.occ-back');
   if (back) bar.insertBefore(a, back); else bar.appendChild(a);
+}
+
+// ปุ่ม "เคสใหม่" — ล้างค่าทั้งหน้ากลับเป็นค่าตั้งต้น (โหลดหน้าใหม่) เพื่อประเมินเคสถัดไป
+function addReset() {
+  const bar = document.querySelector('.occ-topbar');
+  if (!bar || bar.querySelector('.occ-reset')) return;
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'occ-reset'; b.title = 'เริ่มคำนวณเคสใหม่ (ล้างค่าทั้งหมด)';
+  b.innerHTML = RESET_ICON + '<span>เคสใหม่</span>';
+  b.addEventListener('click', () => {
+    if (confirm('เริ่มคำนวณเคสใหม่? ค่าที่กรอกไว้จะถูกล้างกลับเป็นค่าตั้งต้น')) location.reload();
+  });
+  const home = bar.querySelector('.occ-home'), back = bar.querySelector('.occ-back');
+  bar.insertBefore(b, home || back || null);
 }
 
 async function copyText(txt, btn) {
@@ -98,5 +113,6 @@ function addCombine() {
 
 export function mountPageKit(opts = {}) {
   addHome();
+  addReset();
   if (opts.combine !== false) addCombine();
 }
