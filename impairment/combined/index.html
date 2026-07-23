@@ -108,5 +108,6 @@ $('btnCopy').addEventListener('click',e=>{const {total,v}=combineSteps(values);c
 $('btnPrint').addEventListener('click',()=>window.print());
 renderRows(); renderResult();
 </script>
+<script type="module">import { mountPageKit } from '/shared/pagekit.js'; mountPageKit({ combine: false });</script>
 </body>
 </html>

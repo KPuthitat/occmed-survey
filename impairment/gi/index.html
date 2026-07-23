@@ -419,5 +419,6 @@ async function copyText(txt, btn) {
 $('btnCopy').addEventListener('click', e => copyText(buildSummaryText(), e.currentTarget));
 $('btnPrint').addEventListener('click', () => window.print());
 </script>
+<script type="module">import { mountPageKit } from '/shared/pagekit.js'; mountPageKit({});</script>
 </body>
 </html>
