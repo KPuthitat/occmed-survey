@@ -17,6 +17,7 @@ const IC = {
   malerepro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="5.5"/><path d="M15.5 11 20 6.5"/><path d="M15.5 4H20v4.5"/></svg>',
   kidney: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3C5.5 3 4 5.4 4 8.5 4 12 6 14 8.2 14c1.6 0 2.3-1 2.3-2.4 0-1.2-.7-1.8-.7-3 0-1 .6-1.6 1.2-2.1"/><path d="M15.5 3C18.5 3 20 5.4 20 8.5 20 12 18 14 15.8 14c-1.6 0-2.3-1-2.3-2.4 0-1.2.7-1.8.7-3 0-1-.6-1.6-1.2-2.1"/><path d="M8.4 14c-.2 2.5.6 5 3.6 7 3-2 3.8-4.5 3.6-7"/></svg>',
   xray: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M12 6v12"/><path d="M12 8c-1.6 0-3 .7-3 2 0 1 .8 1.5 3 1.5s3 .5 3 1.5c0 1.3-1.4 2-3 2"/><path d="M8.5 6.5C8.9 8 9 9 9 9M15.5 6.5C15.1 8 15 9 15 9M8.5 17.5C8.9 16 9 15 9 15M15.5 17.5C15.1 16 15 15 15 15"/></svg>',
+  bone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a2.2 2.2 0 1 1-1.6-3.7 2.2 2.2 0 0 1 1.6-3.7L17 5.9a2.2 2.2 0 1 1 1.6 3.7 2.2 2.2 0 0 1-1.6 3.7Z" transform="rotate(0 12 12)"/><path d="M6.2 13.3 10 9.5M14 14.5l3.8-3.8"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -50,6 +51,7 @@ export const GROUPS = [
 
 // ---------- บท (ระบบอวัยวะ) ในกลุ่มประเมินการสูญเสียฯ — ใช้เป็นหัวข้อ section ในหน้า /impairment/ ----------
 export const CHAPTERS = [
+  { id: 'msk', nameTh: 'กระดูกและกล้ามเนื้อ (แขน/ขา)', ref: 'บทที่ 2–3', icon: IC.bone },
   { id: 'eye', nameTh: 'ระบบจักษุ', ref: 'บทที่ 6', icon: IC.eye },
   { id: 'ent', nameTh: 'โสต ศอ นาสิก', ref: 'บทที่ 7', icon: IC.ear },
   { id: 'resp', nameTh: 'ระบบทางเดินหายใจ', ref: 'บทที่ 9', icon: IC.lung },
@@ -68,6 +70,14 @@ export const MODULES = [
     nameTh: 'เดินสำรวจสถานประกอบการ',
     desc: 'Walk-through survey — ประเมินสิ่งคุกคาม ความเสี่ยง และวางแผนตรวจสุขภาพ ทำงานร่วมกันแบบเรียลไทม์',
     path: '/walkthrough/', icon: IC.factory, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- กระดูกและกล้ามเนื้อ · แขน/ขา (บท 2–3) ----
+  {
+    id: 'impairment-msk', group: 'impairment', chapter: 'msk',
+    nameTh: 'แขน/มือ และ ขา/เท้า',
+    desc: 'วินิจฉัย/ROM/ตัดขาด/เส้นประสาท → ร้อยละแขน-ขา → ทั้งร่างกาย (ตาราง 2–3, ค่ารวม บท 19)',
+    path: '/impairment/msk/', icon: IC.bone, status: 'ready', requiresLogin: false,
   },
 
   // ---- ระบบจักษุ (บท 6) ----
