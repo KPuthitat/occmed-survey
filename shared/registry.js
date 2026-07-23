@@ -16,6 +16,7 @@ const IC = {
   femrepro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4c0 3 .8 5 2.2 6.3C11.4 11.5 11 13 11 15v5"/><path d="M16 4c0 3-.8 5-2.2 6.3C12.6 11.5 13 13 13 15v5"/><path d="M9 20h6"/><path d="M8 4H6M16 4h2"/></svg>',
   malerepro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="5.5"/><path d="M15.5 11 20 6.5"/><path d="M15.5 4H20v4.5"/></svg>',
   kidney: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3C5.5 3 4 5.4 4 8.5 4 12 6 14 8.2 14c1.6 0 2.3-1 2.3-2.4 0-1.2-.7-1.8-.7-3 0-1 .6-1.6 1.2-2.1"/><path d="M15.5 3C18.5 3 20 5.4 20 8.5 20 12 18 14 15.8 14c-1.6 0-2.3-1-2.3-2.4 0-1.2.7-1.8.7-3 0-1-.6-1.6-1.2-2.1"/><path d="M8.4 14c-.2 2.5.6 5 3.6 7 3-2 3.8-4.5 3.6-7"/></svg>',
+  xray: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M12 6v12"/><path d="M12 8c-1.6 0-3 .7-3 2 0 1 .8 1.5 3 1.5s3 .5 3 1.5c0 1.3-1.4 2-3 2"/><path d="M8.5 6.5C8.9 8 9 9 9 9M15.5 6.5C15.1 8 15 9 15 9M8.5 17.5C8.9 16 9 15 9 15M15.5 17.5C15.1 16 15 15 15 15"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -35,6 +36,15 @@ export const GROUPS = [
     desc: 'คำนวณร้อยละการสูญเสียสมรรถภาพ (WPI) ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 — กดเข้าไปเลือกระบบอวัยวะ',
     icon: IC.pulse,
     path: '/impairment/',
+  },
+  {
+    id: 'pneumo',
+    nameTh: 'อ่านฟิล์ม ILO (Pneumoconiosis)',
+    desc: 'จำแนกภาพรังสีทรวงอกมาตรฐาน ILO สำหรับโรคปอดจากฝุ่น · เปิดแอปในแท็บใหม่',
+    icon: IC.xray,
+    path: 'https://pneumo.ikigaimedihealth.com',
+    single: true,
+    external: true,
   },
 ];
 
