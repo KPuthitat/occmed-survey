@@ -18,6 +18,7 @@ const IC = {
   kidney: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3C5.5 3 4 5.4 4 8.5 4 12 6 14 8.2 14c1.6 0 2.3-1 2.3-2.4 0-1.2-.7-1.8-.7-3 0-1 .6-1.6 1.2-2.1"/><path d="M15.5 3C18.5 3 20 5.4 20 8.5 20 12 18 14 15.8 14c-1.6 0-2.3-1-2.3-2.4 0-1.2.7-1.8.7-3 0-1-.6-1.6-1.2-2.1"/><path d="M8.4 14c-.2 2.5.6 5 3.6 7 3-2 3.8-4.5 3.6-7"/></svg>',
   xray: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M12 6v12"/><path d="M12 8c-1.6 0-3 .7-3 2 0 1 .8 1.5 3 1.5s3 .5 3 1.5c0 1.3-1.4 2-3 2"/><path d="M8.5 6.5C8.9 8 9 9 9 9M15.5 6.5C15.1 8 15 9 15 9M8.5 17.5C8.9 16 9 15 9 15M15.5 17.5C15.1 16 15 15 15 15"/></svg>',
   bone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a2.2 2.2 0 1 1-1.6-3.7 2.2 2.2 0 0 1 1.6-3.7L17 5.9a2.2 2.2 0 1 1 1.6 3.7 2.2 2.2 0 0 1-1.6 3.7Z" transform="rotate(0 12 12)"/><path d="M6.2 13.3 10 9.5M14 14.5l3.8-3.8"/></svg>',
+  pain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12l1-9Z"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -60,6 +61,7 @@ export const CHAPTERS = [
   { id: 'urinary', nameTh: 'ระบบทางเดินปัสสาวะ', ref: 'บทที่ 12', icon: IC.kidney },
   { id: 'reprom', nameTh: 'ระบบสืบพันธุ์ชาย', ref: 'บทที่ 13', icon: IC.malerepro },
   { id: 'reprof', nameTh: 'ระบบสืบพันธุ์หญิง', ref: 'บทที่ 14', icon: IC.femrepro },
+  { id: 'pain', nameTh: 'อาการปวดเรื้อรัง', ref: 'บทที่ 17', icon: IC.pain },
   { id: 'tools', nameTh: 'เครื่องมือร่วม', ref: '', icon: IC.combine },
 ];
 
@@ -298,6 +300,14 @@ export const MODULES = [
     nameTh: 'ท่อนำไข่ / รังไข่',
     desc: 'objective test → ขั้น 0–3 × A–C + ประวัติปรับระดับ → WPI (ตาราง 14-3)',
     path: '/impairment/reprof-ovary/', icon: IC.femrepro, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- อาการปวดเรื้อรัง (บท 17) ----
+  {
+    id: 'impairment-pain', group: 'impairment', chapter: 'pain',
+    nameTh: 'อาการปวดเรื้อรัง (PDQ)',
+    desc: 'แบบสอบถาม PDQ 15 ข้อ → คะแนนรวม 0–150 → ร้อยละทั้งร่างกาย (ตาราง 17-1/17-2)',
+    path: '/impairment/pain/', icon: IC.pain, status: 'ready', requiresLogin: false,
   },
 
   // ---- เครื่องมือร่วม ----
