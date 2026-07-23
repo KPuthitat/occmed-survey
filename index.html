@@ -54,8 +54,9 @@ const mods = document.getElementById('mods');
 mods.innerHTML = GROUPS.map(g => {
   const inner = modulesInGroup(g.id);
   const cnt = g.single ? '' : `<span class="cnt">${inner.length} ระบบ</span>`;
-  const go = g.single ? 'เปิดใช้งาน →' : 'เลือกระบบ →';
-  return `<a class="card mod" href="${esc(g.path)}">
+  const go = g.external ? 'เปิด ILO Reader ↗' : (g.single ? 'เปิดใช้งาน →' : 'เลือกระบบ →');
+  const ext = g.external ? ' target="_blank" rel="noopener"' : '';
+  return `<a class="card mod" href="${esc(g.path)}"${ext}>
     <span class="ic">${g.icon || ''}</span>
     <span class="nm">${esc(g.nameTh)}</span>
     <span class="ds">${esc(g.desc)}</span>
