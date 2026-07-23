@@ -15,6 +15,7 @@ const IC = {
   lung: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 11c-.6-1.4-2-2-3.3-2"/><path d="M12 11c.6-1.4 2-2 3.3-2"/><path d="M8.7 9C6.4 9 5 11 5 14.2c0 3.3.9 5.8 3.2 5.8 1.7 0 2.6-1.3 2.6-3.4V11.4C10.8 9.9 9.9 9 8.7 9Z"/><path d="M15.3 9c2.3 0 3.7 2 3.7 5.2 0 3.3-.9 5.8-3.2 5.8-1.7 0-2.6-1.3-2.6-3.4V11.4C13.2 9.9 14.1 9 15.3 9Z"/></svg>',
   femrepro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4c0 3 .8 5 2.2 6.3C11.4 11.5 11 13 11 15v5"/><path d="M16 4c0 3-.8 5-2.2 6.3C12.6 11.5 13 13 13 15v5"/><path d="M9 20h6"/><path d="M8 4H6M16 4h2"/></svg>',
   malerepro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="5.5"/><path d="M15.5 11 20 6.5"/><path d="M15.5 4H20v4.5"/></svg>',
+  kidney: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3C5.5 3 4 5.4 4 8.5 4 12 6 14 8.2 14c1.6 0 2.3-1 2.3-2.4 0-1.2-.7-1.8-.7-3 0-1 .6-1.6 1.2-2.1"/><path d="M15.5 3C18.5 3 20 5.4 20 8.5 20 12 18 14 15.8 14c-1.6 0-2.3-1-2.3-2.4 0-1.2.7-1.8.7-3 0-1-.6-1.6-1.2-2.1"/><path d="M8.4 14c-.2 2.5.6 5 3.6 7 3-2 3.8-4.5 3.6-7"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -44,6 +45,7 @@ export const CHAPTERS = [
   { id: 'resp', nameTh: 'ระบบทางเดินหายใจ', ref: 'บทที่ 9', icon: IC.lung },
   { id: 'cardio', nameTh: 'ระบบหัวใจและหลอดเลือด', ref: 'บทที่ 10', icon: IC.heart },
   { id: 'gi', nameTh: 'ระบบทางเดินอาหาร', ref: 'บทที่ 11', icon: IC.stomach },
+  { id: 'urinary', nameTh: 'ระบบทางเดินปัสสาวะ', ref: 'บทที่ 12', icon: IC.kidney },
   { id: 'reprom', nameTh: 'ระบบสืบพันธุ์ชาย', ref: 'บทที่ 13', icon: IC.malerepro },
   { id: 'reprof', nameTh: 'ระบบสืบพันธุ์หญิง', ref: 'บทที่ 14', icon: IC.femrepro },
   { id: 'tools', nameTh: 'เครื่องมือร่วม', ref: '', icon: IC.combine },
@@ -210,6 +212,32 @@ export const MODULES = [
     nameTh: 'ระบบทางเดินอาหาร',
     desc: 'ปัจจัยหลัก/รอง → ขั้น 0–4 × A–E → WPI (บทที่ 11)',
     path: '/impairment/gi/', icon: IC.stomach, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบทางเดินปัสสาวะ (บท 12) ----
+  {
+    id: 'impairment-urinary-upper', group: 'impairment', chapter: 'urinary',
+    nameTh: 'ทางเดินปัสสาวะส่วนบน (ไต/ท่อไต)',
+    desc: 'eGFR (ปรับตามอายุ) + คลินิก → ขั้น 0–4 × ต่ำ/กลาง/สูง → WPI (ตาราง 12-1)',
+    path: '/impairment/urinary-upper/', icon: IC.kidney, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-urinary-bladder', group: 'impairment', chapter: 'urinary',
+    nameTh: 'กระเพาะปัสสาวะ',
+    desc: 'คลินิก + urodynamics → ขั้น 0–4 × ต่ำ/กลาง/สูง → WPI (ตาราง 12-2)',
+    path: '/impairment/urinary-bladder/', icon: IC.kidney, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-urinary-urethra', group: 'impairment', chapter: 'urinary',
+    nameTh: 'ท่อปัสสาวะ',
+    desc: 'ระดับตีบ/ส่องกล้อง → ขั้น 0–4 × ต่ำ/กลาง/สูง → WPI (ตาราง 12-3)',
+    path: '/impairment/urinary-urethra/', icon: IC.kidney, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-urinary-diversion', group: 'impairment', chapter: 'urinary',
+    nameTh: 'การเปลี่ยนทิศทางเดินปัสสาวะ',
+    desc: 'Uretero-intestinal 10 / cutaneous ureterostomy 15 / nephrostomy 20 + รวมค่า (ตาราง 12-4)',
+    path: '/impairment/urinary-diversion/', icon: IC.kidney, status: 'ready', requiresLogin: false,
   },
 
   // ---- ระบบสืบพันธุ์ชาย (บท 13) ----
