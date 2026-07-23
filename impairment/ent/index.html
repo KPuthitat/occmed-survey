@@ -97,10 +97,14 @@
     <div id="resultBody" style="margin-top:10px"></div>
     <div class="print-note">การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</div>
   </div>
+
+  <div id="secExamples"></div>
 </div>
 
 <script type="module">
 import { HEARING_FREQS, dshl, hearingResult } from './engine.js';
+import { mountExamples } from '/shared/example.js';
+import { HEARING_EXAMPLES } from './examples.js';
 const $ = id => document.getElementById(id);
 const state = { R: {}, L: {} };
 HEARING_FREQS.forEach(f => { state.R[f] = ''; state.L[f] = ''; });
@@ -174,6 +178,10 @@ $('btnCopy').addEventListener('click', e => copyText(buildText(), e.currentTarge
 $('btnPrint').addEventListener('click', () => window.print());
 
 renderInputs(); renderResult();
+mountExamples('#secExamples', HEARING_EXAMPLES, {
+  title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 7)',
+  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 7',
+});
 </script>
 </body>
 </html>

@@ -148,10 +148,13 @@
     <div id="resultBody" style="margin-top:10px"></div>
     <div class="print-note">การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</div>
   </div>
+  <div id="secExamples"></div>
 </div>
 
 <script type="module">
 import { NYHA_CLASSES, CCS_CLASSES, CAD_LEVELS, GRADE_LETTERS, cadResult } from './engine.js';
+import { mountExamples } from '/shared/example.js';
+import { CAD_EXAMPLES } from './examples.js';
 const $ = id => document.getElementById(id);
 const state = { level: null, grade: 0 };
 
@@ -248,6 +251,10 @@ $('btnCopy').addEventListener('click', e => copyText(buildText(), e.currentTarge
 $('btnPrint').addEventListener('click', () => window.print());
 
 renderLevels(); renderGrades(); renderResult();
+mountExamples('#secExamples', CAD_EXAMPLES, {
+  title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 10)',
+  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 10',
+});
 </script>
 </body>
 </html>

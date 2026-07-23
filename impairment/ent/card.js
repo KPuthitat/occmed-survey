@@ -1,6 +1,8 @@
 // card.js — UI ร่วมของการ์ดรายโรค โสต ศอ นาสิก (บทที่ 7)
 // mountStepCard('vestibular'|'facial'|'airway') · mountVoiceCard() · mountSwallowCard() · mountOtherCard()
 import { ENT_STEP_TABLES, stepAdjust, voiceResult, VOICE_VALUES, SWALLOW, CAP_OTHER } from './engine.js';
+import { mountExamples } from '/shared/example.js';
+import { CARD_EXAMPLES } from './examples.js';
 
 const CSS = `
   .lead{max-width:940px;margin:0 auto;padding:16px 16px 0}
@@ -52,7 +54,7 @@ const beToday = () => { const d = new Date(); return `${d.getDate()} ${THMON[d.g
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const $ = id => document.getElementById(id);
 
-function shell(titleTh, ref, note, bodyHtml) {
+function shell(titleTh, ref, note, bodyHtml, exampleKey) {
   document.title = `${titleTh} — โสต ศอ นาสิก | OCCMED`;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   document.body.innerHTML = `
@@ -81,8 +83,13 @@ function shell(titleTh, ref, note, bodyHtml) {
     <div id="resultBody" style="margin-top:10px"></div>
     <div class="print-note">การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</div>
   </div>
+  <div id="secExamples"></div>
 </div>`;
   $('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — ${esc(titleTh)}</b><span>ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 7 (ตาราง ${ref}) · วันที่ประเมิน ${beToday()}</span>`;
+  mountExamples('#secExamples', (CARD_EXAMPLES && CARD_EXAMPLES[exampleKey]) || [], {
+    title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 7)',
+    source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 7',
+  });
 }
 
 async function copyText(txt, btn) {
@@ -122,7 +129,7 @@ export function mountStepCard(key) {
     <div class="hint">ค่าเริ่มต้น = ค่ากลางของขั้น · ปรับด้วย Σ(ขั้นปัจจัยรอง − ขั้นปัจจัยหลัก)</div>
     <div id="nkBody"></div>
   </div>`;
-  shell(T.titleTh, T.ref, T.note, body);
+  shell(T.titleTh, T.ref, T.note, body, key);
 
   function renderLevels() {
     $('levels').innerHTML = keyRow.desc.map((d, i) => {
@@ -196,7 +203,7 @@ export function mountVoiceCard() {
       ${sel('objective', 'การตรวจ objective (Strobovideolaryngoscope / VHI)')}
     </div>
   </div>`;
-  shell('เสียงและการพูด (Voice & Speech)', '7-8', 'ปกติ: พูดต่อเนื่อง > 10 วินาที หรือประโยค ≥ 10 คำโดยไม่หยุดหายใจ · ≥ 75–100 คำ/นาที · นับ 1→100 ได้ใน 2 นาที', body);
+  shell('เสียงและการพูด (Voice & Speech)', '7-8', 'ปกติ: พูดต่อเนื่อง > 10 วินาที หรือประโยค ≥ 10 คำโดยไม่หยุดหายใจ · ≥ 75–100 คำ/นาที · นับ 1→100 ได้ใน 2 นาที', body, 'voice');
 
   function renderResult() {
     const r = voiceResult(state, state.objective);
@@ -225,7 +232,7 @@ export function mountSwallowCard() {
     <div class="levels" id="foods"></div>
     <div class="nk hide" id="subWrap" style="margin-top:12px"><div class="nkrow"><label>ระดับภายในกลุ่ม</label><select id="sub"></select></div></div>
   </div>`;
-  shell('การเคี้ยวและการกลืน', '7-7', 'เลือกค่าตามความจำกัดของชนิดอาหารที่รับได้', body);
+  shell('การเคี้ยวและการกลืน', '7-7', 'เลือกค่าตามความจำกัดของชนิดอาหารที่รับได้', body, 'swallow');
 
   function renderFoods() {
     $('foods').innerHTML = SWALLOW.map(s => {
@@ -265,7 +272,7 @@ export function mountOtherCard() {
     ${num('olfaction', 'การได้กลิ่น-รู้รส (Olfaction/Taste)', CAP_OTHER.olfaction)}
     ${num('tinnitus', 'เสียงในหู (Tinnitus)', CAP_OTHER.tinnitus)}
   </div>`;
-  shell('การได้กลิ่น-รู้รส / เสียงในหู', '7 §ซ,ฌ', 'ไม่มีเกณฑ์แบ่งขั้นชัดเจน · เพดานอย่างละ ≤ ร้อยละ 5', body);
+  shell('การได้กลิ่น-รู้รส / เสียงในหู', '7 §ซ,ฌ', 'ไม่มีเกณฑ์แบ่งขั้นชัดเจน · เพดานอย่างละ ≤ ร้อยละ 5', body, 'other');
 
   const clampV = (v, cap) => Math.max(0, Math.min(cap, Number(v) || 0));
   function renderResult() {

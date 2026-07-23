@@ -116,10 +116,15 @@
     <div id="resultBody" style="margin-top:10px"></div>
     <div class="print-note">การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</div>
   </div>
+
+  <!-- โจทย์ตัวอย่าง + วิธีทำ -->
+  <div id="secExamples"></div>
 </div>
 
 <script type="module">
 import { ACUITY, LENS_STATUS, vasFor, visionResult, VF_MERIDIANS, meridianPoints, visualFieldScore } from './engine.js';
+import { mountExamples } from '/shared/example.js';
+import { EYE_EXAMPLES } from './examples.js';
 const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const $ = id => document.getElementById(id);
 
@@ -339,6 +344,11 @@ async function copyText(txt, btn) {
 }
 $('btnCopy').addEventListener('click', e => copyText(buildText(), e.currentTarget));
 $('btnPrint').addEventListener('click', () => window.print());
+
+mountExamples('#secExamples', EYE_EXAMPLES, {
+  title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 6)',
+  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 6',
+});
 
 render();
 </script>
