@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OCCUMED · เครื่องคำนวณการสูญเสียสมรรถภาพ แขนและมือ</title>
+<style>
+@font-face{font-family:'LINESeedSansTH';src:url('https://cdn.jsdelivr.net/gh/gsccnu/line-seed-sans-th/LINESeedSansTH_W_Rg.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'LINESeedSansTH';src:url('https://cdn.jsdelivr.net/gh/gsccnu/line-seed-sans-th/LINESeedSansTH_W_Bd.woff2') format('woff2');font-weight:700;font-display:swap}
+:root{--navy:#0B1B33;--line:#24466F;--gold:#C9A227;--gold2:#E3C15B;--ink:#EAF0F8;--mut:#9FB3CC;--bad:#E2705F}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:linear-gradient(180deg,#08152A,#0B1B33 40%,#0A1729);color:var(--ink);
+ font-family:'LINESeedSansTH','Noto Sans Thai',-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.65;padding:0 0 90px}
+header{position:sticky;top:0;z-index:20;background:rgba(8,21,42,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:13px 16px 10px}
+h1{margin:0;font-size:16.5px;font-weight:700}h1 span{color:var(--gold2)}
+.sub{margin:2px 0 9px;font-size:11px;color:var(--mut)}
+main{max-width:760px;margin:0 auto;padding:16px}
+.card{background:linear-gradient(180deg,rgba(27,58,99,.35),rgba(18,41,74,.35));border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.card>h2{margin:0 0 10px;font-size:12.5px;font-weight:700;color:var(--gold2);text-transform:uppercase;letter-spacing:1.1px;display:flex;gap:8px;align-items:center}
+.card>h2 i{width:21px;height:21px;border-radius:7px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-style:normal;font-size:11.5px;font-weight:700}
+label{display:block;font-size:12.5px;color:var(--mut);margin:10px 0 5px;font-weight:700}
+select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0E2340;color:var(--ink);font-family:inherit;font-size:14.5px;appearance:none}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;min-width:54px;padding:9px 6px;border-radius:10px;border:1px solid var(--line);background:#0E2340;color:var(--mut);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.seg button.on{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.chk{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--mut)}
+.chk input{width:18px;height:18px;accent-color:var(--gold)}
+.hint{font-size:11.5px;color:var(--mut);margin-top:6px}
+.warnbox{margin-top:10px;padding:9px 11px;border-radius:9px;font-size:12px;background:rgba(232,176,75,.12);border:1px solid rgba(232,176,75,.4);color:#F0CE8A}
+.opt{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-top:7px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;background:#0E2340}
+.opt.on{border-color:var(--gold);background:rgba(201,162,39,.12)}
+.opt b{color:var(--gold2);font-size:13px;white-space:nowrap}.opt span{font-size:12.5px;line-height:1.5}
+.res{text-align:center;padding:6px 0 2px}.res .big{font-size:42px;font-weight:700;color:var(--gold2);line-height:1.1}
+.res .big small{font-size:17px;color:var(--mut);font-weight:400}.res .cap{font-size:12px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+td{padding:7px 4px;border-bottom:1px solid rgba(36,70,111,.6);vertical-align:top}
+td:last-child{text-align:right;font-weight:700;color:var(--gold2);white-space:nowrap}
+.btn{width:100%;padding:12px;border-radius:11px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:9px}
+.btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.item{display:flex;gap:9px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-top:7px;background:#0E2340;font-size:12.5px}
+.item .g{flex:1}.item .v{font-weight:700;color:var(--gold2);white-space:nowrap}
+.item button{background:none;border:none;color:var(--bad);font-size:17px;cursor:pointer}
+.foot{font-size:11px;color:var(--mut);text-align:center;padding:16px 16px 0;line-height:1.7}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:var(--gold);color:var(--navy);padding:11px 20px;border-radius:30px;font-weight:700;font-size:13.5px;opacity:0;transition:.28s;z-index:60}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(201,162,39,.16);color:var(--gold2);border:1px solid rgba(201,162,39,.35);margin-left:6px}
+.romrow{border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-top:8px;background:#0E2340}
+.romrow b{font-size:12.5px;color:var(--ink)}
+</style>
+<style>
+  .occhub{display:flex;gap:8px;align-items:center;margin-bottom:9px;font-size:12px}
+  .occhub a{color:var(--gold2);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-weight:700}
+  .occhub a:hover{border-color:var(--gold)}
+  .occhub .oc{width:24px;height:24px;border-radius:7px;background:var(--gold);color:#0B1B33;display:grid;place-items:center;font-weight:800;font-size:11px}
+  .occhub .sp{flex:1}
+</style></head><body>
+<header>
+  <div class="occhub"><span class="oc">OC</span><a href="/">หน้าแรก</a><a href="/impairment/">← เลือกระบบ</a><span class="sp"></span></div>
+  <h1>OCCUMED · <span>คำนวณการสูญเสียสมรรถภาพ</span></h1>
+  <p class="sub">บทที่ 2 ระบบแขนและมือ — กองทุนเงินทดแทน สำนักงานประกันสังคม</p>
+  <div class="seg" id="segBody" style="margin-bottom:6px"></div>
+  <div class="seg" id="segMode"></div>
+</header>
+<main>
+  <div id="paneDBI">
+    <div class="card"><h2><i>1</i>ส่วนและการวินิจฉัย</h2>
+      <label>ส่วนของแขนและมือ</label><div class="seg" id="segRegion"></div>
+      <div id="digitWrap" style="display:none"><label>นิ้วที่ประเมิน</label>
+        <select id="selDigit">
+          <option value="thumb">นิ้วหัวแม่มือ (×0.40)</option><option value="index">นิ้วชี้ (×0.20)</option>
+          <option value="middle">นิ้วกลาง (×0.20)</option><option value="ring">นิ้วนาง (×0.10)</option>
+          <option value="little">นิ้วก้อย (×0.10)</option></select></div>
+      <label>การวินิจฉัยโรค (ปัจจัยหลัก)</label><select id="selDx"></select>
+      <p class="hint" id="dxMeta"></p></div>
+    <div class="card"><h2><i>2</i>ขั้นและเกณฑ์</h2><div id="classWrap"></div></div>
+    <div class="card"><h2><i>3</i>ปัจจัยปรับระดับ</h2>
+      <label>ประวัติการใช้งาน · ตาราง 2-7</label><div class="seg" id="segFH"></div>
+      <p class="hint" id="fhHint"></p>
+      <div class="chk"><input type="checkbox" id="useFH" checked><label for="useFH" style="margin:0">นำมาใช้ปรับระดับ</label></div>
+      <label style="margin-top:13px">การตรวจร่างกาย · ตาราง 2-8</label><div class="seg" id="segPE"></div>
+      <div class="chk"><input type="checkbox" id="usePE" checked><label for="usePE" style="margin:0">นำมาใช้ปรับระดับ</label></div>
+      <label style="margin-top:13px">การตรวจทางคลินิก · ตาราง 2-9</label><div class="seg" id="segCS"></div>
+      <div class="chk"><input type="checkbox" id="useCS" checked><label for="useCS" style="margin:0">นำมาใช้ปรับระดับ</label></div>
+      <div id="modWarn"></div>
+      <p class="hint">ปัจจัยรองที่ใช้กำหนดขั้นแล้ว <b>ห้ามนำมาปรับระดับซ้ำ</b> · กดที่ "เกณฑ์ตาราง…" เพื่อดูคำอธิบายของแต่ละระดับจากคู่มือ</p></div>
+    <div class="card"><h2><i>4</i>ผลการคำนวณ</h2>
+      <div class="res"><div class="big" id="bigVal">—</div><div class="cap" id="bigCap">รอเลือกการวินิจฉัย</div></div>
+      <table id="calcTable"></table>
+      <button class="btn gold" id="btnAdd">+ เพิ่มเข้ารายการ</button></div>
+  </div>
+
+  <div id="paneAMP" style="display:none">
+    <div class="card"><h2><i>A</i>แขนและมือขาด · ตาราง 2-28</h2>
+      <label>ระดับที่ขาด</label><select id="selAmp"></select>
+      <div class="res" style="margin-top:8px"><div class="big" id="ampVal">—</div><div class="cap" id="ampCap"></div></div>
+      <table id="ampTable"></table>
+      <button class="btn gold" id="btnAddAmp">+ เพิ่มเข้ารายการ</button>
+      <p class="hint">นิ้วหลายนิ้วให้ประเมินทีละนิ้ว แปลงเป็น % ของมือ แล้ว <b>บวกกันโดยตรง</b> (ไม่ใช่ combined values) ก่อนแปลงเป็นแขน</p></div>
+  </div>
+
+  <div id="paneROM" style="display:none">
+    <div class="card"><h2><i>R</i>พิสัยการเคลื่อนไหว · ตาราง 2-30 ถึง 2-34</h2>
+      <label>ตาราง</label><select id="selRomT"></select>
+      <label>ข้อ</label><select id="selRomJ"></select>
+      <div id="romMotions"></div>
+      <div class="res" style="margin-top:10px"><div class="big" id="romVal">—</div><div class="cap" id="romCap"></div></div>
+      <table id="romTable"></table>
+      <button class="btn gold" id="btnAddRom">+ เพิ่มเข้ารายการ</button>
+      <div class="warnbox">ทดสอบด้วยเคสสไลด์ 51–64 อ่านจากตารางจริงได้ <b>22 จาก 22 จุด</b> และคำตอบสุดท้าย <b>44% ของทั้งร่างกาย</b> ตรงเฉลย<br>
+      ค่าทั้งหมดในหน้านี้ยึดตาม<b>คู่มือฉบับจัดทำ 4</b> เป็นหลัก สไลด์สอนใช้เป็นตัวตรวจทานเท่านั้น</div>
+    </div>
+  </div>
+
+  <div id="paneNRV" style="display:none">
+    <div class="card"><h2><i>N</i>เส้นประสาท · ตาราง 2-21</h2>
+      <label>เส้นประสาท / ระดับรอยโรค</label><select id="selNrv"></select>
+      <p class="hint" id="nrvMeta"></p>
+      <label>การสูญเสียความรู้สึก / ความเจ็บปวด</label><div class="seg" id="segNS"></div>
+      <p class="hint" id="nsHint"></p>
+      <label style="margin-top:12px">การสูญเสียกำลังกล้ามเนื้อ</label><div class="seg" id="segNM"></div>
+      <p class="hint" id="nmHint"></p>
+      <label style="margin-top:12px">ปัจจัยปรับระดับ (ใช้ร่วมกันทั้งสองส่วน)</label>
+      <div class="seg" id="segNG"></div>
+      <div class="res" style="margin-top:10px"><div class="big" id="nrvVal">—</div><div class="cap" id="nrvCap"></div></div>
+      <table id="nrvTable"></table>
+      <button class="btn gold" id="btnAddNrv">+ เพิ่มเข้ารายการ</button>
+      <div id="nrvWarn"></div>
+      <p class="hint">ขั้นตอนตามคู่มือ: ประเมินความรู้สึกและกำลังกล้ามเนื้อแยกกัน แล้ว<b>รวมด้วยตารางค่ารวม</b> · กรณีเส้นประสาทถูกกดทับที่ข้อมือ (carpal tunnel) ให้ใช้ตาราง 2-23 แทน ซึ่งยังไม่ได้แกะ</p>
+    </div>
+    <div class="card"><h2><i>i</i>เกณฑ์ระดับการสูญเสีย</h2>
+      <table id="defTable"></table></div>
+  </div>
+
+  <div id="paneCASE" style="display:none">
+    <div class="card"><h2><i>C</i>ตัวอย่างการประเมิน (สไลด์ 51–64)</h2>
+      <p class="hint" id="caseIntro"></p>
+      <div class="warnbox">ตรวจแล้วว่าอ่านค่าจากตาราง ROM จริงได้ครบทุกจุด และคำนวณทั้งเคสได้ <b>44% ของทั้งร่างกาย</b> ตรงเฉลย<br>
+      หมายเหตุ: ขั้น "นิ้วกลาง" หน้านี้แสดง <b>70%</b> ตามสไลด์ แต่เมื่อยึดคู่มือ (ข้อปลายนิ้วมือ เหยียด -10° = 4 ไม่ใช่ 2) จะได้ <b>71%</b> — คำตอบสุดท้ายเท่ากันเพราะแปลงเป็น % ของมือแล้วปัดเป็น 14 ทั้งคู่</div>
+      <div id="caseBody"></div>
+    </div>
+  </div>
+
+  <div id="paneLDBI" style="display:none">
+    <div class="card"><h2><i>1</i>ส่วนและการวินิจฉัย</h2>
+      <label>ส่วนของขาและเท้า</label><div class="seg" id="segLReg"></div>
+      <label>การวินิจฉัยโรค</label><select id="selLDx"></select>
+      <p class="hint" id="ldxMeta"></p></div>
+    <div class="card"><h2><i>2</i>ขั้นและเกณฑ์</h2><div id="lclassWrap"></div></div>
+    <div class="card"><h2><i>3</i>ปัจจัยปรับระดับ (ตาราง 3-5 ถึง 3-9)</h2>
+      <label>ประวัติการใช้งาน</label><div class="seg" id="segLFH"></div>
+      <label style="margin-top:12px">การตรวจร่างกาย</label><div class="seg" id="segLPE"></div>
+      <label style="margin-top:12px">การตรวจทางคลินิก</label><div class="seg" id="segLCS"></div>
+      <div id="lmodWarn"></div></div>
+    <div class="card"><h2><i>4</i>ผลการคำนวณ</h2>
+      <div class="res"><div class="big" id="lBigVal">—</div><div class="cap" id="lBigCap"></div></div>
+      <table id="lCalcTable"></table>
+      <button class="btn gold" id="btnAddL">+ เพิ่มเข้ารายการ</button></div>
+  </div>
+
+  <div id="paneLAMP" style="display:none">
+    <div class="card"><h2><i>A</i>ขาและเท้าขาด</h2>
+      <label>ระดับที่ขาด</label><select id="selLAmp"></select>
+      <div class="res" style="margin-top:8px"><div class="big" id="lAmpVal">—</div><div class="cap" id="lAmpCap"></div></div>
+      <table id="lAmpTable"></table>
+      <button class="btn gold" id="btnAddLAmp">+ เพิ่มเข้ารายการ</button>
+      <div class="warnbox">การแปลง <b>เท้า → ขา ไม่ใช่การคูณคงที่</b> (100% เท้า = 62% ขา แต่ 64% เท้า = 45% ขา) ต้องอ่านจากตารางเท่านั้น · ส่วน <b>ขา → ทั้งร่างกาย = ×0.40</b> ตรงทุกแถว</div></div>
+  </div>
+
+  <div id="paneLROM" style="display:none">
+    <div class="card"><h2><i>R</i>พิสัยการเคลื่อนไหวของขา · ตาราง 3-17 ถึง 3-24</h2>
+      <label>ตาราง</label><select id="selLRomT"></select>
+      <div id="lromRows"></div>
+      <div class="res" style="margin-top:10px"><div class="big" id="lRomVal">—</div><div class="cap" id="lRomCap"></div></div>
+      <table id="lRomTable"></table>
+      <button class="btn gold" id="btnAddLRom">+ เพิ่มเข้ารายการ</button>
+      <p class="hint">ข้อเดียวกัน = บวกตรงทุกทิศทาง · หลายข้อในขาข้างเดียวกัน = รวมด้วยตารางค่ารวม · <b>ห้ามใช้ร่วมกับการประเมินตามการวินิจฉัยในส่วนเดียวกัน</b></p></div>
+  </div>
+
+  <div id="paneLNRV" style="display:none">
+    <div class="card"><h2><i>N</i>เส้นประสาทขา (ตาราง 3-12)</h2>
+      <label>เส้นประสาท</label><select id="selLNrv"></select>
+      <label>การสูญเสียความรู้สึก / CRPS II</label><div class="seg" id="segLNS"></div>
+      <p class="hint" id="lnsHint"></p>
+      <label style="margin-top:12px">การสูญเสียกำลังกล้ามเนื้อ</label><div class="seg" id="segLNM"></div>
+      <p class="hint" id="lnmHint"></p>
+      <label style="margin-top:12px">ระดับ</label><div class="seg" id="segLNG"></div>
+      <div class="res" style="margin-top:10px"><div class="big" id="lNrvVal">—</div><div class="cap" id="lNrvCap"></div></div>
+      <table id="lNrvTable"></table>
+      <button class="btn gold" id="btnAddLNrv">+ เพิ่มเข้ารายการ</button></div>
+    <div class="card"><h2><i>!</i>วิธีที่ห้ามใช้ร่วมกัน</h2>
+      <div style="overflow-x:auto"><table id="mtxTable" style="font-size:11.5px"></table></div>
+      <p class="hint">✕ = ห้ามใช้สองวิธีนี้ร่วมกันในการประเมินส่วนเดียวกัน</p></div>
+  </div>
+
+  <div class="card"><h2><i>Σ</i>รวมค่าการสูญเสียสมรรถภาพ</h2>
+    <div id="itemList"><p class="hint">ยังไม่มีรายการ</p></div>
+    <table id="sumTable"></table>
+    <button class="btn ghost" id="btnCopyReport">📋 คัดลอกรายงานผลประเมิน</button>
+    <button class="btn ghost" id="btnCopyJSON">📦 คัดลอก JSON ตารางทั้งหมด</button>
+    <button class="btn ghost" id="btnCopySrc">🚀 คัดลอกซอร์สโค้ดทั้งไฟล์</button>
+    <button class="btn ghost" id="btnReset" style="color:var(--bad)">ล้างรายการ</button></div>
+
+  <div class="card"><h2><i>฿</i>ค่าทดแทน · ประกาศกระทรวงแรงงาน 2547</h2>
+    <table id="compTable"></table>
+    <p class="hint">ตารางอ้างอิงเฉพาะกรณีอวัยวะขาด ไม่ใช่ผลจากการคำนวณร้อยละข้างต้น ใช้ประกอบการพิจารณาเท่านั้น</p></div>
+
+  <div class="card"><h2><i>Σ</i>ตารางค่ารวม · บทที่ 19</h2>
+    <p class="hint">ก% รวมกับ ข% = ก% + ข%(100% − ก%) ปัดเศษทุกขั้น · ค่ามากที่สุดอยู่แนวตั้งเสมอ (เรียงมากไปน้อยก่อน)<br>
+    มากกว่า 2 ค่า: จับคู่ทีละคู่แล้วนำผลของแต่ละคู่มารวมกันอีกครั้งในแบบเดียวกัน<br>
+    <b>ข้ามอวัยวะ</b> (แขนกับขา) ต้องแปลงเป็น % ของร่างกายก่อนแล้วจึงรวม — โปรแกรมทำให้อัตโนมัติในช่องสรุปด้านบน</p>
+    <label>ลองคำนวณ (คั่นด้วยจุลภาค)</label>
+    <input id="cvIn" value="40, 28" inputmode="numeric">
+    <div class="res" style="margin-top:8px"><div class="big" id="cvOut">57<small>%</small></div><div class="cap" id="cvStep"></div></div>
+  </div>
+
+  <p class="foot">คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 · บทที่ 2<br>
+  แขนและมือ: 2-2 ถึง 2-5, 2-8, 2-9, 2-11, 2-12, 2-21, 2-28, 2-30 ถึง 2-34 · ขาและเท้า: 3-1 ถึง 3-4, 3-6 ถึง 3-8, 3-12, 3-17 ถึง 3-24<br>
+  <b>ต้นแบบเพื่อทดสอบ — ผู้ประเมินต้องตรวจทานกับคู่มือฉบับจริงทุกครั้ง</b></p>
+</main>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { DF, round, d2h, h2u, u2w, pair, combine, sum, le2wp, capAt, buildCaps, aggregate, netAdjust } from './engine.js';
+
+const PRISTINE='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+const D = await (await fetch('./tables.runtime.json')).json();
+const  DX=D.dx, ROM=D.rom, AMP=D.amp, NRV=D.nerve, COMP=D.comp,
+      LDX=D.legdx, LAMP=D.legamp, LNRV=D.legnerve, LMTX=D.legmatrix, LROM=D.legrom, MODS=D.mods;
+const REGIONS=[{id:'digit',label:'นิ้วมือ',unit:'นิ้วมือ'},{id:'wrist',label:'ข้อมือ',unit:'แขน'},
+ {id:'elbow',label:'ข้อศอก',unit:'แขน'},{id:'shoulder',label:'ข้อไหล่',unit:'แขน'}];
+
+const DN={thumb:'นิ้วหัวแม่มือ',index:'นิ้วชี้',middle:'นิ้วกลาง',ring:'นิ้วนาง',little:'นิ้วก้อย'};
+const CR={0:'0',1:'1 – 12',2:'13 – 26',3:'27 – 50',4:'51 – 100'};
+const SEV=['normal','mild','moderate','severe','ankylosis'];
+const SEVTH=['ปกติ','เล็กน้อย','ปานกลาง','มาก','ข้อยึดติด'];
+const FHH=['ไม่มีอาการ · QuickDASH 0–20','ปวดเมื่อใช้กำลังเต็มที่ · QuickDASH 21–40',
+ 'ปวดเมื่อทำกิจวัตรตามปกติ · QuickDASH 41–60','ปวดแม้ทำกิจวัตรน้อยกว่าปกติ ต้องมีผู้ช่วย · QuickDASH 61–80',
+ 'ปวดแม้ไม่ได้ใช้งาน ช่วยเหลือตัวเองไม่ได้ · QuickDASH 81–100'];
+const $=s=>document.querySelector(s);
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1700)};
+const copy=async(t,m)=>{try{await navigator.clipboard.writeText(t);toast(m)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast(m)}};
+
+const CAPS=buildCaps(AMP,LAMP);   // เพดานจากตารางตัดขาดจริง (แขน) — ขาใช้ตารางตัดขาดขา
+
+let S={mode:'dbi',region:'digit',digit:'thumb',dxIdx:0,cls:null,optIdx:0,fh:0,pe:0,cs:0,useFH:1,usePE:1,useCS:1,
+       ampIdx:0,romT:0,romJ:0,romSev:{},nrvIdx:0,ns:0,nm:0,ng:1,
+       body:'ue',lreg:'foot',ldxIdx:0,lcls:null,lopt:0,lfh:0,lpe:0,lcs:0,
+       lampIdx:0,lnrvIdx:0,lns:0,lnm:0,lng:1,lromT:0,lromSel:{}};
+let items=[],last=null,lastAmp=null,lastRom=null,lastNrv=null,lastL=null,lastLAmp=null,lastLNrv=null,lastLRom=null;
+let GID=0;   // ตัวนับให้ grp ไม่ซ้ำ สำหรับ item ที่ต้องแยกกลุ่ม (uniq) — ไม่ให้รวมผิดกลุ่ม
+
+/* ---- mode ---- */
+const MODES_UE=[['dbi','ฐานการวินิจฉัย'],['amp','แขน/มือขาด'],['rom','พิสัยเคลื่อนไหว'],['nrv','เส้นประสาท'],['case','ตัวอย่าง']];
+const MODES_LE=[['ldbi','ฐานการวินิจฉัย'],['lamp','ขา/เท้าขาด'],['lrom','พิสัยเคลื่อนไหว'],['lnrv','เส้นประสาท']];
+const LREG=[['foot','เท้า/ข้อเท้า','3-2'],['knee','ข้อเข่า','3-3'],['hip','ข้อสะโพก','3-4']];
+function renderMode(){
+ const MODES = S.body==='ue'?MODES_UE:MODES_LE;
+ if(!MODES.some(m=>m[0]===S.mode)) S.mode=MODES[0][0];
+ $('#segBody').innerHTML=[['ue','แขนและมือ'],['le','ขาและเท้า']].map(([k,l])=>
+   `<button data-b="${k}" class="${S.body===k?'on':''}">${l}</button>`).join('');
+ $('#segBody').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.body=b.dataset.b;renderMode()});
+ $('#segMode').innerHTML=MODES.map(([k,l])=>`<button data-m="${k}" class="${S.mode===k?'on':''}">${l}</button>`).join('');
+ $('#segMode').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;renderMode()});
+ const show={dbi:'paneDBI',amp:'paneAMP',rom:'paneROM',nrv:'paneNRV',case:'paneCASE',
+             ldbi:'paneLDBI',lamp:'paneLAMP',lnrv:'paneLNRV',lrom:'paneLROM'};
+ Object.values(show).forEach(id=>{const el=$('#'+id); if(el) el.style.display='none'});
+ const el=$('#'+show[S.mode]); if(el) el.style.display='block';
+}
+
+/* ---- ตารางเกณฑ์ปัจจัยปรับระดับ ---- */
+function modRef(side,kind,level){
+ const t=(MODS[side]||[]).find(x=>x.kind===kind);
+ if(!t) return '';
+ const rows=t.rows.filter(r=>(r.cells[String(level)]||'').trim());
+ if(!rows.length) return `<p class="hint">ตาราง ${t?t.table:''} ไม่มีคำอธิบายสำหรับระดับ ${level}</p>`;
+ return `<details style="margin-top:7px"><summary style="font-size:12px;color:var(--gold2);cursor:pointer">
+   เกณฑ์ตาราง ${t.table} · ระดับ ${level} (${rows.length} หัวข้อ)</summary>
+   <table style="font-size:12px">`+rows.map(r=>
+     `<tr><td style="width:38%"><b>${r.name}</b></td><td style="text-align:left;font-weight:400;color:var(--ink)">${r.cells[String(level)]}</td></tr>`).join('')+
+   `</table></details>`;
+}
+
+/* ---- DBI ---- */
+const dxList=()=>DX.filter(d=>d.region===S.region), curDx=()=>dxList()[S.dxIdx];
+const curOpt=()=>{const d=curDx();if(!d)return null;const o=d.classes[S.cls];return o?(o[Math.min(S.optIdx,o.length-1)]||null):null};
+function renderRegion(){$('#segRegion').innerHTML=REGIONS.map(r=>`<button data-r="${r.id}" class="${S.region===r.id?'on':''}">${r.label}</button>`).join('');
+ $('#segRegion').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.region=b.dataset.r;S.dxIdx=0;S.cls=null;S.optIdx=0;renderDBI()});
+ $('#digitWrap').style.display=S.region==='digit'?'block':'none'}
+function renderDx(){const l=dxList();let h='',g=null;
+ l.forEach((d,i)=>{if(d.group!==g){if(g!==null)h+='</optgroup>';g=d.group;h+=`<optgroup label="${g||'อื่น ๆ'}">`}
+  h+=`<option value="${i}" ${i===S.dxIdx?'selected':''}>${d.name.replace(/\s*\*\s*/g,' ').slice(0,95)}</option>`});
+ if(g!==null)h+='</optgroup>';$('#selDx').innerHTML=h;const d=curDx();
+ $('#dxMeta').innerHTML=d?`ตารางที่ ${d.table} · หน้า ${d.page} · ร้อยละของ<b>${REGIONS.find(r=>r.id===d.region).unit}</b>`:''}
+function renderClasses(){const d=curDx();if(!d){$('#classWrap').innerHTML='';return}
+ const ks=Object.keys(d.classes).map(Number).sort((a,b)=>a-b);
+ if(S.cls===null||!d.classes[S.cls]){S.cls=ks[0];S.optIdx=0}
+ let h=`<div class="seg">`+ks.map(k=>`<button data-c="${k}" class="${S.cls==k?'on':''}">ขั้น ${k}<br><small style="font-weight:400;font-size:10px">${CR[k]}</small></button>`).join('')+`</div><label>เกณฑ์ย่อยในขั้น ${S.cls}</label>`;
+ d.classes[S.cls].forEach((o,i)=>h+=`<div class="opt ${i===S.optIdx?'on':''}" data-o="${i}"><b>${o.v.join(' / ')}</b><span>${o.crit||'(ไม่มีคำอธิบายในตาราง)'}</span></div>`);
+ h+=`<p class="hint">ตัวเลขเรียงตามระดับ <b>A / B / C</b> — ค่ากลางคือ B</p>`;$('#classWrap').innerHTML=h;
+ $('#classWrap').querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{S.cls=+b.dataset.c;S.optIdx=0;renderClasses();calc()});
+ $('#classWrap').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{S.optIdx=+b.dataset.o;renderClasses();calc()})}
+function renderMods(){
+ document.querySelectorAll('#paneDBI details').forEach(e=>e.remove());
+ [['segFH','fh'],['segPE','pe'],['segCS','cs']].forEach(([id,k])=>{
+  $('#'+id).innerHTML=[0,1,2,3,4].map(v=>`<button data-v="${v}" class="${S[k]===v?'on':''}">${v}</button>`).join('');
+  $('#'+id).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[k]=+b.dataset.v;renderMods();calc()})});
+ $('#fhHint').innerHTML=FHH[S.fh];
+ $('#segPE').insertAdjacentHTML('afterend', modRef('ue','pe',S.pe));
+ $('#segCS').insertAdjacentHTML('afterend', modRef('ue','cs',S.cs));
+ ['useFH','usePE','useCS'].forEach(k=>{$('#'+k).checked=!!S[k];$('#'+k).onchange=e=>{S[k]=e.target.checked;calc()}})}
+function calc(){const d=curDx(),o=curOpt();
+ if(!d||!o){$('#bigVal').textContent='—';$('#calcTable').innerHTML='';last=null;return}
+ const cdx=+S.cls;let useFH=!!S.useFH,drop=false;
+ if(useFH&&(Math.abs(S.fh-S.pe)>=2||Math.abs(S.fh-S.cs)>=2)){useFH=false;drop=true}
+ const mods=[],used=[];
+ if(useFH){mods.push(S.fh);used.push('FH='+S.fh)}
+ if(S.usePE){mods.push(S.pe);used.push('PE='+S.pe)}
+ if(S.useCS){mods.push(S.cs);used.push('CS='+S.cs)}
+ const na=netAdjust(cdx,mods),base=o.v[{A:0,B:1,C:2}[na.grade]];
+ let rows=[],ue,wp;
+ if(d.region==='digit'){const hand=d2h(base,S.digit);ue=h2u(hand);wp=u2w(ue);
+   rows.push(['ค่าของนิ้ว',base+'% '+DN[S.digit]],['→ มือ (2-11 ก ×'+DF[S.digit].toFixed(2)+')',hand+'% มือ'],['→ แขน (2-11 ข ×0.90)',ue+'% แขน']);
+ } else {ue=base;wp=u2w(ue);rows.push(['ค่าของแขน',ue+'% แขน'])}
+ rows.push(['→ ทั้งร่างกาย (2-12 ×0.60)',wp+'% ทั้งร่างกาย']);
+ $('#bigVal').innerHTML=ue+'<small>% แขน</small>';
+ $('#bigCap').innerHTML=`ขั้น ${cdx} ระดับ <b>${na.grade}</b> · net = ${na.net===null?'—':(na.net>0?'+':'')+na.net}`+(na.bumped?' <span class="pill">+1 กฎขั้น 4</span>':'');
+ $('#calcTable').innerHTML=[['ขั้น (CDX)','ขั้น '+cdx],['ค่า A / B / C',o.v.join(' / ')],
+   ['ปัจจัยที่ใช้',used.length?used.join(', '):'ไม่มี'],['Σ(GM − CDX)',na.net===null?'—':(na.net>0?'+':'')+na.net],
+   ['ระดับ','ระดับ '+na.grade]].concat(rows).map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ $('#modWarn').innerHTML=drop?`<div class="warnbox">⚠ ประวัติการใช้งานต่างจากการตรวจร่างกาย/คลินิก ≥ 2 ระดับ — ตัดออกอัตโนมัติ (หัวข้อ 2.3 ก)</div>`:'';
+ const isDigit=d.region==='digit';
+ last={kind:'dbi',unit:'ue',
+  lvl:isDigit?'digit':'ue', grp:isDigit?S.digit:d.region,
+  df:isDigit?DF[S.digit]:undefined, thumb:isDigit&&S.digit==='thumb',
+  nat:isDigit?base:ue, uniq:!isDigit,   // นิ้วเดียวกันรวมกลุ่ม (grp=นิ้ว) · ภูมิภาคแขนแยกกลุ่ม
+  title:d.name.replace(/\s*\*\s*/g,' '),detail:`ตาราง ${d.table} · ขั้น ${cdx} ระดับ ${na.grade}${d.region==='digit'?' · '+DN[S.digit]:''}`,
+  crit:o.crit||'',ue,wp}}
+function renderDBI(){renderRegion();renderDx();renderClasses();renderMods();calc()}
+
+/* ---- amputation ---- */
+const ampFlat=()=>{const o=[];AMP.forEach(g=>g.rows.forEach(r=>o.push({g:g.g,name:r[0],digit:r[1],hand:r[2],ue:r[3],wp:r[4]})));return o};
+function renderAmp(){const f=ampFlat();let h='',g=null;
+ f.forEach((r,i)=>{if(r.g!==g){if(g!==null)h+='</optgroup>';g=r.g;h+=`<optgroup label="${g}">`}
+  h+=`<option value="${i}" ${i===S.ampIdx?'selected':''}>${r.name}</option>`});
+ h+='</optgroup>';$('#selAmp').innerHTML=h;const r=f[S.ampIdx];
+ $('#ampVal').innerHTML=(r.ue!==null?r.ue:'—')+'<small>% แขน</small>';
+ $('#ampCap').textContent=r.g+' · '+r.name;
+ $('#ampTable').innerHTML=[['ร้อยละของนิ้ว',r.digit],['ร้อยละของมือ',r.hand],['ร้อยละของแขน',r.ue],['ร้อยละของทั้งร่างกาย',r.wp]]
+   .map(x=>`<tr><td>${x[0]}</td><td>${x[1]===null?'—':x[1]}</td></tr>`).join('');
+ const ampFinger=/นิ้ว/.test(r.g)&&r.digit!=null;
+ const ampDf=/หัวแม่มือ/.test(r.g)?.40:(/(ชี้|กลาง)/.test(r.g)?.20:.10);
+ lastAmp=ampFinger
+  ? {kind:'amp',unit:'ue',lvl:'digit',grp:'amp',df:ampDf,thumb:/หัวแม่มือ/.test(r.g),nat:r.digit,uniq:true,
+     title:r.g+' — '+r.name,detail:'ตาราง 2-28',crit:'',ue:r.ue||0,wp:r.wp||0}
+  : {kind:'amp',unit:'ue',lvl:'ue',grp:'amp',nat:r.ue||0,uniq:true,
+     title:r.g+' — '+r.name,detail:'ตาราง 2-28',crit:'',ue:r.ue||0,wp:r.wp||0}}
+
+/* ---- ROM (schema แบบ bands) ---- */
+const SEVTH2={normal:'ปกติ',mild:'เล็กน้อย',moderate:'ปานกลาง',severe:'มาก'};
+function romJoints(){return Object.entries(ROM[S.romT].joints)}
+function renderRom(){
+ $('#selRomT').innerHTML=ROM.map((t,i)=>`<option value="${i}" ${i===S.romT?'selected':''}>${t.table} · ${t.title.replace('ตารางประเมินการจำกัดพิสัยการเคลื่อนไหว :','').trim()}</option>`).join('');
+ const J=romJoints(); if(S.romJ>=J.length)S.romJ=0;
+ $('#selRomJ').innerHTML=J.map(([k,v],i)=>`<option value="${i}" ${i===S.romJ?'selected':''}>${k} (${v.weight}%)</option>`).join('');
+ const [jn,jv]=J[S.romJ];
+ const ankKey='A|'+S.romT+'|'+S.romJ;
+ if(S.romSev[ankKey]===undefined)S.romSev[ankKey]=-1;
+ const ankOn=S.romSev[ankKey]>=0;
+ let h='';
+ Object.entries(jv.motions).forEach(([mn,mv],mi)=>{
+   const key=S.romT+'|'+S.romJ+'|'+mi;
+   const bands=[];
+   ['normal','mild','moderate','severe'].forEach(s=>(mv[s]||[]).forEach(b=>bands.push({s,...b})));
+   if(S.romSev[key]===undefined)S.romSev[key]=0;
+   if(S.romSev[key]>=bands.length)S.romSev[key]=0;
+   h+=`<div class="romrow" ${ankOn?'style="opacity:.35"':''}><b>${mn}</b>`+
+     bands.map((b,bi)=>`<div class="opt ${S.romSev[key]===bi?'on':''}" data-k="${key}" data-v="${bi}" style="margin-top:5px">
+       <b>${b.loss}%</b><span>${SEVTH2[b.s]}${b.range?' · '+b.range:''}</span></div>`).join('')+`</div>`});
+ h+=`<div class="romrow"><b>ข้อยึดติด (ankylosis) — ใช้แทนทุกทิศทางของข้อนี้</b>
+   <div class="opt ${!ankOn?'on':''}" data-k="${ankKey}" data-v="-1" style="margin-top:5px"><b>—</b><span>ไม่มีข้อยึดติด</span></div>`+
+   jv.ankylosis.map((b,bi)=>`<div class="opt ${S.romSev[ankKey]===bi?'on':''}" data-k="${ankKey}" data-v="${bi}" style="margin-top:5px">
+     <b>${b.loss}%</b><span>${b.range}</span></div>`).join('')+`</div>`;
+ $('#romMotions').innerHTML=h;
+ $('#romMotions').querySelectorAll('.opt[data-k]').forEach(b=>b.onclick=()=>{S.romSev[b.dataset.k]=+b.dataset.v;renderRom()});
+ let sum=0,rows=[];
+ if(ankOn){const b=jv.ankylosis[S.romSev[ankKey]];sum=b.loss;rows.push(['ข้อยึดติด · '+b.range,b.loss+'%'])}
+ else Object.entries(jv.motions).forEach(([mn,mv],mi)=>{
+   const bands=[];['normal','mild','moderate','severe'].forEach(s=>(mv[s]||[]).forEach(b=>bands.push({s,...b})));
+   const b=bands[S.romSev[S.romT+'|'+S.romJ+'|'+mi]]||{loss:0,range:''};
+   sum+=b.loss;rows.push([mn+' · '+(b.range||SEVTH2[b.s]),b.loss+'%'])});
+ const tb=ROM[S.romT].table;
+ const unit=tb==='2-30'?'thumb':(tb==='2-31'?'finger':'ue');
+ let ue,note;
+ if(unit==='ue'){ue=sum;rows.push(['รวมของแขน (บวกตรง)',ue+'% แขน'])}
+ else{const d=unit==='thumb'?'thumb':'index';
+   rows.push(['รวมของนิ้ว'+(unit==='thumb'?'หัวแม่มือ':''),sum+'%']);
+   ue=h2u(d2h(sum,d));rows.push(['→ แขน',ue+'% แขน']);
+   note=unit==='thumb'?'นิ้วหัวแม่มือ: บวกตรงทุกข้อ':'นิ้วมืออื่น: ต้องรวมข้ามข้อด้วยตารางค่ารวม ไม่ใช่บวกตรง — หน้านี้แสดงผลรวมของข้อเดียว';}
+ const wp=u2w(ue);rows.push(['→ ทั้งร่างกาย',wp+'% ทั้งร่างกาย']);
+ $('#romVal').innerHTML=ue+'<small>% แขน</small>';
+ $('#romCap').textContent=jn+(note?' · '+note:'');
+ $('#romTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ const romDigit=unit!=='ue';
+ lastRom={kind:'rom',unit:'ue',
+   lvl:romDigit?'digit':'ue', grp:'rom',
+   df:unit==='thumb'?.40:(unit==='finger'?.20:undefined), thumb:unit==='thumb',
+   nat:romDigit?sum:ue, uniq:true,
+   title:'พิสัยการเคลื่อนไหว — '+jn,detail:'ตาราง '+tb,
+   crit:rows.slice(0,-2).map(r=>r[0]).join('; '),ue,wp};
+}
+/* ---- items ---- */
+const itUnit=it=>it.lvl==='digit'?'นิ้ว':(it.unit==='le'?'ขา':'แขน');
+const itVal=it=>it.nat!=null?it.nat:it.ue;
+function renderItems(){
+ if(!items.length){$('#itemList').innerHTML='<p class="hint">ยังไม่มีรายการ</p>';$('#sumTable').innerHTML='';return}
+ $('#itemList').innerHTML=items.map((it,i)=>`<div class="item"><div class="g"><b>${it.title.slice(0,72)}</b><br><span style="color:var(--mut)">${it.detail}</span></div><div class="v">${itVal(it)}% ${itUnit(it)}</div><button data-i="${i}">×</button></div>`).join('');
+ $('#itemList').querySelectorAll('button').forEach(b=>b.onclick=()=>{items.splice(+b.dataset.i,1);renderItems()});
+ const A=aggregate(items,CAPS);
+ const rows=[['จำนวนรายการ',items.length]];
+ if(A.hasUE)rows.push(['รวมแขน (Combined Values)',A.ueTotal+'% แขน = '+A.ueBody+'% ทั้งร่างกาย']);
+ if(A.hasLE)rows.push(['รวมขา (Combined Values)',A.leTotal+'% ขา = '+A.leBody+'% ทั้งร่างกาย']);
+ rows.push(['รวมทั้งร่างกาย',(A.hasUE&&A.hasLE?'(แขน ⊕ ขา ที่ระดับร่างกาย) = ':'')+A.body+'% ทั้งร่างกาย']);
+ $('#sumTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')
+  +(A.caps.length?`<tr><td colspan="2" style="color:var(--gold2);font-size:12.5px">⚠ ตัดตามเพดานการตัดขาด (ตาราง 2-28 / ตัดขาดขา): ${A.caps.join(' · ')}</td></tr>`:'');}
+function report(){const A=aggregate(items,CAPS);
+ let s='รายงานการประเมินการสูญเสียสมรรถภาพอย่างถาวร — แขนและมือ / ขาและเท้า\n(คู่มือฯ ฉบับจัดทำ 4 · บทที่ 2–3)\n'+'-'.repeat(48)+'\n';
+ items.forEach((it,i)=>{s+=`${i+1}. ${it.title}\n   ${it.detail}\n`+(it.crit?`   เกณฑ์: ${it.crit}\n`:'')+`   ค่า: ${itVal(it)}% ${itUnit(it)} = ${it.wp}% ทั้งร่างกาย\n\n`});
+ s+='-'.repeat(48)+'\n';
+ if(A.hasUE)s+=`รวมแขน: ${A.ueTotal}% แขน = ${A.ueBody}% ทั้งร่างกาย\n`;
+ if(A.hasLE)s+=`รวมขา: ${A.leTotal}% ขา = ${A.leBody}% ทั้งร่างกาย\n`;
+ if(A.caps.length)s+=`เพดานการตัดขาด (ตาราง 2-28/ตัดขาดขา): ${A.caps.join('; ')}\n`;
+ return s+`รวมทั้งร่างกาย (Combined Values): ${A.body}% ทั้งร่างกาย\n`}
+
+$('#selDx').onchange=e=>{S.dxIdx=+e.target.value;S.cls=null;S.optIdx=0;renderDx();renderClasses();calc()};
+$('#selDigit').onchange=e=>{S.digit=e.target.value;calc()};
+$('#selAmp').onchange=e=>{S.ampIdx=+e.target.value;renderAmp()};
+$('#selRomT').onchange=e=>{S.romT=+e.target.value;S.romJ=0;renderRom()};
+$('#selRomJ').onchange=e=>{S.romJ=+e.target.value;renderRom()};
+const add=o=>{if(!o){toast('ยังไม่มีผลคำนวณ');return}
+  const it=JSON.parse(JSON.stringify(o));
+  if(it.uniq)it.grp=(it.grp||'g')+'#'+(++GID);   // แยกกลุ่มไม่ให้รวมกับรายการอื่นโดยไม่ตั้งใจ
+  items.push(it);renderItems();toast('เพิ่มรายการแล้ว')};
+$('#btnAdd').onclick=()=>add(last);$('#btnAddAmp').onclick=()=>add(lastAmp);$('#btnAddRom').onclick=()=>add(lastRom);
+$('#btnReset').onclick=()=>{items=[];renderItems();toast('ล้างรายการแล้ว')};
+$('#btnCopyReport').onclick=()=>items.length?copy(report(),'คัดลอกรายงานแล้ว'):toast('ยังไม่มีรายการ');
+$('#btnCopyJSON').onclick=()=>copy(JSON.stringify(D,null,1),'คัดลอก JSON แล้ว');
+$('#btnCopySrc').onclick=()=>copy(PRISTINE,'คัดลอกซอร์สแล้ว — พร้อม deploy');
+
+/* ---- nerve (table 2-21) ---- */
+const LVL=['ไม่มี','เล็กน้อย','ปานกลาง','อย่างมาก','ทั้งหมด'];
+const DEFTBL=[
+ ['กำลัง 5/5','ต้านแรงโน้มถ่วงและสู้แรงต้านได้เต็มที่','สูญเสีย 0%'],
+ ['กำลัง 4/5','ต้านแรงโน้มถ่วงได้ สู้แรงต้านได้บ้าง','สูญเสีย 1–25% · ระดับ 1'],
+ ['กำลัง 3/5','ต้านแรงโน้มถ่วงได้เท่านั้น','สูญเสีย 26–60% · ระดับ 2'],
+ ['กำลัง 2/5','ต้านแรงโน้มถ่วงไม่ได้ เคลื่อนแนวราบได้','สูญเสีย 51–75% · ระดับ 3'],
+ ['กำลัง 0–1/5','ไม่พบการหดตัวของกล้ามเนื้อ','สูญเสีย 76–100% · ระดับ 4'],
+ ['ความรู้สึก ปกติ','2-PD และ monofilament ปกติ','ระดับ 0'],
+ ['ความรู้สึก น้อย','2-PD ปกติ แต่ monofilament ผิดปกติ','ระดับ 1'],
+ ['ความรู้สึก ปานกลาง','2-PD และ monofilament ผิดปกติ','ระดับ 2'],
+ ['ความรู้สึก มาก','ความรู้สึกสัมผัสปกป้องลดถอยลง','ระดับ 3'],
+ ['ความรู้สึก รุนแรง','สูญเสียความรู้สึกสัมผัสและเจ็บปวด','ระดับ 4'],
+];
+function nrvRow(n,tr,lv){return n.rows.find(r=>r.track===tr&&r.level===lv)||null}
+function renderNrv(){
+ $('#selNrv').innerHTML=NRV.map((n,i)=>`<option value="${i}" ${i===S.nrvIdx?'selected':''}>${n.name.replace(/\s*\(.*?\)\s*/g,' ').slice(0,80)}${n.needsReview.length?' ⚠':''}</option>`).join('');
+ const n=NRV[S.nrvIdx];
+ const hasS=n.rows.some(r=>r.track==='sensory'), hasM=n.rows.some(r=>r.track==='motor');
+ $('#nrvMeta').innerHTML=`ตาราง 2-21 · หน้า ${n.page} · ${hasS?'มี':'ไม่มี'}ส่วนความรู้สึก · ${hasM?'มี':'ไม่มี'}ส่วนกำลังกล้ามเนื้อ`;
+ [['segNS','ns',hasS,'sensory'],['segNM','nm',hasM,'motor']].forEach(([id,k,ok,tr])=>{
+  $('#'+id).innerHTML=[0,1,2,3,4].map(v=>{const r=v===0?null:nrvRow(n,tr,v);
+    const dis=(!ok||(v>0&&!r))?'disabled style="opacity:.3"':'';
+    return `<button ${dis} data-k="${k}" data-v="${v}" class="${S[k]===v?'on':''}">${LVL[v]}</button>`}).join('');
+  $('#'+id).querySelectorAll('button[data-k]').forEach(b=>b.onclick=()=>{S[b.dataset.k]=+b.dataset.v;renderNrv()})});
+ $('#segNG').innerHTML=[0,1,2].map(g=>`<button data-g="${g}" class="${S.ng===g?'on':''}">ระดับ ${'ABC'[g]}</button>`).join('');
+ $('#segNG').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.ng=+b.dataset.g;renderNrv()});
+ const rs=S.ns?nrvRow(n,'sensory',S.ns):null, rm=S.nm?nrvRow(n,'motor',S.nm):null;
+ $('#nsHint').textContent=rs?`ขั้น ${rs.cls} · A/B/C = ${rs.v.join(' / ')} · ${rs.crit}`:'ไม่ประเมินส่วนนี้';
+ $('#nmHint').textContent=rm?`ขั้น ${rm.cls} · A/B/C = ${rm.v.join(' / ')} · ${rm.crit}`:'ไม่ประเมินส่วนนี้';
+ const vs=rs?rs.v[S.ng]:0, vm=rm?rm.v[S.ng]:0;
+ const ue=combine([vs,vm].filter(x=>x>0)), wp=u2w(ue);
+ $('#nrvVal').innerHTML=ue+'<small>% แขน</small>';
+ $('#nrvCap').textContent='ความรู้สึก '+vs+'% ⊕ กำลังกล้ามเนื้อ '+vm+'%';
+ $('#nrvTable').innerHTML=[['ความรู้สึก',rs?`ขั้น ${rs.cls} ระดับ ${'ABC'[S.ng]} = ${vs}%`:'—'],
+  ['กำลังกล้ามเนื้อ',rm?`ขั้น ${rm.cls} ระดับ ${'ABC'[S.ng]} = ${vm}%`:'—'],
+  ['รวม (ตารางค่ารวม)',ue+'% แขน'],['→ ทั้งร่างกาย',wp+'% ทั้งร่างกาย']]
+  .map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ $('#nrvWarn').innerHTML=n.needsReview.length?`<div class="warnbox">⚠ รายการนี้แกะออกมาแล้วผิดปกติ (${n.needsReview.join(', ')}) ต้องตรวจทานกับคู่มือหน้า ${n.page} ก่อนใช้</div>`:'';
+ lastNrv={kind:'nrv',unit:'ue', lvl:'ue', grp:'nrv', nat:ue, uniq:true,
+  title:'เส้นประสาท — '+n.name,detail:'ตาราง 2-21 · หน้า '+n.page+' · ระดับ '+'ABC'[S.ng],
+  crit:[rs?'ความรู้สึก: '+rs.crit:'',rm?'กำลังกล้ามเนื้อ: '+rm.crit:''].filter(Boolean).join(' | '),ue,wp};
+ $('#defTable').innerHTML=DEFTBL.map(r=>`<tr><td><b>${r[0]}</b><br><span style="color:var(--mut)">${r[1]}</span></td><td>${r[2]}</td></tr>`).join('');
+ $('#compTable').innerHTML=COMP.map(r=>`<tr><td>${r[0]}</td><td>${r[1]} เดือน</td></tr>`).join('');
+}
+$('#selNrv').onchange=e=>{S.nrvIdx=+e.target.value;S.ns=0;S.nm=0;renderNrv()};
+$('#btnAddNrv').onclick=()=>add(lastNrv);
+
+
+/* ---- worked example (slides 51-64) ---- */
+const CASE={
+ intro:'ชายไทยอายุ 31 ปี ถนัดขวา บาดเจ็บขณะทำงานที่แขนและมือซ้าย ภายหลังผ่าตัดและกายภาพบำบัดประมาณ 1 ปี (อยู่ในสภาวะ MMI) ตรวจพบความผิดปกติดังนี้ — ทุกค่าด้านล่างคำนวณสดจาก engine ของหน้านี้ แล้วเทียบกับเฉลยในสไลด์',
+ steps:[
+  {t:'นิ้วหัวแม่มือ · พิสัยการเคลื่อนไหว (ตาราง 2-30)',
+   rows:[['ข้อปลายนิ้ว งอได้ 20°','6% ของนิ้ว'],['ข้อปลายนิ้ว เหยียด -10°','3%'],
+         ['ข้อโคนนิ้ว ติดแข็ง -10°','7%'],['ข้อฐานนิ้ว กางได้ 20°','10%'],
+         ['ข้อฐานนิ้ว หุบได้ 6 ซม.','8%'],['ข้อฐานนิ้ว สบนิ้วได้ 4 ซม.','9%']],
+   rule:'นิ้วหัวแม่มือ — บวกตรงทุกทิศทางทุกข้อ',
+   calc:()=>sum([6,3,7,10,8,9]), exp:43, unit:'% ของนิ้ว'},
+  {t:'นิ้วหัวแม่มือ · การสูญเสียความรู้สึก',
+   rows:[['ชาตั้งแต่ข้อโคนนิ้วถึงปลายนิ้ว · 2-PD = 9 มม.','ขาดระดับข้อโคนนิ้ว = 100% ของนิ้ว × ¼ (2-PD 7–15 มม.)']],
+   rule:'รวมกับค่า ROM ด้วยตารางค่ารวม',
+   calc:()=>combine([43,Math.round(100*0.25)]), exp:57, unit:'% ของนิ้ว'},
+  {t:'นิ้วชี้ (ตาราง 2-31)',
+   rows:[['ข้อปลายนิ้ว ติดแข็ง -40°','35% ของนิ้ว'],['ข้อกลางนิ้ว ติดแข็ง -20°','60%'],
+         ['ข้อโคนนิ้ว งอ 60°','19%'],['ข้อโคนนิ้ว เหยียด -20°','7%']],
+   rule:'ภายในข้อเดียวกันบวกตรง (19+7=26) แล้วรวมข้ามข้อด้วยตารางค่ารวม',
+   calc:()=>combine([60,35,sum([19,7])]), exp:81, unit:'% ของนิ้ว'},
+  {t:'นิ้วกลาง (ตาราง 2-31)',
+   rows:[['ข้อปลายนิ้ว งอ 30° / เหยียด -10°','25% + <b>4%</b> = 29% (คู่มือ · สไลด์เขียน 2%)'],
+         ['ข้อกลางนิ้ว งอ 40° / เหยียด -10°','42% + 3% = 45%'],
+         ['ข้อโคนนิ้ว งอ 70° / เหยียด -10°','19% + 7% = 26%']],
+   rule:'บวกภายในข้อ แล้วรวมข้ามข้อด้วยตารางค่ารวม',
+   calc:()=>combine([45,25+4,26]), exp:71, unit:'% ของนิ้ว (ตามคู่มือ)'},
+  {t:'นิ้วนาง และ นิ้วก้อย (ตาราง 2-28)',
+   rows:[['ขาดระดับข้อกลางนิ้ว (PIP)','80% ของแต่ละนิ้ว']],
+   rule:'อ่านจากตารางการตัดขาดโดยตรง',
+   calc:()=>80, exp:80, unit:'% ของนิ้ว (แต่ละนิ้ว)'},
+  {t:'แปลงนิ้ว → มือ (ตาราง 2-11 ก)',
+   rows:[['หัวแม่มือ 57% × 0.40','23% ของมือ'],['ชี้ 81% × 0.20','16%'],
+         ['กลาง 71% × 0.20','14%'],['นาง 80% × 0.10','8%'],['ก้อย 80% × 0.10','8%']],
+   rule:'แปลงทีละนิ้วแล้ว บวกตรง — ไม่ใช้ตารางค่ารวม',
+   calc:()=>sum([d2h(57,'thumb'),d2h(81,'index'),d2h(71,'middle'),d2h(80,'ring'),d2h(80,'little')]),
+   exp:69, unit:'% ของมือ'},
+  {t:'แปลงมือ → แขน (ตาราง 2-11 ข)',
+   rows:[['69% ของมือ × 0.90','']],
+   rule:'',
+   calc:()=>h2u(69), exp:62, unit:'% ของแขน'},
+  {t:'ข้อมือ (ตาราง 2-32)',
+   rows:[['งอลงได้ 30°','3% ของแขน'],['กระดกขึ้นได้ 20°','7%'],
+         ['เบนทางนิ้วหัวแม่มือ 10°','2%'],['เบนทางนิ้วก้อย 10°','4%']],
+   rule:'ข้อมือ — บวกตรงทุกทิศทาง (ค่าเป็น % ของแขนอยู่แล้ว)',
+   calc:()=>sum([3,7,2,4]), exp:16, unit:'% ของแขน'},
+  {t:'ข้อศอก (ตาราง 2-33)',
+   rows:[['งอได้ 90°','8% ของแขน'],['เหยียดขาดไป 30°','2%'],
+         ['คว่ำมือได้ 30°','3%'],['หงายมือได้ 20°','2%']],
+   rule:'ข้อศอก — บวกตรงทุกทิศทาง',
+   calc:()=>sum([8,2,3,2]), exp:15, unit:'% ของแขน'},
+  {t:'รวมทั้งแขน',
+   rows:[['นิ้วมือทั้งหมด','62% ของแขน'],['ข้อมือ','16%'],['ข้อศอก','15%']],
+   rule:'ตารางค่ารวม (บทที่ 19) · เรียงมากไปน้อยแล้วจับคู่: (62 ⊕ 16) = 68 แล้ว 68 ⊕ 15 = 73',
+   calc:()=>combine([62,16,15]), exp:73, unit:'% ของแขน'},
+  {t:'แปลงแขน → ทั้งร่างกาย (ตาราง 2-12)',
+   rows:[['73% ของแขน × 0.60','']],
+   rule:'คำตอบสุดท้าย',
+   calc:()=>u2w(73), exp:44, unit:'% ของทั้งร่างกาย'},
+ ]};
+function renderCase(){
+ $('#caseIntro').textContent=CASE.intro;
+ let pass=0;
+ const h=CASE.steps.map((s,i)=>{
+   const got=s.calc(), ok=got===s.exp; if(ok)pass++;
+   return `<div class="romrow"><b>${i+1}. ${s.t}</b>
+     <table style="margin-top:6px">${s.rows.map(r=>`<tr><td>${r[0]}</td><td style="color:var(--mut);font-weight:400">${r[1]}</td></tr>`).join('')}</table>
+     ${s.rule?`<p class="hint" style="color:#F0CE8A">${s.rule}</p>`:''}
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+       <span style="font-size:12.5px;color:var(--mut)">engine คำนวณได้</span>
+       <span style="font-weight:700;color:${ok?'var(--gold2)':'var(--bad)'}">${got} ${s.unit} ${ok?'✓':'✗ เฉลย '+s.exp}</span>
+     </div></div>`}).join('');
+ $('#caseBody').innerHTML=h+`<div class="${pass===CASE.steps.length?'warnbox':'warnbox'}" style="background:rgba(92,194,141,.12);border-color:rgba(92,194,141,.4);color:#8FE0B4;margin-top:12px">
+   ผ่าน ${pass}/${CASE.steps.length} ขั้นตอน — คำตอบสุดท้าย <b>44% ของทั้งร่างกาย</b> (แขนซ้าย)</div>`;
+}
+
+
+/* ================= LOWER EXTREMITY ================= */
+const lList = () => LDX.filter(d=>d.region===S.lreg);
+const lCur  = () => lList()[S.ldxIdx];
+function lOpt(){const d=lCur();if(!d)return null;const o=d.classes[S.lcls];return o?(o[Math.min(S.lopt,o.length-1)]||null):null}
+
+function renderLDbi(){
+ $('#segLReg').innerHTML=LREG.map(([k,l,t])=>`<button data-r="${k}" class="${S.lreg===k?'on':''}">${l}</button>`).join('');
+ $('#segLReg').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.lreg=b.dataset.r;S.ldxIdx=0;S.lcls=null;S.lopt=0;renderLDbi()});
+ const l=lList();let h='',g=null;
+ l.forEach((d,i)=>{if(d.group!==g){if(g!==null)h+='</optgroup>';g=d.group;h+=`<optgroup label="${(g||'อื่น ๆ').slice(0,60)}">`}
+  h+=`<option value="${i}" ${i===S.ldxIdx?'selected':''}>${d.name.replace(/\s*\*\s*/g,' ').slice(0,95)}</option>`});
+ if(g!==null)h+='</optgroup>';$('#selLDx').innerHTML=h;
+ const d=lCur();
+ $('#ldxMeta').innerHTML=d?`ตารางที่ ${d.table} · หน้า ${d.page} · ค่าคิดเป็นร้อยละของ<b>ขา</b>`+(d.needsReview.length?` <span class="pill">⚠ ${d.needsReview.join(', ')}</span>`:''):'';
+ // classes
+ if(d){
+  const ks=Object.keys(d.classes).map(Number).sort((a,b)=>a-b);
+  if(S.lcls===null||!d.classes[S.lcls]){S.lcls=ks[0];S.lopt=0}
+  let c=`<div class="seg">`+ks.map(k=>`<button data-c="${k}" class="${S.lcls==k?'on':''}">ขั้น ${k}<br><small style="font-weight:400;font-size:10px">${CR[k]}</small></button>`).join('')+`</div><label>เกณฑ์ย่อยในขั้น ${S.lcls}</label>`;
+  d.classes[S.lcls].forEach((o,i)=>c+=`<div class="opt ${i===S.lopt?'on':''}" data-o="${i}"><b>${o.v.join(' / ')}</b><span>${o.crit||'(ไม่มีคำอธิบายในตาราง)'}</span></div>`);
+  $('#lclassWrap').innerHTML=c;
+  $('#lclassWrap').querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{S.lcls=+b.dataset.c;S.lopt=0;renderLDbi()});
+  $('#lclassWrap').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{S.lopt=+b.dataset.o;renderLDbi()});
+ }
+ document.querySelectorAll('#paneLDBI details').forEach(e=>e.remove());
+ [['segLFH','lfh'],['segLPE','lpe'],['segLCS','lcs']].forEach(([id,k])=>{
+  $('#'+id).innerHTML=[0,1,2,3,4].map(v=>`<button data-v="${v}" class="${S[k]===v?'on':''}">${v}</button>`).join('');
+  $('#'+id).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[k]=+b.dataset.v;renderLDbi()})});
+ $('#segLFH').insertAdjacentHTML('afterend', modRef('le','fh',S.lfh));
+ $('#segLPE').insertAdjacentHTML('afterend', modRef('le','pe',S.lpe));
+ $('#segLCS').insertAdjacentHTML('afterend', modRef('le','cs',S.lcs));
+ lCalc();
+}
+function lCalc(){
+ const d=lCur(),o=lOpt();
+ if(!d||!o){$('#lBigVal').textContent='—';$('#lCalcTable').innerHTML='';lastL=null;return}
+ const cdx=+S.lcls;let useFH=true,drop=false;
+ if(Math.abs(S.lfh-S.lpe)>=2||Math.abs(S.lfh-S.lcs)>=2){useFH=false;drop=true}
+ const mods=[];const used=[];
+ if(useFH){mods.push(S.lfh);used.push('FH='+S.lfh)}
+ mods.push(S.lpe);used.push('PE='+S.lpe);
+ mods.push(S.lcs);used.push('CS='+S.lcs);
+ const na=netAdjust(cdx,mods), leg=o.v[{A:0,B:1,C:2}[na.grade]], wp=le2wp(leg);
+ $('#lBigVal').innerHTML=leg+'<small>% ขา</small>';
+ $('#lBigCap').innerHTML=`ขั้น ${cdx} ระดับ <b>${na.grade}</b> · net = ${na.net===null?'—':(na.net>0?'+':'')+na.net}`+(na.bumped?' <span class="pill">+1 กฎขั้น 4</span>':'');
+ $('#lCalcTable').innerHTML=[['ขั้น (CDX)','ขั้น '+cdx],['ค่า A / B / C',o.v.join(' / ')],
+   ['ปัจจัยที่ใช้',used.join(', ')],['Σ(GM − CDX)',(na.net>0?'+':'')+na.net],['ระดับ','ระดับ '+na.grade],
+   ['ค่าของขา',leg+'% ขา'],['→ ทั้งร่างกาย (×0.40)',wp+'% ทั้งร่างกาย']]
+   .map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ $('#lmodWarn').innerHTML=drop?`<div class="warnbox">⚠ ประวัติการใช้งานต่างจากการตรวจร่างกาย/คลินิก ≥ 2 ระดับ — ตัดออกอัตโนมัติ</div>`:'';
+ lastL={kind:'ldbi',unit:'le', lvl:'le', grp:'le', nat:leg, uniq:true,
+        title:d.name.replace(/\s*\*\s*/g,' '),
+        detail:`ตาราง ${d.table} · หน้า ${d.page} · ขั้น ${cdx} ระดับ ${na.grade}`,crit:o.crit||'',ue:leg,wp};
+}
+function renderLAmp(){
+ $('#selLAmp').innerHTML=LAMP.map((r,i)=>`<option value="${i}" ${i===S.lampIdx?'selected':''}>${r[0]}</option>`).join('');
+ const r=LAMP[S.lampIdx];
+ const leg=r[2], wp=r[1];
+ $('#lAmpVal').innerHTML=(leg!==null?leg:wp)+`<small>% ${leg!==null?'ขา':'ทั้งร่างกาย'}</small>`;
+ $('#lAmpCap').textContent=r[0];
+ $('#lAmpTable').innerHTML=[['ร้อยละของเท้า',r[3]],['ร้อยละของขา',r[2]],['ร้อยละของทั้งร่างกาย',r[1]]]
+   .map(x=>`<tr><td>${x[0]}</td><td>${x[1]===null?'—':x[1]}</td></tr>`).join('');
+ lastLAmp={kind:'lamp',unit:'le', lvl:'le', grp:'le', nat:(leg!==null?leg:100), uniq:true,
+           title:'ขาขาด — '+r[0],detail:'ตารางการตัดขาด (ขาและเท้า)',crit:'',
+           ue:leg!==null?leg:0, wp:wp};
+}
+function lnRow(n,tr,lv){return n.rows.find(r=>r.track===tr&&r.level===lv)||null}
+function renderLNrv(){
+ $('#selLNrv').innerHTML=LNRV.map((n,i)=>`<option value="${i}" ${i===S.lnrvIdx?'selected':''}>${n.name}</option>`).join('');
+ const n=LNRV[S.lnrvIdx];
+ [['segLNS','lns','sensory'],['segLNM','lnm','motor']].forEach(([id,k,tr])=>{
+  $('#'+id).innerHTML=[0,1,2,3,4].map(v=>{const r=v===0?null:lnRow(n,tr,v);
+    const dis=(v>0&&!r)?'disabled style="opacity:.3"':'';
+    return `<button ${dis} data-k="${k}" data-v="${v}" class="${S[k]===v?'on':''}">${LVL[v]}</button>`}).join('');
+  $('#'+id).querySelectorAll('button[data-k]').forEach(b=>b.onclick=()=>{S[b.dataset.k]=+b.dataset.v;renderLNrv()})});
+ $('#segLNG').innerHTML=[0,1,2].map(g=>`<button data-g="${g}" class="${S.lng===g?'on':''}">ระดับ ${'ABC'[g]}</button>`).join('');
+ $('#segLNG').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.lng=+b.dataset.g;renderLNrv()});
+ const rs=S.lns?lnRow(n,'sensory',S.lns):null, rm=S.lnm?lnRow(n,'motor',S.lnm):null;
+ $('#lnsHint').textContent=rs?`ขั้น ${rs.cls} · A/B/C = ${rs.v.join(' / ')} · ${rs.crit}`:'ไม่ประเมินส่วนนี้';
+ $('#lnmHint').textContent=rm?`ขั้น ${rm.cls} · A/B/C = ${rm.v.join(' / ')} · ${rm.crit}`:'ไม่ประเมินส่วนนี้';
+ const vs=rs?rs.v[S.lng]:0, vm=rm?rm.v[S.lng]:0;
+ const leg=combine([vs,vm].filter(x=>x>0)), wp=le2wp(leg);
+ $('#lNrvVal').innerHTML=leg+'<small>% ขา</small>';
+ $('#lNrvCap').textContent='ความรู้สึก '+vs+'% ⊕ กำลังกล้ามเนื้อ '+vm+'%';
+ $('#lNrvTable').innerHTML=[['ความรู้สึก',rs?`ขั้น ${rs.cls} ระดับ ${'ABC'[S.lng]} = ${vs}%`:'—'],
+  ['กำลังกล้ามเนื้อ',rm?`ขั้น ${rm.cls} ระดับ ${'ABC'[S.lng]} = ${vm}%`:'—'],
+  ['รวม (ตารางค่ารวม)',leg+'% ขา'],['→ ทั้งร่างกาย (×0.40)',wp+'% ทั้งร่างกาย']]
+  .map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ lastLNrv={kind:'lnrv',unit:'le', lvl:'le', grp:'le', nat:leg, uniq:true,
+   title:'เส้นประสาทขา — '+n.name,detail:'ตาราง 3-12 · ระดับ '+'ABC'[S.lng],
+   crit:[rs?'ความรู้สึก: '+rs.crit:'',rm?'กำลังกล้ามเนื้อ: '+rm.crit:''].filter(Boolean).join(' | '),ue:leg,wp};
+ $('#mtxTable').innerHTML='<tr><td></td>'+LMTX.cols.map(c=>`<td style="text-align:center;color:var(--gold2)">${c}</td>`).join('')+'</tr>'
+  +LMTX.rows.map(([nm,cells])=>`<tr><td>${nm}</td>`+cells.map(v=>`<td style="text-align:center;color:${v?'var(--bad)':'var(--mut)'}">${v?'✕':'·'}</td>`).join('')+'</tr>').join('');
+}
+$('#selLDx').onchange=e=>{S.ldxIdx=+e.target.value;S.lcls=null;S.lopt=0;renderLDbi()};
+$('#selLAmp').onchange=e=>{S.lampIdx=+e.target.value;renderLAmp()};
+$('#selLNrv').onchange=e=>{S.lnrvIdx=+e.target.value;S.lns=0;S.lnm=0;renderLNrv()};
+$('#btnAddL').onclick=()=>add(lastL);
+$('#btnAddLAmp').onclick=()=>add(lastLAmp);
+$('#btnAddLNrv').onclick=()=>add(lastLNrv);
+
+
+/* ---- ROM ของขา (ตาราง 3-17 ถึง 3-24) ---- */
+const LSEV={mild:'เล็กน้อย',moderate:'ปานกลาง',severe:'มาก'};
+function renderLRom(){
+ $('#selLRomT').innerHTML=LROM.map((b,i)=>`<option value="${i}" ${i===S.lromT?'selected':''}>${b.table} · ${b.title.slice(0,70)}</option>`).join('');
+ const B=LROM[S.lromT];
+ let h='';
+ B.rows.forEach((r,ri)=>{
+   const key=S.lromT+'|'+ri;
+   if(S.lromSel[key]===undefined)S.lromSel[key]='';
+   h+=`<div class="romrow"><b>${r.name}</b>
+     <div class="opt ${S.lromSel[key]===''?'on':''}" data-k="${key}" data-v="" style="margin-top:5px"><b>0%</b><span>ปกติ / ไม่ประเมิน</span></div>`+
+     ['mild','moderate','severe'].filter(s=>r.bands[s]).map(s=>
+       `<div class="opt ${S.lromSel[key]===s?'on':''}" data-k="${key}" data-v="${s}" style="margin-top:5px">
+          <b>${r.bands[s].loss}%</b><span>${LSEV[s]} · ${r.bands[s].range}</span></div>`).join('')+`</div>`});
+ $('#lromRows').innerHTML=h;
+ $('#lromRows').querySelectorAll('.opt[data-k]').forEach(b=>b.onclick=()=>{S.lromSel[b.dataset.k]=b.dataset.v;renderLRom()});
+ let sum=0,rows=[];
+ B.rows.forEach((r,ri)=>{const s=S.lromSel[S.lromT+'|'+ri];
+   if(s&&r.bands[s]){sum+=r.bands[s].loss;rows.push([r.name+' · '+r.bands[s].range,r.bands[s].loss+'%'])}});
+ const leg=Math.min(sum,100), wp=le2wp(leg);
+ rows.push(['รวมของข้อนี้ (บวกตรง)',leg+'% ขา'],['→ ทั้งร่างกาย (×0.40)',wp+'% ทั้งร่างกาย']);
+ $('#lRomVal').innerHTML=leg+'<small>% ขา</small>';
+ $('#lRomCap').textContent=B.title.slice(0,70);
+ $('#lRomTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+ lastLRom={kind:'lrom',unit:'le', lvl:'le', grp:'le', nat:leg, uniq:true,
+   title:'พิสัยการเคลื่อนไหวขา — '+B.title.slice(0,60),detail:'ตาราง '+B.table,
+   crit:rows.slice(0,-2).map(r=>r[0]).join('; '),ue:leg,wp};
+}
+$('#selLRomT').onchange=e=>{S.lromT=+e.target.value;renderLRom()};
+$('#btnAddLRom').onclick=()=>add(lastLRom);
+
+$('#cvIn').oninput=()=>{
+  const l=($('#cvIn').value.match(/\d+/g)||[]).map(Number).filter(x=>x>0&&x<=100);
+  $('#cvOut').innerHTML=combine(l)+'<small>%</small>';
+  $('#cvStep').textContent=l.length?('เรียง: '+l.slice().sort((a,b)=>b-a).join(' , ')):'ใส่ตัวเลข 1–100';
+};
+renderMode();renderDBI();renderAmp();renderRom();renderNrv();renderCase();renderLDbi();renderLAmp();renderLRom();renderLNrv();renderItems();
+
+</script></body></html>
