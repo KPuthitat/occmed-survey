@@ -45,8 +45,8 @@ export const GROUPS = [
   },
   {
     id: 'pneumo',
-    nameTh: 'อ่านฟิล์ม ILO (Pneumoconiosis)',
-    desc: 'จำแนกภาพรังสีทรวงอกมาตรฐาน ILO สำหรับโรคปอดจากฝุ่น · เปิดแอปในแท็บใหม่',
+    nameTh: 'อ่านฟิล์มรังสีทรวงอก ILO (Pneumoconiosis)',
+    desc: 'การอ่านฟิล์มรังสีทรวงอกในโรคปอดจากการทำงานตามมาตรฐานขององค์การแรงงานระหว่างประเทศ (ILO Classification of Radiographs of Pneumoconioses) · เปิดแอปในแท็บใหม่',
     icon: IC.xray,
     path: 'https://pneumo.ikigaimedihealth.com',
     single: true,
