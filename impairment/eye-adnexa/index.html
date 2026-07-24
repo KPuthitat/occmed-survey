@@ -37,7 +37,7 @@
   <div><b>การสูญเสียอื่นๆ ของระบบจักษุ</b><small>จักษุ · ตาราง 6-7</small></div>
   <div class="sp"></div><a class="occ-back" href="/impairment/">← เลือกระบบ</a></div>
 <div class="lead">
-  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <div class="kick">สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564)</div>
   <h1>ภาพซ้อน / หนังตา-เยื่อบุตา / น้ำตา (ตาราง 6-7)</h1>
   <p>เลือกอาการ → คิดเป็น VAS ของตาข้างที่ผิดปกติ → FVA → VSI → WPI</p>
 </div>
@@ -118,7 +118,7 @@ $('other').addEventListener('input', e=>{ state.other=Math.max(0,Math.min(100,Nu
 
 const THMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const beToday=()=>{const d=new Date();return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543}`;};
-$('printHead').innerHTML=`<b>สรุป — การสูญเสียอื่นๆ ของระบบจักษุ (ตาราง 6-7)</b><span>คู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 6 · วันที่ ${beToday()}</span>`;
+$('printHead').innerHTML=`<b>สรุป — การสูญเสียอื่นๆ ของระบบจักษุ (ตาราง 6-7)</b><span>คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 6 · วันที่ ${beToday()}</span>`;
 async function copyText(txt,btn){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}const o=btn.textContent;btn.textContent=ok?'คัดลอกแล้ว':'ไม่สำเร็จ';setTimeout(()=>btn.textContent=o,1600);}
 $('btnCopy').addEventListener('click',e=>{const a=cur();const loss=lossVal();const r=adnexaResult(loss,state.other,a.cap??null);
   copyText([`สรุป — การสูญเสียอื่นๆ ของระบบจักษุ (คู่มือฯ บทที่ 6 ตาราง 6-7) · วันที่ ${beToday()}`,`อาการ: ${a.group} — ${a.label} (สูญเสีย ${loss}% ของตาข้างที่ผิดปกติ)`,`การสูญเสียระบบจักษุ (VSI) = ${Math.round(r.vsi)}%${r.capped?' (เพดาน 15%)':''}`,`การสูญเสียทั้งร่างกาย (WPI) = ${r.wpi}%`,'การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน'].join('\n'),e.currentTarget);});

@@ -238,7 +238,7 @@ export function mountClassifier(opts) {
   <a class="occ-back" href="/impairment/">← เลือกระบบ</a>
 </div>
 <div class="cl-lead">
-  <div class="kick">${esc(opts.chapter || 'กองทุนเงินทดแทน · ฉบับจัดทำ 4')}</div>
+  <div class="kick">${esc(opts.chapter || 'สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564)')}</div>
   <h1>เครื่องคำนวณการสูญเสียสมรรถภาพ — ${esc(opts.titleTh)}</h1>
   <p>กรอกผลตรวจ (ประวัติ · การตรวจร่างกาย · แล็บ) แล้วระบบเลือกขั้น + ระดับย่อยให้อัตโนมัติ (ปรับเองได้)</p>
 </div>

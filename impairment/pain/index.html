@@ -49,7 +49,7 @@
   <a class="occ-back" href="/impairment/">← เลือกระบบ</a>
 </div>
 <div class="lead">
-  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <div class="kick">สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564)</div>
   <h1>เครื่องคำนวณการสูญเสียสมรรถภาพ — อาการปวดเรื้อรัง</h1>
   <p>แบบสอบถาม PDQ 15 ข้อ (ข้อละ 0–10) → คะแนนรวม → ร้อยละทั้งร่างกาย (ตาราง 17-2)</p>
 </div>
@@ -115,7 +115,7 @@ function render(){
 
 const THMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const beToday=()=>{const d=new Date();return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543}`;};
-$('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — อาการปวดเรื้อรัง</b><span>คู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 17 (PDQ) · วันที่ ${beToday()}</span>`;
+$('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — อาการปวดเรื้อรัง</b><span>คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 17 (PDQ) · วันที่ ${beToday()}</span>`;
 async function copyText(txt,btn){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}const o=btn.textContent;btn.textContent=ok?'คัดลอกแล้ว':'ไม่สำเร็จ';setTimeout(()=>btn.textContent=o,1600);}
 $('btnCopy').addEventListener('click', e=>{
   const r = painResult(state.ans);
@@ -128,7 +128,7 @@ $('btnPrint').addEventListener('click', ()=>window.print());
 
 mountExamples('#secExamples', PAIN_EXAMPLES, {
   title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 17)',
-  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 17',
+  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 17',
 });
 render();
 mountPageKit();

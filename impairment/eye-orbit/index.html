@@ -42,7 +42,7 @@
   <div><b>รูปลักษณ์เบ้าตา / สูญเสียลูกตา</b><small>จักษุ · ตาราง 6-9</small></div>
   <div class="sp"></div><a class="occ-back" href="/impairment/">← เลือกระบบ</a></div>
 <div class="lead">
-  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <div class="kick">สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564)</div>
   <h1>การสูญเสียรูปลักษณ์ของเบ้าตา (ตาราง 6-9)</h1>
   <p>เลือกระดับตามหัวข้อที่รุนแรงที่สุด · ค่าที่ได้ = WPI โดยตรง</p>
 </div>
@@ -122,7 +122,7 @@ $('other').addEventListener('input',e=>{state.other=Math.max(0,Math.min(100,Numb
 
 const THMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const beToday=()=>{const d=new Date();return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543}`;};
-$('printHead').innerHTML=`<b>สรุป — รูปลักษณ์เบ้าตา / สูญเสียลูกตา (ตาราง 6-9)</b><span>คู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 6 · วันที่ ${beToday()}</span>`;
+$('printHead').innerHTML=`<b>สรุป — รูปลักษณ์เบ้าตา / สูญเสียลูกตา (ตาราง 6-9)</b><span>คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 6 · วันที่ ${beToday()}</span>`;
 async function copyText(txt,btn){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}const o=btn.textContent;btn.textContent=ok?'คัดลอกแล้ว':'ไม่สำเร็จ';setTimeout(()=>btn.textContent=o,1600);}
 $('btnCopy').addEventListener('click',e=>{if(state.band==null)return;const orbit=state.sub;const L=[`สรุป — รูปลักษณ์เบ้าตา (คู่มือฯ บทที่ 6 ตาราง 6-9) · วันที่ ${beToday()}`,`รูปลักษณ์เบ้าตา = ${orbit}% ของทั้งร่างกาย`];
   if(state.globe){const visWpi=vsiToWpi(globeLossVsi(state.other));const total=Math.round(combineValues([orbit,visWpi]));L.push(`รวมการสูญเสียสายตา (สูญเสียลูกตา) ${visWpi}% → รวม (Combined Values) = ${total}%`);}

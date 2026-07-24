@@ -22,7 +22,7 @@ export function mountHemaCard(key) {
     titleTh: T.titleTh,
     subtitleTh: 'ระบบโลหิตวิทยา',
     ref: T.ref,
-    chapter: 'กองทุนเงินทดแทน · ฉบับจัดทำ 4 · บทที่ 15',
+    chapter: 'สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564) · บทที่ 15',
     output: 'wpi',
     keyRow: T.keyRow,
     shiftMode: T.shiftMode || 'unit',
@@ -33,7 +33,7 @@ export function mountHemaCard(key) {
     examples: (HEMA_EXAMPLES && HEMA_EXAMPLES[key]) || [],
     examplesOpts: {
       title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 15)',
-      source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 15',
+      source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 15',
     },
     mountExamples,
     mountPageKit,

@@ -74,7 +74,7 @@ function shell(titleTh, ref, note, bodyHtml, key) {
 <div class="occ-topbar"><div class="mark">OC</div>
   <div><b>${esc(titleTh)}</b><small>ระบบทางเดินหายใจ · ตาราง ${ref}</small></div>
   <div class="sp"></div><a class="occ-back" href="/impairment/">← เลือกระบบ</a></div>
-<div class="lead"><div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+<div class="lead"><div class="kick">สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564)</div>
   <h1>เครื่องคำนวณการสูญเสียสมรรถภาพ — ${esc(titleTh)}</h1>
   <p>อ้างอิงตาราง ${ref}</p></div>
 <div class="wrap">
@@ -95,11 +95,11 @@ function shell(titleTh, ref, note, bodyHtml, key) {
   </div>
   <div id="secExamples"></div>
 </div>`;
-  $('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — ${esc(titleTh)}</b><span>ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 9 (ตาราง ${ref}) · วันที่ประเมิน ${beToday()}</span>`;
+  $('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — ${esc(titleTh)}</b><span>ตามคู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม) บทที่ 9 (ตาราง ${ref}) · วันที่ประเมิน ${beToday()}</span>`;
   mountPageKit();
   mountExamples('#secExamples', (CARD_EXAMPLES && CARD_EXAMPLES[key]) || [], {
     title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 9)',
-    source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 9',
+    source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 9',
   });
 }
 async function copyText(txt, btn) {

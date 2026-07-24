@@ -61,7 +61,7 @@
 </div>
 
 <div class="lead">
-  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <div class="kick">สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564)</div>
   <h1>เครื่องคำนวณการสูญเสียการได้ยิน (Hearing loss)</h1>
   <p>กรอกระดับการได้ยิน (dB) ที่ 500/1000/2000/3000 Hz ของแต่ละหู → คำนวณ Binaural + WPI</p>
 </div>
@@ -152,7 +152,7 @@ document.addEventListener('input', e => {
 
 const THMON = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 function beToday() { const d = new Date(); return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear() + 543}`; }
-$('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียการได้ยิน — โสต ศอ นาสิก</b><span>ตามคู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 บทที่ 7 · วันที่ประเมิน ${beToday()}</span>`;
+$('printHead').innerHTML = `<b>สรุปการประเมินการสูญเสียการได้ยิน — โสต ศอ นาสิก</b><span>ตามคู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม) บทที่ 7 · วันที่ประเมิน ${beToday()}</span>`;
 
 function buildText() {
   const r = hearingResult(state.R, state.L);
@@ -180,7 +180,7 @@ $('btnPrint').addEventListener('click', () => window.print());
 renderInputs(); renderResult();
 mountExamples('#secExamples', HEARING_EXAMPLES, {
   title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 7)',
-  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 7',
+  source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 7',
 });
 </script>
 <script type="module">import { mountPageKit } from '/shared/pagekit.js'; mountPageKit({});</script>
