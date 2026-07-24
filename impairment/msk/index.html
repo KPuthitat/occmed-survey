@@ -74,11 +74,11 @@
     <div class="card"><h2><i>3</i>ปัจจัยปรับระดับ</h2>
       <label>ประวัติการใช้งาน · ตาราง 2-7</label><div class="seg" id="segFH"></div>
       <p class="hint" id="fhHint"></p>
-      <div class="chk"><input type="checkbox" id="useFH" checked><label for="useFH" style="margin:0">นำมาใช้ปรับระดับ</label></div>
+      <div class="chk"><input type="checkbox" id="useFH"><label for="useFH" style="margin:0">นำมาใช้ปรับระดับ</label></div>
       <label style="margin-top:13px">การตรวจร่างกาย · ตาราง 2-8</label><div class="seg" id="segPE"></div>
-      <div class="chk"><input type="checkbox" id="usePE" checked><label for="usePE" style="margin:0">นำมาใช้ปรับระดับ</label></div>
+      <div class="chk"><input type="checkbox" id="usePE"><label for="usePE" style="margin:0">นำมาใช้ปรับระดับ</label></div>
       <label style="margin-top:13px">การตรวจทางคลินิก · ตาราง 2-9</label><div class="seg" id="segCS"></div>
-      <div class="chk"><input type="checkbox" id="useCS" checked><label for="useCS" style="margin:0">นำมาใช้ปรับระดับ</label></div>
+      <div class="chk"><input type="checkbox" id="useCS"><label for="useCS" style="margin:0">นำมาใช้ปรับระดับ</label></div>
       <div id="modWarn"></div>
       <p class="hint">ปัจจัยรองที่ใช้กำหนดขั้นแล้ว <b>ห้ามนำมาปรับระดับซ้ำ</b> · กดที่ "เกณฑ์ตาราง…" เพื่อดูคำอธิบายของแต่ละระดับจากคู่มือ</p></div>
     <div class="card"><h2><i>4</i>ผลการคำนวณ</h2>
@@ -149,8 +149,12 @@
     <div class="card"><h2><i>2</i>ขั้นและเกณฑ์</h2><div id="lclassWrap"></div></div>
     <div class="card"><h2><i>3</i>ปัจจัยปรับระดับ (ตาราง 3-5 ถึง 3-9)</h2>
       <label>ประวัติการใช้งาน</label><div class="seg" id="segLFH"></div>
+      <div class="chk"><input type="checkbox" id="useLFH"><label for="useLFH" style="margin:0">นำมาใช้ปรับระดับ</label></div>
       <label style="margin-top:12px">การตรวจร่างกาย</label><div class="seg" id="segLPE"></div>
+      <div class="chk"><input type="checkbox" id="useLPE"><label for="useLPE" style="margin:0">นำมาใช้ปรับระดับ</label></div>
       <label style="margin-top:12px">การตรวจทางคลินิก</label><div class="seg" id="segLCS"></div>
+      <div class="chk"><input type="checkbox" id="useLCS"><label for="useLCS" style="margin:0">นำมาใช้ปรับระดับ</label></div>
+      <p class="hint">ค่าตั้งต้น = ระดับกลาง (B) · ติ๊กเลือกปัจจัยที่ประเมินแล้วเพื่อปรับระดับ</p>
       <div id="lmodWarn"></div></div>
     <div class="card"><h2><i>4</i>ผลการคำนวณ</h2>
       <div class="res"><div class="big" id="lBigVal">—</div><div class="cap" id="lBigCap"></div></div>
@@ -243,9 +247,9 @@ const copy=async(t,m)=>{try{await navigator.clipboard.writeText(t);toast(m)}catc
 
 const CAPS=buildCaps(AMP,LAMP);   // เพดานจากตารางตัดขาดจริง (แขน) — ขาใช้ตารางตัดขาดขา
 
-let S={mode:'dbi',side:'R',region:'digit',digit:'thumb',dxIdx:0,cls:null,optIdx:0,fh:0,pe:0,cs:0,useFH:1,usePE:1,useCS:1,
+let S={mode:'dbi',side:'R',region:'digit',digit:'thumb',dxIdx:0,cls:null,optIdx:0,fh:0,pe:0,cs:0,useFH:0,usePE:0,useCS:0,
        ampIdx:0,romT:0,romJ:0,romFinger:'index',romSev:{},nrvIdx:0,ns:0,nm:0,ng:1,
-       body:'ue',lreg:'foot',ldxIdx:0,lcls:null,lopt:0,lfh:0,lpe:0,lcs:0,
+       body:'ue',lreg:'foot',ldxIdx:0,lcls:null,lopt:0,lfh:0,lpe:0,lcs:0,useLFH:0,useLPE:0,useLCS:0,
        lampIdx:0,lnrvIdx:0,lns:0,lnm:0,lng:1,lromT:0,lromSel:{}};
 let items=[],last=null,lastAmp=null,lastRom=null,lastNrv=null,lastL=null,lastLAmp=null,lastLNrv=null,lastLRom=null;
 let GID=0;   // ตัวนับให้ grp ไม่ซ้ำ สำหรับ item ที่ต้องแยกกลุ่ม (uniq) — ไม่ให้รวมผิดกลุ่ม
@@ -480,11 +484,11 @@ const add=o=>{if(!o){toast('ยังไม่มีผลคำนวณ');retu
 // หลังเพิ่มรายการ → รีเซ็ตตัวเลือกของโหมดปัจจุบันกลับค่าตั้งต้น (เริ่มประเมินจุดใหม่ได้ทันที)
 function resetAfterAdd(){
   switch(S.mode){
-    case 'dbi': S.cls=null;S.optIdx=0;S.fh=0;S.pe=0;S.cs=0;S.useFH=1;S.usePE=1;S.useCS=1;S.digit='thumb';renderDBI();break;
+    case 'dbi': S.cls=null;S.optIdx=0;S.fh=0;S.pe=0;S.cs=0;S.useFH=0;S.usePE=0;S.useCS=0;S.digit='thumb';renderDBI();break;
     case 'amp': S.ampIdx=0;renderAmp();break;
     case 'rom': S.romSev={};S.romFinger='index';S.romJ=0;renderRom();break;
     case 'nrv': S.ns=0;S.nm=0;S.ng=1;renderNrv();break;
-    case 'ldbi': S.lcls=null;S.lopt=0;renderLDbi();break;
+    case 'ldbi': S.lcls=null;S.lopt=0;S.lfh=0;S.lpe=0;S.lcs=0;S.useLFH=0;S.useLPE=0;S.useLCS=0;renderLDbi();break;
     case 'lamp': S.lampIdx=0;renderLAmp();break;
     case 'lrom': S.lromSel={};renderLRom();break;
     case 'lnrv': S.lns=0;S.lnm=0;S.lng=1;renderLNrv();break;
@@ -651,17 +655,18 @@ function renderLDbi(){
  $('#segLFH').insertAdjacentHTML('afterend', modRef('le','fh',S.lfh));
  $('#segLPE').insertAdjacentHTML('afterend', modRef('le','pe',S.lpe));
  $('#segLCS').insertAdjacentHTML('afterend', modRef('le','cs',S.lcs));
+ [['useLFH'],['useLPE'],['useLCS']].forEach(([k])=>{const el=$('#'+k);if(el){el.checked=!!S[k];el.onchange=e=>{S[k]=e.target.checked?1:0;renderLDbi()}}});
  lCalc();
 }
 function lCalc(){
  const d=lCur(),o=lOpt();
  if(!d||!o){$('#lBigVal').textContent='—';$('#lCalcTable').innerHTML='';lastL=null;return}
- const cdx=+S.lcls;let useFH=true,drop=false;
- if(Math.abs(S.lfh-S.lpe)>=2||Math.abs(S.lfh-S.lcs)>=2){useFH=false;drop=true}
+ const cdx=+S.lcls;let useFH=!!S.useLFH,drop=false;
+ if(useFH&&((S.useLPE&&Math.abs(S.lfh-S.lpe)>=2)||(S.useLCS&&Math.abs(S.lfh-S.lcs)>=2))){useFH=false;drop=true}
  const mods=[];const used=[];
  if(useFH){mods.push(S.lfh);used.push('FH='+S.lfh)}
- mods.push(S.lpe);used.push('PE='+S.lpe);
- mods.push(S.lcs);used.push('CS='+S.lcs);
+ if(S.useLPE){mods.push(S.lpe);used.push('PE='+S.lpe)}
+ if(S.useLCS){mods.push(S.lcs);used.push('CS='+S.lcs)}
  const na=netAdjust(cdx,mods), leg=o.v[{A:0,B:1,C:2}[na.grade]], wp=le2wp(leg);
  $('#lBigVal').innerHTML=leg+'<small>% ขา</small>';
  $('#lBigCap').innerHTML=`ขั้น ${cdx} ระดับ <b>${na.grade}</b> · net = ${na.net===null?'—':(na.net>0?'+':'')+na.net}`+(na.bumped?' <span class="pill">+1 กฎขั้น 4</span>':'');
