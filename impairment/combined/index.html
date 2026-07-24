@@ -36,7 +36,7 @@
   <div><b>เครื่องรวมค่า (Combined Values)</b><small>เครื่องมือร่วม</small></div>
   <div class="sp"></div><a class="occ-back" href="/impairment/">← เลือกระบบ</a></div>
 <div class="lead">
-  <div class="kick">กองทุนเงินทดแทน · ฉบับจัดทำ 4</div>
+  <div class="kick">สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564)</div>
   <h1>รวมค่าการสูญเสียสมรรถภาพหลายรายการ</h1>
   <p>ใช้สูตรตารางค่ารวม A + B(100 − A)/100 (เรียงมาก→น้อย)</p>
 </div>
@@ -102,7 +102,7 @@ document.addEventListener('click',e=>{
 });
 const THMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const beToday=()=>{const d=new Date();return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543}`;};
-$('printHead').innerHTML=`<b>สรุป — เครื่องรวมค่า (Combined Values)</b><span>คู่มือกองทุนเงินทดแทน ฉบับจัดทำ 4 · วันที่ ${beToday()}</span>`;
+$('printHead').innerHTML=`<b>สรุป — เครื่องรวมค่า (Combined Values)</b><span>คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · วันที่ ${beToday()}</span>`;
 async function copyText(txt,btn){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true;}catch(e){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}const o=btn.textContent;btn.textContent=ok?'คัดลอกแล้ว':'ไม่สำเร็จ';setTimeout(()=>btn.textContent=o,1600);}
 $('btnCopy').addEventListener('click',e=>{const {total,v}=combineSteps(values);copyText([`สรุป — เครื่องรวมค่า (Combined Values) · วันที่ ${beToday()}`,`ค่าที่รวม: ${v.join(', ')||'—'}`,`ค่ารวมของทั้งร่างกาย = ${Math.round(total)}%`,'การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน'].join('\n'),e.currentTarget);});
 $('btnPrint').addEventListener('click',()=>window.print());

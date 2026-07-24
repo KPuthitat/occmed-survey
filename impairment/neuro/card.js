@@ -33,7 +33,7 @@ export function mountNeuroGroup(groupKey) {
       titleTh: T.titleTh,
       subtitleTh: 'ระบบประสาท · ' + G.titleTh,
       ref: T.ref,
-      chapter: 'กองทุนเงินทดแทน · ฉบับจัดทำ 4 · บทที่ 5',
+      chapter: 'สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564) · บทที่ 5',
       output: 'wpi',
       keyRow: 'crit',
       rangeMode: true,
@@ -43,7 +43,7 @@ export function mountNeuroGroup(groupKey) {
       examples: (NEURO_EXAMPLES && NEURO_EXAMPLES[tableKey]) || [],
       examplesOpts: {
         title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 5)',
-        source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 5',
+        source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 5',
       },
       mountExamples,
       mountPageKit,

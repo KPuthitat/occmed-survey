@@ -21,7 +21,7 @@ export function mountEndocrineCard(key) {
     titleTh: T.titleTh,
     subtitleTh: 'ระบบต่อมไร้ท่อและเมตะบอลิสม',
     ref: T.ref,
-    chapter: 'กองทุนเงินทดแทน · ฉบับจัดทำ 4 · บทที่ 16',
+    chapter: 'สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564) · บทที่ 16',
     output: 'wpi',
     keyRow: T.keyRow || 'history',
     shiftMode: T.shiftMode || 'proportional',
@@ -32,7 +32,7 @@ export function mountEndocrineCard(key) {
     examples: (ENDO_EXAMPLES && ENDO_EXAMPLES[key]) || [],
     examplesOpts: {
       title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 16)',
-      source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 16',
+      source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 16',
     },
     mountExamples,
     mountPageKit,

@@ -34,7 +34,7 @@ export function mountCardioCard(key) {
     titleTh: T.titleTh,
     subtitleTh: 'หัวใจและหลอดเลือด',
     ref: T.ref,
-    chapter: 'กองทุนเงินทดแทน · ฉบับจัดทำ 4 · บทที่ 10',
+    chapter: 'สำนักงานกองทุนเงินทดแทน · ฉบับจัดทำ 4 (พ.ศ. 2564) · บทที่ 10',
     output: T.output,
     keyRow: T.keyRow,
     levels: T.levels,
@@ -43,7 +43,7 @@ export function mountCardioCard(key) {
     examples: (CARDIO_EXAMPLES && CARDIO_EXAMPLES[key]) || [],
     examplesOpts: {
       title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (จากคู่มือ บทที่ 10)',
-      source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพฯ (กองทุนเงินทดแทน) ฉบับจัดทำ 4 บทที่ 10',
+      source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 10',
     },
     mountExamples,
     mountPageKit,
