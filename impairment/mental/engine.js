@@ -39,10 +39,20 @@ export function psychLevel(avg) {
   const a = Number(avg);
   return PSYCH_LEVELS.find(L => a >= L.avgLo) || PSYCH_LEVELS[PSYCH_LEVELS.length - 1];
 }
-// ผลรวม: คะแนนเฉลี่ย + ระดับ + ช่วงร้อยละ · wpi = ค่าที่แพทย์เลือก (ถ้าไม่ระบุ = ค่าต่ำสุดของช่วง)
+// บัญญัติไตรยางค์: เทียบคะแนนเฉลี่ยในช่วงของระดับ → ค่าร้อยละเจาะจงในช่วง
+//   คะแนนเฉลี่ยยิ่งต่ำ = สูญเสียยิ่งมาก → avgHi↔wpiLo, avgLo↔wpiHi (แปรผกผัน)
+//   เช่น ระดับ 3 (เฉลี่ย 2.51–3.50 · ช่วง 25–54%) · เฉลี่ย 3.25 → ≈ 32%
+export function interpWpi(avg, L) {
+  const span = L.avgHi - L.avgLo;
+  const t = span > 0 ? clamp((L.avgHi - Number(avg)) / span, 0, 1) : 0;
+  return Math.round(L.wpiLo + t * (L.wpiHi - L.wpiLo));
+}
+// ผลรวม: คะแนนเฉลี่ย + ระดับ + ช่วงร้อยละ + ค่าที่คำนวณด้วยบัญญัติไตรยางค์ (auto)
+//   wpi = ค่าที่แพทย์เลือก (ถ้าไม่ระบุ = ค่า auto จากบัญญัติไตรยางค์)
 export function psychResult(scores, wpi) {
   const avg = psychAverage(scores);
   const L = psychLevel(avg);
-  const picked = wpi == null ? L.wpiLo : clamp(Math.round(Number(wpi)), L.wpiLo, L.wpiHi);
-  return { avg: +avg.toFixed(2), level: L.level, range: [L.wpiLo, L.wpiHi], wpi: picked };
+  const auto = interpWpi(avg, L);
+  const picked = wpi == null ? auto : clamp(Math.round(Number(wpi)), L.wpiLo, L.wpiHi);
+  return { avg: +avg.toFixed(2), level: L.level, range: [L.wpiLo, L.wpiHi], auto, wpi: picked };
 }

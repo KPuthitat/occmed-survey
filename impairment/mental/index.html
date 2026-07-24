@@ -52,7 +52,7 @@
 <div class="wrap">
   <div class="warn"><b>ข้อควรทราบ</b><ul>
     <li>ประเมินโดยจิตแพทย์ เมื่ออาการคงที่ (MMI) · ให้คะแนนแต่ละด้านตามเกณฑ์ในตาราง 18-2</li>
-    <li>ค่าร้อยละเป็น "ช่วง" ของแต่ละระดับ — แพทย์ผู้ประเมินเลือกค่าภายในช่วงตามความรุนแรงจริง</li>
+    <li>ค่าร้อยละคำนวณด้วย <b>บัญญัติไตรยางค์</b> จากคะแนนเฉลี่ยเทียบในช่วงของระดับ (คะแนนยิ่งต่ำ = สูญเสียยิ่งมาก) — ยังปรับเองได้ตามดุลยพินิจ</li>
     <li>การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน</li>
   </ul></div>
   <div class="card sec">
@@ -79,7 +79,7 @@
 </div>
 
 <script type="module">
-import { PSYCH_DOMAINS, SEVERITY, psychResult, psychAverage, psychLevel } from './engine.js';
+import { PSYCH_DOMAINS, SEVERITY, psychResult, psychAverage, psychLevel, interpWpi } from './engine.js';
 import { mountExamples } from '/shared/example.js';
 import { mountPageKit } from '/shared/pagekit.js';
 import { MENTAL_EXAMPLES } from './examples.js';
@@ -99,17 +99,20 @@ $('wpi').addEventListener('input', e=>{ state.wpi = e.target.value===''?null:Num
 function render(){
   const avg = psychAverage(state.scores);
   const L = psychLevel(avg);
-  if (state.wpi==null) state.wpi = L.wpiLo;
+  const auto = interpWpi(avg, L);                 // ค่าจากบัญญัติไตรยางค์
+  if (state.wpi==null) state.wpi = auto;          // ค่าตั้งต้น = ค่า auto (ปรับเองได้)
   const wpiEl=$('wpi'); wpiEl.min=L.wpiLo; wpiEl.max=L.wpiHi;
   const w = Math.min(L.wpiHi, Math.max(L.wpiLo, state.wpi));
   wpiEl.value = w;
-  $('rangeHint').innerHTML = `ระดับ ${L.level} · ช่วง <b>${L.wpiLo}–${L.wpiHi}%</b> — เลือกค่าภายในช่วงตามดุลยพินิจ`;
+  const overridden = w !== auto;
+  $('rangeHint').innerHTML = `ระดับ ${L.level} · ช่วง <b>${L.wpiLo}–${L.wpiHi}%</b> · บัญญัติไตรยางค์จากคะแนนเฉลี่ย = <b>${auto}%</b> (ปรับเองได้)`;
   $('resultBody').innerHTML = `
     <div class="result">
       <div class="rcard"><b>${avg.toFixed(2)}</b><span>คะแนนเฉลี่ย · ระดับ ${L.level}</span></div>
       <div class="rcard gold"><b>${w}%</b><span>การสูญเสียทั้งร่างกาย (WPI)</span></div>
     </div>
-    <div class="steps">คะแนน ${state.scores.join(' / ')} → เฉลี่ย <b>${avg.toFixed(2)}</b> → ระดับ <b>${L.level}</b> (ช่วง ${L.wpiLo}–${L.wpiHi}%) → เลือก <b>${w}%</b> (ตาราง 18-3)</div>`;
+    <div class="steps">คะแนน ${state.scores.join(' / ')} → เฉลี่ย <b>${avg.toFixed(2)}</b> → ระดับ <b>${L.level}</b> (ช่วง ${L.wpiLo}–${L.wpiHi}%)<br>
+      บัญญัติไตรยางค์: เฉลี่ย ${avg.toFixed(2)} ในช่วงคะแนน ${L.avgLo}–${L.avgHi} → <b>${auto}%</b> ในช่วง ${L.wpiLo}–${L.wpiHi}%${overridden ? ` · ปรับเป็น <b>${w}%</b>` : ''} (ตาราง 18-3)</div>`;
 }
 const THMON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const beToday=()=>{const d=new Date();return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543}`;};
@@ -119,6 +122,7 @@ $('btnCopy').addEventListener('click', e=>{
   const r = psychResult(state.scores, state.wpi);
   copyText([`สรุปการประเมิน — ทางจิตและพฤติกรรม (คู่มือฯ บทที่ 18) · วันที่ ${beToday()}`,
     `คะแนน 4 ด้าน = ${state.scores.join(' / ')} → เฉลี่ย ${r.avg} → ระดับ ${r.level} (ช่วง ${r.range[0]}–${r.range[1]}%)`,
+    `บัญญัติไตรยางค์จากคะแนนเฉลี่ย = ${r.auto}%${r.wpi !== r.auto ? ` · ปรับเป็น ${r.wpi}%` : ''}`,
     `การสูญเสียทั้งร่างกาย (WPI) = ${r.wpi}%`,
     'การตัดสินขั้นสุดท้ายอยู่ที่ดุลยพินิจของแพทย์ผู้ประเมิน'].join('\n'), e.currentTarget);
 });
