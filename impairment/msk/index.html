@@ -97,6 +97,9 @@
   <div id="paneROM" style="display:none">
     <div class="card"><h2><i>R</i>พิสัยการเคลื่อนไหว · ตาราง 2-30 ถึง 2-34</h2>
       <label>ตาราง</label><select id="selRomT"></select>
+      <div id="romFingerWrap" style="display:none"><label>นิ้วที่ประเมิน</label><select id="selRomFinger">
+        <option value="index">นิ้วชี้ (×0.20)</option><option value="middle">นิ้วกลาง (×0.20)</option>
+        <option value="ring">นิ้วนาง (×0.10)</option><option value="little">นิ้วก้อย (×0.10)</option></select></div>
       <label>ข้อ</label><select id="selRomJ"></select>
       <div id="romMotions"></div>
       <div class="res" style="margin-top:10px"><div class="big" id="romVal">—</div><div class="cap" id="romCap"></div></div>
@@ -239,7 +242,7 @@ const copy=async(t,m)=>{try{await navigator.clipboard.writeText(t);toast(m)}catc
 const CAPS=buildCaps(AMP,LAMP);   // เพดานจากตารางตัดขาดจริง (แขน) — ขาใช้ตารางตัดขาดขา
 
 let S={mode:'dbi',region:'digit',digit:'thumb',dxIdx:0,cls:null,optIdx:0,fh:0,pe:0,cs:0,useFH:1,usePE:1,useCS:1,
-       ampIdx:0,romT:0,romJ:0,romSev:{},nrvIdx:0,ns:0,nm:0,ng:1,
+       ampIdx:0,romT:0,romJ:0,romFinger:'index',romSev:{},nrvIdx:0,ns:0,nm:0,ng:1,
        body:'ue',lreg:'foot',ldxIdx:0,lcls:null,lopt:0,lfh:0,lpe:0,lcs:0,
        lampIdx:0,lnrvIdx:0,lns:0,lnm:0,lng:1,lromT:0,lromSel:{}};
 let items=[],last=null,lastAmp=null,lastRom=null,lastNrv=null,lastL=null,lastLAmp=null,lastLNrv=null,lastLRom=null;
@@ -346,9 +349,9 @@ function renderAmp(){const f=ampFlat();let h='',g=null;
  const ampFinger=/นิ้ว/.test(r.g)&&r.digit!=null;
  const ampDf=/หัวแม่มือ/.test(r.g)?.40:(/(ชี้|กลาง)/.test(r.g)?.20:.10);
  lastAmp=ampFinger
-  ? {kind:'amp',unit:'ue',lvl:'digit',grp:'amp',df:ampDf,thumb:/หัวแม่มือ/.test(r.g),nat:r.digit,uniq:true,
+  ? {kind:'amp',unit:'ue',lvl:'digit',grp:r.g,df:ampDf,thumb:/หัวแม่มือ/.test(r.g),nat:r.digit,uniq:true,
      title:r.g+' — '+r.name,detail:'ตาราง 2-28',crit:'',ue:r.ue||0,wp:r.wp||0}
-  : {kind:'amp',unit:'ue',lvl:'ue',grp:'amp',nat:r.ue||0,uniq:true,
+  : {kind:'amp',unit:'ue',lvl:'ue',grp:r.g,nat:r.ue||0,uniq:true,
      title:r.g+' — '+r.name,detail:'ตาราง 2-28',crit:'',ue:r.ue||0,wp:r.wp||0}}
 
 /* ---- ROM (schema แบบ bands) ---- */
@@ -386,24 +389,28 @@ function renderRom(){
    sum+=b.loss;rows.push([mn+' · '+(b.range||SEVTH2[b.s]),b.loss+'%'])});
  const tb=ROM[S.romT].table;
  const unit=tb==='2-30'?'thumb':(tb==='2-31'?'finger':'ue');
+ // นิ้วที่ประเมิน: 2-30 = หัวแม่มือเสมอ · 2-31 = เลือกได้ (ชี้/กลาง/นาง/ก้อย → df และการจัดกลุ่มต่างกัน)
+ const romFin=unit==='thumb'?'thumb':(unit==='finger'?S.romFinger:null);
+ $('#romFingerWrap').style.display=unit==='finger'?'':'none';
+ const REGMAP={'2-32':'wrist','2-33':'elbow','2-34':'shoulder'};
  let ue,note;
  if(unit==='ue'){ue=sum;rows.push(['รวมของแขน (บวกตรง)',ue+'% แขน'])}
- else{const d=unit==='thumb'?'thumb':'index';
-   rows.push(['รวมของนิ้ว'+(unit==='thumb'?'หัวแม่มือ':''),sum+'% ของนิ้ว']);
-   const hand=d2h(sum,d);
-   rows.push(['→ มือ (2-11 ก ×'+DF[d].toFixed(2)+')',hand+'% มือ']);
+ else{
+   rows.push([DN[romFin]+' · รวมของนิ้ว (ข้อนี้)',sum+'% ของนิ้ว']);
+   const hand=d2h(sum,romFin);
+   rows.push(['→ มือ (2-11 ก ×'+DF[romFin].toFixed(2)+')',hand+'% มือ']);
    ue=h2u(hand);rows.push(['→ แขน (2-11 ข ×0.90)',ue+'% แขน']);
-   note=unit==='thumb'?'นิ้วหัวแม่มือ: บวกตรงทุกข้อ':'นิ้วมืออื่น: ต้องรวมข้ามข้อด้วยตารางค่ารวม ไม่ใช่บวกตรง — หน้านี้แสดงผลรวมของข้อเดียว';}
+   note=romFin==='thumb'?'นิ้วหัวแม่มือ: บวกตรงทุกข้อ':'นิ้วมืออื่น: หลายข้อของนิ้วเดียวกันจะถูกรวมด้วยตารางค่ารวม (เพิ่มทีละข้อในรายการ) — หน้านี้แสดงผลของข้อเดียว';}
  const wp=u2w(ue);rows.push(['→ ทั้งร่างกาย (2-12 ×0.60)',wp+'% ทั้งร่างกาย']);
  $('#romVal').innerHTML=ue+'<small>% แขน</small>';
- $('#romCap').textContent=jn+(note?' · '+note:'');
+ $('#romCap').textContent=jn+(romFin&&romFin!=='thumb'?' · '+DN[romFin]:'')+(note?' · '+note:'');
  $('#romTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
  const romDigit=unit!=='ue';
  lastRom={kind:'rom',unit:'ue',
-   lvl:romDigit?'digit':'ue', grp:'rom',
-   df:unit==='thumb'?.40:(unit==='finger'?.20:undefined), thumb:unit==='thumb',
-   nat:romDigit?sum:ue, uniq:true,
-   title:'พิสัยการเคลื่อนไหว — '+jn,detail:'ตาราง '+tb,
+   lvl:romDigit?'digit':'ue', grp:romDigit?romFin:(REGMAP[tb]||'rom'),
+   df:romDigit?DF[romFin]:undefined, thumb:romFin==='thumb',
+   nat:romDigit?sum:ue, uniq:!romDigit,   // นิ้วเดียวกัน (grp=นิ้ว) หลายข้อ → รวมข้ามข้อด้วยตารางค่ารวม · ภูมิภาคแขนแยกกลุ่ม
+   title:(romDigit?DN[romFin]+' · ':'')+'พิสัยการเคลื่อนไหว — '+jn,detail:'ตาราง '+tb+(romDigit?' · '+DN[romFin]:''),
    crit:rows.slice(0,-2).map(r=>r[0]).join('; '),ue,wp};
 }
 /* ---- items ---- */
@@ -414,7 +421,14 @@ function renderItems(){
  $('#itemList').innerHTML=items.map((it,i)=>`<div class="item"><div class="g"><b>${it.title.slice(0,72)}</b><br><span style="color:var(--mut)">${it.detail}</span></div><div class="v">${itVal(it)}% ${itUnit(it)}</div><button data-i="${i}">×</button></div>`).join('');
  $('#itemList').querySelectorAll('button').forEach(b=>b.onclick=()=>{items.splice(+b.dataset.i,1);renderItems()});
  const A=aggregate(items,CAPS);
+ const fN=g=>{const k=String(g).split('#')[0];return {wrist:'ข้อมือ',elbow:'ข้อศอก',shoulder:'ข้อไหล่'}[k]||DN[k]||k;};
  const rows=[['จำนวนรายการ',items.length]];
+ // รายละเอียดแต่ละนิ้วก่อนรวม (บอกว่าเป็นนิ้วอะไร · รวมข้ามข้อแล้วแปลงเป็น % ของมือ)
+ A.fdet.forEach(f=>rows.push([
+   '• '+fN(f.grp)+(f.n>1?' (รวม '+f.n+' ข้อ)':''),
+   (f.thumb?'บวกตรง':'รวมข้ามข้อ')+' = '+f.val+'% ของนิ้ว'+(f.capped?' (จาก '+f.raw+'% ตัดเพดาน 100%)':'')+' × '+f.df.toFixed(2)+' → '+round(f.val*f.df)+'% ของมือ']));
+ if(A.fdet.length)rows.push(['รวมมือ (บวกนิ้วตรง)',A.hand+'% มือ → '+A.fingersUE+'% แขน']);
+ A.regVals.forEach(rv=>rows.push(['• '+fN(rv.grp)+' (ภูมิภาคแขน)',rv.val+'% แขน'+(rv.capped?' (ตัดเพดาน)':'')]));
  if(A.hasUE)rows.push(['รวมแขน (Combined Values)',A.ueTotal+'% แขน = '+A.ueBody+'% ทั้งร่างกาย']);
  if(A.hasLE)rows.push(['รวมขา (Combined Values)',A.leTotal+'% ขา = '+A.leBody+'% ทั้งร่างกาย']);
  rows.push(['รวมทั้งร่างกาย',(A.hasUE&&A.hasLE?'(แขน ⊕ ขา ที่ระดับร่างกาย) = ':'')+A.body+'% ทั้งร่างกาย']);
@@ -424,6 +438,11 @@ function report(){const A=aggregate(items,CAPS);
  let s='รายงานการประเมินการสูญเสียสมรรถภาพอย่างถาวร — แขนและมือ / ขาและเท้า\n(คู่มือฯ ฉบับจัดทำ 4 · บทที่ 2–3)\n'+'-'.repeat(48)+'\n';
  items.forEach((it,i)=>{s+=`${i+1}. ${it.title}\n   ${it.detail}\n`+(it.crit?`   เกณฑ์: ${it.crit}\n`:'')+`   ค่า: ${itVal(it)}% ${itUnit(it)} = ${it.wp}% ทั้งร่างกาย\n\n`});
  s+='-'.repeat(48)+'\n';
+ const fN=g=>{const k=String(g).split('#')[0];return {wrist:'ข้อมือ',elbow:'ข้อศอก',shoulder:'ข้อไหล่'}[k]||DN[k]||k;};
+ if(A.fdet.length){s+='รายละเอียดแต่ละนิ้ว (ก่อนรวมเป็นมือ):\n';
+   A.fdet.forEach(f=>{s+=`  - ${fN(f.grp)}${f.n>1?' (รวม '+f.n+' ข้อ)':''}: ${f.thumb?'บวกตรง':'รวมข้ามข้อ'} = ${f.val}% ของนิ้ว${f.capped?' (จาก '+f.raw+'% ตัดเพดาน 100%)':''} × ${f.df.toFixed(2)} → ${round(f.val*f.df)}% ของมือ\n`});
+   s+=`  รวมมือ (บวกนิ้วตรง): ${A.hand}% มือ → ${A.fingersUE}% แขน\n`;}
+ A.regVals.forEach(rv=>{s+=`  - ${fN(rv.grp)} (ภูมิภาคแขน): ${rv.val}% แขน\n`});
  if(A.hasUE)s+=`รวมแขน: ${A.ueTotal}% แขน = ${A.ueBody}% ทั้งร่างกาย\n`;
  if(A.hasLE)s+=`รวมขา: ${A.leTotal}% ขา = ${A.leBody}% ทั้งร่างกาย\n`;
  if(A.caps.length)s+=`เพดานการตัดขาด (ตาราง 2-28/ตัดขาดขา): ${A.caps.join('; ')}\n`;
@@ -434,6 +453,7 @@ $('#selDigit').onchange=e=>{S.digit=e.target.value;calc()};
 $('#selAmp').onchange=e=>{S.ampIdx=+e.target.value;renderAmp()};
 $('#selRomT').onchange=e=>{S.romT=+e.target.value;S.romJ=0;renderRom()};
 $('#selRomJ').onchange=e=>{S.romJ=+e.target.value;renderRom()};
+$('#selRomFinger').onchange=e=>{S.romFinger=e.target.value;renderRom()};
 const add=o=>{if(!o){toast('ยังไม่มีผลคำนวณ');return}
   const it=JSON.parse(JSON.stringify(o));
   if(it.uniq)it.grp=(it.grp||'g')+'#'+(++GID);   // แยกกลุ่มไม่ให้รวมกับรายการอื่นโดยไม่ตั้งใจ
