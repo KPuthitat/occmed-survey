@@ -1,7 +1,7 @@
 // engine.test.js — ทดสอบ engine ทางจิตและพฤติกรรม (บทที่ 18)
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { psychAverage, psychLevel, psychResult, PSYCH_DOMAINS, PSYCH_LEVELS } from './engine.js';
+import { psychAverage, psychLevel, psychResult, interpWpi, PSYCH_DOMAINS, PSYCH_LEVELS } from './engine.js';
 
 test('มี 4 ด้าน · 5 ระดับ', () => { assert.equal(PSYCH_DOMAINS.length, 4); assert.equal(PSYCH_LEVELS.length, 5); });
 test('เฉลี่ยคะแนน 4 ด้าน', () => {
@@ -35,5 +35,18 @@ test('18.3: [3,3,4,4] → เฉลี่ย 3.50 → ระดับ 3 (25–54
 });
 test('wpi นอกช่วงถูก clamp เข้าช่วงของระดับ', () => {
   assert.equal(psychResult([4, 4, 3, 2], 99).wpi, 54); // ระดับ 3 เพดาน 54
-  assert.equal(psychResult([4, 4, 3, 2]).wpi, 25);     // ไม่ระบุ = ต่ำสุดของช่วง
+});
+test('บัญญัติไตรยางค์: คะแนนเฉลี่ย → ร้อยละเจาะจงในช่วง (คะแนนต่ำ = สูญเสียมาก)', () => {
+  const L3 = PSYCH_LEVELS.find(x => x.level === 3);   // เฉลี่ย 2.51–3.50 · ช่วง 25–54
+  assert.equal(interpWpi(3.25, L3), 32);              // ตามที่แพทย์ระบุ (3.25 → ~32%)
+  assert.equal(interpWpi(3.50, L3), 25);              // ปลายช่วงคะแนนสูง → ร้อยละต่ำสุด
+  assert.equal(interpWpi(2.51, L3), 54);              // ปลายช่วงคะแนนต่ำ → ร้อยละสูงสุด
+  const L1 = PSYCH_LEVELS.find(x => x.level === 1);   // เฉลี่ย 4.51–5.00 · ช่วง 0–9
+  assert.equal(interpWpi(5.00, L1), 0);
+  const L5 = PSYCH_LEVELS.find(x => x.level === 5);   // เฉลี่ย 1.00–1.50 · ช่วง 76–100
+  assert.equal(interpWpi(1.00, L5), 100);
+});
+test('ค่าตั้งต้น (ไม่ระบุ wpi) = ค่าบัญญัติไตรยางค์ (auto)', () => {
+  const r = psychResult([4, 4, 3, 2]);                // เฉลี่ย 3.25
+  assert.equal(r.auto, 32); assert.equal(r.wpi, 32);
 });
