@@ -29,9 +29,12 @@ export function classifyPicks({ levels, keyRow, picks = {}, gradeOverride = null
     keyClass = picks[keyRow];
     if (keyClass == null) return null;
     keyClass = Number(keyClass);
+    const maxClass = Math.max(...levels.map(x => x.level));
     for (const [k, v] of Object.entries(picks)) {
       if (k === keyRow || v == null) continue;
       const d = Number(v) - keyClass;
+      // ข้อยกเว้นระดับสูงสุด: ปัจจัยหลัก+ปัจจัยรองอยู่ขั้นสูงสุดพร้อมกัน → เลื่อนขึ้นสู่ระดับสูงสุด (+1 ต่อปัจจัย)
+      if (d === 0 && keyClass === maxClass) { autoShift += 1; continue; }
       // 'unit' = เลื่อน ±1 ต่อปัจจัยรอง ตามทิศทาง (บท 15 เลือด) · 'proportional' = ตามส่วนต่างขั้น (บท 16 ต่อมไร้ท่อ)
       autoShift += (shiftMode === 'unit') ? Math.sign(d) : d;
     }
@@ -90,6 +93,11 @@ const CSS = `
 .cl-brow .cl-btxt{font-size:13px;line-height:1.5;color:#3a4557;flex:1}
 .cl-brow .cl-btxt b{color:var(--gold-dk);white-space:nowrap}
 .cl-brow .cl-bnum{flex:0 0 auto;width:74px;padding:8px 9px;border:1px solid var(--line);border-radius:9px;font-size:16px;background:#fff;text-align:center}
+.cl-botcg{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.cl-bgrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cl-bgrow .cl-bglab{font-size:13px;color:#3a4557;flex:1 1 150px;min-width:0}
+.cl-bgrow .cl-bgsel{flex:1 1 160px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff}
+.cl-bgres{margin-top:12px;font-size:13.5px;color:var(--navy);background:var(--line2);border-radius:9px;padding:10px 13px;font-weight:600}
 .cl-result{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .cl-rcard{background:var(--line2);border-radius:12px;padding:16px;text-align:center}
 .cl-rcard b{display:block;font-size:30px;color:var(--navy);line-height:1;font-weight:800}
@@ -146,7 +154,7 @@ export function mountClassifier(opts) {
   document.title = `${opts.titleTh} | OCCMED`;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
 
-  const state = { picks: {}, gradeOverride: null, botc: {} };
+  const state = { picks: {}, gradeOverride: null, botc: {}, botcSel: { oral: 0, inject: 0, diet: 0, device: 0 } };
 
   const refsHtml = (opts.refs || []).map(r =>
     `<details class="cl-refs" style="margin-top:8px"><summary>${esc(r.title)}</summary>
@@ -195,6 +203,22 @@ export function mountClassifier(opts) {
     }).join('')}</div>
   </div>` : '';
 
+  // BOTC แบบ "เลื่อนระดับ" (บท 16 ต่อมไร้ท่อ): ยา+อาหาร+อุปกรณ์ → Total BOTC → ขั้น BOTC → เลื่อน grade
+  const botcGrade = opts.botcGrade || null;
+  const bgSelect = (k, label, list) => list && list.length ? `<label class="cl-bgrow"><span class="cl-bglab">${esc(label)}</span>
+    <select class="cl-bgsel" data-bg="${k}">${list.map((o, i) => `<option value="${i}">${esc(o.label)}${o.score ? ' (+' + o.score + ')' : ''}</option>`).join('')}</select></label>` : '';
+  const botcGradeHtml = botcGrade ? `<div class="card cl-sec" id="clBotcG">
+    <h2>${esc(botcGrade.title || 'ผลกระทบจากการรักษา (BOTC)')}</h2>
+    <div class="hint">${esc(botcGrade.note || 'กรอกวิธีการรักษา → คะแนน BOTC (Total) จะเทียบเป็นขั้น แล้วปรับระดับย่อยให้อัตโนมัติ')}</div>
+    <div class="cl-botcg">
+      ${bgSelect('oral', 'ยารับประทาน/พ่นจมูก/เฉพาะที่ (16-2A)', botcGrade.oral)}
+      ${bgSelect('inject', 'ยาฉีด (16-2B)', botcGrade.inject)}
+      ${bgSelect('diet', 'การปรับอาหารเพื่อควบคุมโรค (16-3)', botcGrade.diet)}
+      ${bgSelect('device', 'อุปกรณ์/ตรวจน้ำตาลปลายนิ้ว (16-4)', botcGrade.device)}
+    </div>
+    <div class="cl-bgres" id="clBgRes"></div>
+  </div>` : '';
+
   document.body.innerHTML = `
 <div class="cl-print-head" id="clPrintHead"></div>
 <div class="occ-topbar">
@@ -218,6 +242,7 @@ export function mountClassifier(opts) {
     <div class="cl-grades" id="clGrades"></div>
     <div class="cl-gnote">ระบบตั้งค่าให้อัตโนมัติจากปัจจัยรอง (ป้าย “auto”) · แตะเพื่อปรับเอง · A = น้อยที่สุดในขั้น</div>
   </div>
+  ${botcGradeHtml}
   ${botcHtml}
   <div class="card cl-sec">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -234,6 +259,20 @@ export function mountClassifier(opts) {
   const $ = id => document.getElementById(id);
   const shiftMode = opts.shiftMode || 'proportional';
   const compute = () => classifyPicks({ levels, keyRow, picks: state.picks, gradeOverride: state.gradeOverride, classMode, shiftMode });
+  // BOTC แบบเลื่อนระดับ (บท 16): รวมคะแนนยา+อาหาร+อุปกรณ์ → เทียบเป็นขั้น (thresholds) → ตั้ง picks.botc
+  function updateBotcGrade() {
+    if (!botcGrade) return;
+    const s = state.botcSel;
+    const sc = (list, i) => (list && list[i] ? Number(list[i].score) || 0 : 0);
+    const score = sc(botcGrade.oral, s.oral) + sc(botcGrade.inject, s.inject) + sc(botcGrade.diet, s.diet) + sc(botcGrade.device, s.device);
+    let bc = botcGrade.thresholds.length - 1;
+    for (let i = 0; i < botcGrade.thresholds.length; i++) { if (score <= botcGrade.thresholds[i]) { bc = i; break; } }
+    if (score > 0) state.picks.botc = bc; else delete state.picks.botc;
+    const el = $('clBgRes');
+    if (el) el.innerHTML = score > 0
+      ? `Total BOTC = <b>${score}</b> คะแนน → เทียบเป็น <b>ขั้น ${bc}</b> · ปรับระดับย่อยเทียบกับขั้นปัจจัยหลัก`
+      : 'ยังไม่ได้กรอก BOTC (ไม่ปรับระดับย่อย)';
+  }
   // BOTC บวกร้อยละ: unit → pct×จำนวน (เพดาน cap) · ไม่มี unit → ค่า % โดยตรง (เพดาน pct)
   function botcTotal() {
     if (!botc) return 0;
@@ -278,7 +317,7 @@ export function mountClassifier(opts) {
       </div>
       <div class="cl-gnote" style="margin-top:12px">${esc(opts.titleTh)} — ${lbl}${botc ? ` · ฐาน ${base}%${botcLine}` : ''} → <b style="color:var(--navy)">${final}%</b> ${esc(outLabel)}${rangeLine}${isExtremity ? ' · ต้องแปลงเป็น % ทั้งร่างกายแล้วรวมด้วย Combined Values' : ''}</div>`;
   }
-  function rerender() { renderOpts(); renderGrades(); renderResult(); }
+  function rerender() { updateBotcGrade(); renderOpts(); renderGrades(); renderResult(); }
 
   document.addEventListener('click', e => {
     const opt = e.target.closest('.cl-opt');
@@ -295,6 +334,9 @@ export function mountClassifier(opts) {
   });
   if (botc) document.addEventListener('input', e => {
     if (e.target.dataset && e.target.dataset.botc != null) { state.botc[e.target.dataset.botc] = e.target.value; renderResult(); }
+  });
+  if (botcGrade) document.addEventListener('change', e => {
+    if (e.target.dataset && e.target.dataset.bg != null) { state.botcSel[e.target.dataset.bg] = Number(e.target.value); state.gradeOverride = null; rerender(); }
   });
 
   $('clPrintHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — ${esc(opts.titleTh)}</b><span>${esc(opts.chapter || '')}${opts.ref ? ' (ตาราง ' + esc(opts.ref) + ')' : ''} · วันที่ประเมิน ${beToday()}</span>`;
