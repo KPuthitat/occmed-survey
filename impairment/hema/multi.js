@@ -7,6 +7,8 @@
 import { HEMA_TABLES, BOTC_ITEMS } from './engine.js';
 import { classifyPicks, GRADE_LETTERS } from '../../shared/classifier.js';
 import { combineValues, mountPageKit } from '../../shared/pagekit.js';
+import { mountExamples } from '../../shared/example.js';
+import { HEMA_MULTI_EXAMPLES } from './multi-examples.js';
 
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -174,6 +176,7 @@ export function mountHemaMulti() {
     </div>
     <div class="mc-result" id="mcResult"></div>
   </div>
+  <div id="secExamples"></div>
 </div>`;
 
   const $ = id => document.getElementById(id);
@@ -271,4 +274,8 @@ export function mountHemaMulti() {
 
   rerenderAll();
   mountPageKit({ combine: false }); // หน้านี้เป็นตัวรวมค่าอยู่แล้ว — ใส่แค่ปุ่มหน้าแรก/เคสใหม่
+  mountExamples('#secExamples', HEMA_MULTI_EXAMPLES, {
+    title: 'ดูโจทย์ตัวอย่าง + วิธีทำ (pancytopenia จากคู่มือ บทที่ 15)',
+    source: 'ที่มา: คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 (พ.ศ. 2564) · สำนักงานกองทุนเงินทดแทน สำนักงานประกันสังคม · บทที่ 15',
+  });
 }
