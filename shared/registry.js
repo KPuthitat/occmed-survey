@@ -20,6 +20,9 @@ const IC = {
   bone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a2.2 2.2 0 1 1-1.6-3.7 2.2 2.2 0 0 1 1.6-3.7L17 5.9a2.2 2.2 0 1 1 1.6 3.7 2.2 2.2 0 0 1-1.6 3.7Z" transform="rotate(0 12 12)"/><path d="M6.2 13.3 10 9.5M14 14.5l3.8-3.8"/></svg>',
   pain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12l1-9Z"/></svg>',
   mental: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5a4 4 0 0 0-4 4c-1.3.6-2 1.9-2 3.3 0 1 .4 1.9 1.1 2.5-.2.4-.3.9-.3 1.4a3 3 0 0 0 4.8 2.4"/><path d="M9.3 3.5A3 3 0 0 1 12 6.5V20"/><path d="M14.5 3.5a4 4 0 0 1 4 4c1.3.6 2 1.9 2 3.3 0 1-.4 1.9-1.1 2.5.2.4.3.9.3 1.4a3 3 0 0 1-4.8 2.4"/></svg>',
+  blood: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5C12 2.5 5.5 9.5 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 9.5 12 2.5 12 2.5Z"/><path d="M9 14.5a3 3 0 0 0 3 3"/></svg>',
+  endocrine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3c0 1 .5 1.8 1.2 2.4C9 8.3 8 9.8 8 11.5a4 4 0 0 0 4 4 4 4 0 0 0 4-4c0-1.7-1-3.2-2.2-4.1C14.5 6.8 15 6 15 5a3 3 0 0 0-3-3Z"/><path d="M12 15.5V22"/><path d="M9 19h6"/></svg>',
+  brain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5a2.5 2.5 0 0 0-2.5 2.5v.2A2.6 2.6 0 0 0 6 9.7c0 .9.4 1.6 1 2.1-.6.5-1 1.2-1 2.1a2.6 2.6 0 0 0 3.5 2.4v.2a2.5 2.5 0 0 0 5 0v-.2a2.6 2.6 0 0 0 3.5-2.4c0-.9-.4-1.6-1-2.1.6-.5 1-1.2 1-2.1a2.6 2.6 0 0 0-3.5-2.5V7A2.5 2.5 0 0 0 12 4.5Z"/><path d="M12 4.7v12.6"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -53,6 +56,7 @@ export const GROUPS = [
 
 // ---------- บท (ระบบอวัยวะ) ในกลุ่มประเมินการสูญเสียฯ — ใช้เป็นหัวข้อ section ในหน้า /impairment/ ----------
 export const CHAPTERS = [
+  { id: 'neuro', nameTh: 'ระบบประสาท', ref: 'บทที่ 5', icon: IC.brain },
   { id: 'msk', nameTh: 'กระดูกและกล้ามเนื้อ (แขน/ขา)', ref: 'บทที่ 2–3', icon: IC.bone },
   { id: 'eye', nameTh: 'ระบบจักษุ', ref: 'บทที่ 6', icon: IC.eye },
   { id: 'ent', nameTh: 'โสต ศอ นาสิก', ref: 'บทที่ 7', icon: IC.ear },
@@ -62,6 +66,8 @@ export const CHAPTERS = [
   { id: 'urinary', nameTh: 'ระบบทางเดินปัสสาวะ', ref: 'บทที่ 12', icon: IC.kidney },
   { id: 'reprom', nameTh: 'ระบบสืบพันธุ์ชาย', ref: 'บทที่ 13', icon: IC.malerepro },
   { id: 'reprof', nameTh: 'ระบบสืบพันธุ์หญิง', ref: 'บทที่ 14', icon: IC.femrepro },
+  { id: 'hema', nameTh: 'ระบบเลือด (โลหิตวิทยา)', ref: 'บทที่ 15', icon: IC.blood },
+  { id: 'endocrine', nameTh: 'ต่อมไร้ท่อและเมตะบอลิสม', ref: 'บทที่ 16', icon: IC.endocrine },
   { id: 'pain', nameTh: 'อาการปวดเรื้อรัง', ref: 'บทที่ 17', icon: IC.pain },
   { id: 'mental', nameTh: 'สุขภาพจิตและพฤติกรรม', ref: 'บทที่ 18', icon: IC.mental },
   { id: 'tools', nameTh: 'เครื่องมือร่วม', ref: '', icon: IC.combine },
@@ -74,6 +80,32 @@ export const MODULES = [
     nameTh: 'เดินสำรวจสถานประกอบการ',
     desc: 'Walk-through survey — ประเมินสิ่งคุกคาม ความเสี่ยง และวางแผนตรวจสุขภาพ ทำงานร่วมกันแบบเรียลไทม์',
     path: '/walkthrough/', icon: IC.factory, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบประสาท (บท 5) ----
+  {
+    id: 'impairment-neuro-brain', group: 'impairment', chapter: 'neuro',
+    nameTh: 'สมอง (Brain)',
+    desc: 'รู้สึกตัว/ชัก/หลับ-ตื่น/สภาพจิต(CDR)/ภาษา/อารมณ์ → เลือกระดับ → ช่วง WPI (ตาราง 5-2..5-8)',
+    path: '/impairment/neuro-brain/', icon: IC.brain, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-neuro-cranial', group: 'impairment', chapter: 'neuro',
+    nameTh: 'เส้นประสาทสมอง (Cranial nerves)',
+    desc: 'คู่ที่ 5/7/8/9-10-12 → เลือกระดับ → ช่วง WPI (ตาราง 5-9..5-12)',
+    path: '/impairment/neuro-cranial/', icon: IC.brain, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-neuro-motor', group: 'impairment', chapter: 'neuro',
+    nameTh: 'การยืน-เดิน และแขน (Motor)',
+    desc: 'การยืน-เดิน / แขนข้างเดียว / แขนสองข้าง → เลือกระดับ → ช่วง WPI (ตาราง 5-13..5-15)',
+    path: '/impairment/neuro-motor/', icon: IC.brain, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-neuro-spinal', group: 'impairment', chapter: 'neuro',
+    nameTh: 'ไขสันหลัง (Spinal cord)',
+    desc: 'การหายใจ / ปัสสาวะ / อุจจาระ / เพศ → เลือกระดับ → ช่วง WPI (ตาราง 5-16..5-19)',
+    path: '/impairment/neuro-spinal/', icon: IC.brain, status: 'ready', requiresLogin: false,
   },
 
   // ---- กระดูกและกล้ามเนื้อ · แขน/ขา (บท 2–3) ----
@@ -302,6 +334,118 @@ export const MODULES = [
     nameTh: 'ท่อนำไข่ / รังไข่',
     desc: 'objective test → ขั้น 0–3 × A–C + ประวัติปรับระดับ → WPI (ตาราง 14-3)',
     path: '/impairment/reprof-ovary/', icon: IC.femrepro, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบเลือด · โลหิตวิทยา (บท 15) ----
+  {
+    id: 'impairment-hema-anemia', group: 'impairment', chapter: 'hema',
+    nameTh: 'ภาวะโลหิตจาง (Anemia)',
+    desc: 'กรอกประวัติ + Hb → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-4)',
+    path: '/impairment/hema-anemia/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-neutropenia', group: 'impairment', chapter: 'hema',
+    nameTh: 'เม็ดเลือดขาวนิวโตรฟิลต่ำ',
+    desc: 'จำนวน neutrophil + ประวัติ → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-5)',
+    path: '/impairment/hema-neutropenia/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-acuteleuk', group: 'impairment', chapter: 'hema',
+    nameTh: 'มะเร็งเม็ดเลือดขาวเฉียบพลัน',
+    desc: 'ประวัติการรักษา + ADL → ขั้น 0/3/4 + BOTC → WPI (ตาราง 15-6)',
+    path: '/impairment/hema-acuteleuk/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-chronicleuk', group: 'impairment', chapter: 'hema',
+    nameTh: 'มะเร็งเม็ดเลือดขาวเรื้อรัง',
+    desc: 'ประวัติการรักษา + ADL → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-7)',
+    path: '/impairment/hema-chronicleuk/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-hiv', group: 'impairment', chapter: 'hema',
+    nameTh: 'การติดเชื้อ HIV',
+    desc: 'CD4/viral load + ประวัติ + ADL → ขั้น 0–4 × A–E + BOTC → WPI (ตาราง 15-8)',
+    path: '/impairment/hema-hiv/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-platelet', group: 'impairment', chapter: 'hema',
+    nameTh: 'ความผิดปกติของเกล็ดเลือด',
+    desc: 'ประวัติ + จำนวนเกล็ดเลือด → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-9)',
+    path: '/impairment/hema-platelet/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-hemophilia', group: 'impairment', chapter: 'hema',
+    nameTh: 'โรคฮีโมฟีเลีย (Hemophilias)',
+    desc: 'ประวัติ + การรักษา + clotting factor → ขั้น 0–3 × A–C + BOTC → WPI (ตาราง 15-10)',
+    path: '/impairment/hema-hemophilia/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-bleeding', group: 'impairment', chapter: 'hema',
+    nameTh: 'ภาวะเลือดออก (Bleeding disorders)',
+    desc: 'ความถี่เลือดออก + การรักษา → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-11)',
+    path: '/impairment/hema-bleeding/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-thrombosis', group: 'impairment', chapter: 'hema',
+    nameTh: 'ลิ่มเลือดอุดตันในหลอดเลือด',
+    desc: 'จำนวนครั้ง + hypercoagulable state → ขั้น 0–3 × A–C + BOTC → WPI (ตาราง 15-12)',
+    path: '/impairment/hema-thrombosis/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-lymphoma', group: 'impairment', chapter: 'hema',
+    nameTh: 'Lymphoma / มะเร็งแพร่กระจาย',
+    desc: 'ประวัติการรักษา + ADL → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-13)',
+    path: '/impairment/hema-lymphoma/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ต่อมไร้ท่อและเมตะบอลิสม (บท 16) ----
+  {
+    id: 'impairment-endocrine-pituitary', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'ต่อมใต้สมอง / ฮัยโปธาลามัส',
+    desc: 'ประวัติ → ขั้น 0–4 + BOTC (ยา/อาหาร/อุปกรณ์) → WPI (ตาราง 16-5)',
+    path: '/impairment/endocrine-pituitary/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-endocrine-thyroid', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'ต่อมธัยรอยด์',
+    desc: 'ประวัติ + การตรวจ (ก้อน) → ขั้น 0–2 + BOTC → WPI (ตาราง 16-6)',
+    path: '/impairment/endocrine-thyroid/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-endocrine-parathyroid', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'ต่อมพาราธัยรอยด์',
+    desc: 'ประวัติ + แคลเซียม → ขั้น 0–2 + BOTC → WPI (ตาราง 16-7)',
+    path: '/impairment/endocrine-parathyroid/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-endocrine-adrenalcortex', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'ต่อมหมวกไตส่วนนอก',
+    desc: 'ประวัติ (อาการ/biochem) → ขั้น 0–3 + BOTC → WPI (ตาราง 16-8)',
+    path: '/impairment/endocrine-adrenalcortex/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-endocrine-adrenalmedulla', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'ต่อมหมวกไตส่วนใน',
+    desc: 'ประวัติ (การควบคุม catecholamine) → ขั้น 0–4 + BOTC → WPI (ตาราง 16-9)',
+    path: '/impairment/endocrine-adrenalmedulla/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-endocrine-diabetes', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'โรคเบาหวาน',
+    desc: 'ประวัติ/การรักษา + HbA1C → ขั้น 0–4 × A–E + BOTC → WPI (ตาราง 16-10)',
+    path: '/impairment/endocrine-diabetes/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-endocrine-hypoglycemia', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'ภาวะน้ำตาลในเลือดต่ำ',
+    desc: 'ประวัติ + HbA1C (กลับด้าน) → ขั้น 0–2 + BOTC → WPI (ตาราง 16-11)',
+    path: '/impairment/endocrine-hypoglycemia/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-endocrine-osteoporosis', group: 'impairment', chapter: 'endocrine',
+    nameTh: 'โรคกระดูกพรุน (Osteoporosis)',
+    desc: 'ประวัติ + T-score → ขั้น 0–2 (ไม่มี BOTC) → WPI (ตาราง 16-12)',
+    path: '/impairment/endocrine-osteoporosis/', icon: IC.endocrine, status: 'ready', requiresLogin: false,
   },
 
   // ---- อาการปวดเรื้อรัง (บท 17) ----
