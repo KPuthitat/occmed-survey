@@ -52,15 +52,12 @@ import { GROUPS, MODULES, modulesInGroup } from '/shared/registry.js';
 const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const mods = document.getElementById('mods');
 mods.innerHTML = GROUPS.map(g => {
-  const inner = modulesInGroup(g.id);
-  const cnt = g.single ? '' : `<span class="cnt">${inner.length} ระบบ</span>`;
   const go = 'เปิดใช้งาน →';
   const ext = g.external ? ' target="_blank" rel="noopener"' : '';
   return `<a class="card mod" href="${esc(g.path)}"${ext}>
     <span class="ic">${g.icon || ''}</span>
     <span class="nm">${esc(g.nameTh)}</span>
     <span class="ds">${esc(g.desc)}</span>
-    ${cnt}
     <span class="go">${go}</span>
   </a>`;
 }).join('');
