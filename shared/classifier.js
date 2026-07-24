@@ -19,7 +19,17 @@ const midIndex = grades => Math.floor(grades.length / 2);
 // classMode:
 //   'key' (ค่าเริ่มต้น) — ขั้น = ปัจจัยหลัก (keyRow) · ระดับย่อยเลื่อนตามปัจจัยรอง = Σ(รอง−หลัก)
 //   'max'              — ขั้น = ค่ามากที่สุดในบรรดาด้านที่เลือก · ระดับย่อยตั้งต้นค่ากลาง (ปรับเอง)
-export function classifyPicks({ levels, keyRow, picks = {}, gradeOverride = null, classMode = 'key', shiftMode = 'proportional' }) {
+export function classifyPicks({ levels, keyRow, picks = {}, gradeOverride = null, classMode = 'key', shiftMode = 'proportional', rangeMode = false }) {
+  // rangeMode (บท 5 ประสาท): แต่ละระดับมีช่วง % · เลือกระดับ → เลือกค่าในช่วง (ไม่มีเกรด/BOTC)
+  if (rangeMode) {
+    const kc = picks[keyRow];
+    if (kc == null) return null;
+    const L = levels.find(x => x.level === Number(kc));
+    if (!L) return null;
+    const [lo, hi] = L.range;
+    const pct = gradeOverride == null ? lo : clamp(Math.round(Number(gradeOverride)), lo, hi);
+    return { level: L.level, range: L.range, percent: pct, rangeMode: true, grade: null, gradeIndex: null, autoGrade: null };
+  }
   const vals = Object.values(picks).filter(v => v != null).map(Number);
   let keyClass, autoShift = 0;
   if (classMode === 'max') {
@@ -173,7 +183,7 @@ export function mountClassifier(opts) {
     const rows = optionLevels.map(L => {
       const rangeTxt = L.level === 0 ? '0%' : `${L.range[0]}–${L.range[1]}%`;
       const nyha = (showInfo && L.nyha && L.nyha !== '—') ? `<span class="cl-nyha">NYHA ${L.nyha}</span>` : '';
-      const head = showInfo ? `<div class="cl-ohead"><span class="cl-olv">ขั้นที่ ${L.level}</span><span class="cl-orange">${rangeTxt}</span>${nyha}</div>` : '';
+      const head = showInfo ? `<div class="cl-ohead"><span class="cl-olv">${opts.rangeMode ? 'ระดับที่' : 'ขั้นที่'} ${L.level}</span><span class="cl-orange">${rangeTxt}</span>${nyha}</div>` : '';
       return `<div class="cl-opt" data-factor="${esc(f.key)}" data-level="${L.level}">
         <div class="cl-badge">${L.level}</div>
         <div><div class="cl-otext">${head}${esc(L[f.key])}</div></div></div>`;
@@ -237,10 +247,10 @@ export function mountClassifier(opts) {
   ${refsHtml ? `<div class="card cl-sec"><h2>ข้อมูลอ้างอิงประกอบ</h2>${refsHtml}</div>` : ''}
   ${factorSections}
   <div class="card cl-sec" id="clGrade">
-    <h2>ระดับย่อยภายในขั้น (ปรับเองได้)</h2>
+    <h2>${opts.rangeMode ? 'ค่าร้อยละภายในช่วง (เลือกได้)' : 'ระดับย่อยภายในขั้น (ปรับเองได้)'}</h2>
     <div class="hint" id="clGradeHint"></div>
     <div class="cl-grades" id="clGrades"></div>
-    <div class="cl-gnote">ระบบตั้งค่าให้อัตโนมัติจากปัจจัยรอง (ป้าย “auto”) · แตะเพื่อปรับเอง · A = น้อยที่สุดในขั้น</div>
+    <div class="cl-gnote">${opts.rangeMode ? 'เลือกค่าร้อยละภายในช่วงของระดับ ตามความรุนแรงจริง (ดุลยพินิจแพทย์)' : 'ระบบตั้งค่าให้อัตโนมัติจากปัจจัยรอง (ป้าย “auto”) · แตะเพื่อปรับเอง · A = น้อยที่สุดในขั้น'}</div>
   </div>
   ${botcGradeHtml}
   ${botcHtml}
@@ -258,7 +268,8 @@ export function mountClassifier(opts) {
 
   const $ = id => document.getElementById(id);
   const shiftMode = opts.shiftMode || 'proportional';
-  const compute = () => classifyPicks({ levels, keyRow, picks: state.picks, gradeOverride: state.gradeOverride, classMode, shiftMode });
+  const rangeMode = !!opts.rangeMode;
+  const compute = () => classifyPicks({ levels, keyRow, picks: state.picks, gradeOverride: state.gradeOverride, classMode, shiftMode, rangeMode });
   // BOTC แบบเลื่อนระดับ (บท 16): รวมคะแนนยา+อาหาร+อุปกรณ์ → เทียบเป็นขั้น (thresholds) → ตั้ง picks.botc
   function updateBotcGrade() {
     if (!botcGrade) return;
@@ -296,6 +307,12 @@ export function mountClassifier(opts) {
     if (!r || r.level === 0) { $('clGrade').classList.remove('show'); return; }
     $('clGrade').classList.add('show');
     const L = levels.find(x => x.level === r.level);
+    if (rangeMode) {
+      $('clGradeHint').textContent = `ระดับที่ ${r.level} · ช่วง ${L.range[0]}–${L.range[1]}% · เลือกค่าร้อยละตามความรุนแรงจริง`;
+      $('clGrades').style.gridTemplateColumns = '1fr';
+      $('clGrades').innerHTML = `<input class="cl-rangenum" type="number" min="${L.range[0]}" max="${L.range[1]}" step="1" inputmode="numeric" value="${r.percent}" style="padding:11px 13px;border:1.5px solid var(--navy);border-radius:11px;font-size:18px;font-weight:700;color:var(--navy);text-align:center;width:100%">`;
+      return;
+    }
     $('clGradeHint').textContent = `ขั้นที่ ${r.level} · ช่วง ${L.range[0]}–${L.range[1]}% · แตะระดับเพื่อปรับ`;
     $('clGrades').style.gridTemplateColumns = `repeat(${L.grades.length},1fr)`;
     $('clGrades').innerHTML = L.grades.map((p, i) =>
@@ -307,7 +324,7 @@ export function mountClassifier(opts) {
     if (!r && bt === 0) { $('clResult').innerHTML = `<div class="cl-empty">${classMode === 'max' ? 'เลือกผลตรวจอย่างน้อย 1 ด้านเพื่อดูผล' : 'เลือกผลตรวจของ “ปัจจัยหลัก” (ป้าย <b>ใช้จัดขั้นอัตโนมัติ</b>) เพื่อดูผล'}</div>`; return; }
     const base = r ? r.percent : 0;
     const final = Math.min(100, base + bt);
-    const lbl = !r ? '—' : (r.level === 0 ? 'ขั้นที่ 0 (ไม่มีการสูญเสีย)' : `ขั้นที่ ${r.level} ระดับ ${r.grade}`);
+    const lbl = !r ? '—' : (r.level === 0 ? 'ขั้นที่ 0 (ไม่มีการสูญเสีย)' : (r.rangeMode ? `ระดับที่ ${r.level}` : `ขั้นที่ ${r.level} ระดับ ${r.grade}`));
     const botcLine = botc ? ` + BOTC ${bt}%` : '';
     const rangeLine = (r && r.level !== 0) ? ` (อยู่ในช่วง ${r.range[0]}–${r.range[1]}% ของขั้น)` : '';
     $('clResult').innerHTML = `
@@ -338,6 +355,9 @@ export function mountClassifier(opts) {
   if (botcGrade) document.addEventListener('change', e => {
     if (e.target.dataset && e.target.dataset.bg != null) { state.botcSel[e.target.dataset.bg] = Number(e.target.value); state.gradeOverride = null; rerender(); }
   });
+  if (rangeMode) document.addEventListener('input', e => {
+    if (e.target.classList && e.target.classList.contains('cl-rangenum')) { state.gradeOverride = e.target.value === '' ? null : Number(e.target.value); renderResult(); }
+  });
 
   $('clPrintHead').innerHTML = `<b>สรุปการประเมินการสูญเสียสมรรถภาพ — ${esc(opts.titleTh)}</b><span>${esc(opts.chapter || '')}${opts.ref ? ' (ตาราง ' + esc(opts.ref) + ')' : ''} · วันที่ประเมิน ${beToday()}</span>`;
 
@@ -347,7 +367,7 @@ export function mountClassifier(opts) {
     if (!r && bt === 0) return 'ยังไม่ได้เลือกผลตรวจของปัจจัยหลัก';
     const base = r ? r.percent : 0;
     const final = Math.min(100, base + bt);
-    const lbl = !r ? '—' : (r.level === 0 ? 'ขั้นที่ 0 (ไม่มีการสูญเสีย)' : `ขั้นที่ ${r.level} ระดับ ${r.grade}`);
+    const lbl = !r ? '—' : (r.level === 0 ? 'ขั้นที่ 0 (ไม่มีการสูญเสีย)' : (r.rangeMode ? `ระดับที่ ${r.level}` : `ขั้นที่ ${r.level} ระดับ ${r.grade}`));
     const out = [];
     out.push(`สรุปการประเมินการสูญเสียสมรรถภาพ — ${opts.titleTh}${opts.ref ? ' (ตาราง ' + opts.ref + ')' : ''} · วันที่ ${beToday()}`);
     for (const f of factors) {

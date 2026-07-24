@@ -22,6 +22,7 @@ const IC = {
   mental: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5a4 4 0 0 0-4 4c-1.3.6-2 1.9-2 3.3 0 1 .4 1.9 1.1 2.5-.2.4-.3.9-.3 1.4a3 3 0 0 0 4.8 2.4"/><path d="M9.3 3.5A3 3 0 0 1 12 6.5V20"/><path d="M14.5 3.5a4 4 0 0 1 4 4c1.3.6 2 1.9 2 3.3 0 1-.4 1.9-1.1 2.5.2.4.3.9.3 1.4a3 3 0 0 1-4.8 2.4"/></svg>',
   blood: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5C12 2.5 5.5 9.5 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 9.5 12 2.5 12 2.5Z"/><path d="M9 14.5a3 3 0 0 0 3 3"/></svg>',
   endocrine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3c0 1 .5 1.8 1.2 2.4C9 8.3 8 9.8 8 11.5a4 4 0 0 0 4 4 4 4 0 0 0 4-4c0-1.7-1-3.2-2.2-4.1C14.5 6.8 15 6 15 5a3 3 0 0 0-3-3Z"/><path d="M12 15.5V22"/><path d="M9 19h6"/></svg>',
+  brain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5a2.5 2.5 0 0 0-2.5 2.5v.2A2.6 2.6 0 0 0 6 9.7c0 .9.4 1.6 1 2.1-.6.5-1 1.2-1 2.1a2.6 2.6 0 0 0 3.5 2.4v.2a2.5 2.5 0 0 0 5 0v-.2a2.6 2.6 0 0 0 3.5-2.4c0-.9-.4-1.6-1-2.1.6-.5 1-1.2 1-2.1a2.6 2.6 0 0 0-3.5-2.5V7A2.5 2.5 0 0 0 12 4.5Z"/><path d="M12 4.7v12.6"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -55,6 +56,7 @@ export const GROUPS = [
 
 // ---------- บท (ระบบอวัยวะ) ในกลุ่มประเมินการสูญเสียฯ — ใช้เป็นหัวข้อ section ในหน้า /impairment/ ----------
 export const CHAPTERS = [
+  { id: 'neuro', nameTh: 'ระบบประสาท', ref: 'บทที่ 5', icon: IC.brain },
   { id: 'msk', nameTh: 'กระดูกและกล้ามเนื้อ (แขน/ขา)', ref: 'บทที่ 2–3', icon: IC.bone },
   { id: 'eye', nameTh: 'ระบบจักษุ', ref: 'บทที่ 6', icon: IC.eye },
   { id: 'ent', nameTh: 'โสต ศอ นาสิก', ref: 'บทที่ 7', icon: IC.ear },
@@ -78,6 +80,32 @@ export const MODULES = [
     nameTh: 'เดินสำรวจสถานประกอบการ',
     desc: 'Walk-through survey — ประเมินสิ่งคุกคาม ความเสี่ยง และวางแผนตรวจสุขภาพ ทำงานร่วมกันแบบเรียลไทม์',
     path: '/walkthrough/', icon: IC.factory, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบประสาท (บท 5) ----
+  {
+    id: 'impairment-neuro-brain', group: 'impairment', chapter: 'neuro',
+    nameTh: 'สมอง (Brain)',
+    desc: 'รู้สึกตัว/ชัก/หลับ-ตื่น/สภาพจิต(CDR)/ภาษา/อารมณ์ → เลือกระดับ → ช่วง WPI (ตาราง 5-2..5-8)',
+    path: '/impairment/neuro-brain/', icon: IC.brain, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-neuro-cranial', group: 'impairment', chapter: 'neuro',
+    nameTh: 'เส้นประสาทสมอง (Cranial nerves)',
+    desc: 'คู่ที่ 5/7/8/9-10-12 → เลือกระดับ → ช่วง WPI (ตาราง 5-9..5-12)',
+    path: '/impairment/neuro-cranial/', icon: IC.brain, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-neuro-motor', group: 'impairment', chapter: 'neuro',
+    nameTh: 'การยืน-เดิน และแขน (Motor)',
+    desc: 'การยืน-เดิน / แขนข้างเดียว / แขนสองข้าง → เลือกระดับ → ช่วง WPI (ตาราง 5-13..5-15)',
+    path: '/impairment/neuro-motor/', icon: IC.brain, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-neuro-spinal', group: 'impairment', chapter: 'neuro',
+    nameTh: 'ไขสันหลัง (Spinal cord)',
+    desc: 'การหายใจ / ปัสสาวะ / อุจจาระ / เพศ → เลือกระดับ → ช่วง WPI (ตาราง 5-16..5-19)',
+    path: '/impairment/neuro-spinal/', icon: IC.brain, status: 'ready', requiresLogin: false,
   },
 
   // ---- กระดูกและกล้ามเนื้อ · แขน/ขา (บท 2–3) ----
