@@ -20,6 +20,7 @@ const IC = {
   bone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a2.2 2.2 0 1 1-1.6-3.7 2.2 2.2 0 0 1 1.6-3.7L17 5.9a2.2 2.2 0 1 1 1.6 3.7 2.2 2.2 0 0 1-1.6 3.7Z" transform="rotate(0 12 12)"/><path d="M6.2 13.3 10 9.5M14 14.5l3.8-3.8"/></svg>',
   pain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13H11l-1 9 8.5-11H12l1-9Z"/></svg>',
   mental: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5a4 4 0 0 0-4 4c-1.3.6-2 1.9-2 3.3 0 1 .4 1.9 1.1 2.5-.2.4-.3.9-.3 1.4a3 3 0 0 0 4.8 2.4"/><path d="M9.3 3.5A3 3 0 0 1 12 6.5V20"/><path d="M14.5 3.5a4 4 0 0 1 4 4c1.3.6 2 1.9 2 3.3 0 1-.4 1.9-1.1 2.5.2.4.3.9.3 1.4a3 3 0 0 1-4.8 2.4"/></svg>',
+  blood: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5C12 2.5 5.5 9.5 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 9.5 12 2.5 12 2.5Z"/><path d="M9 14.5a3 3 0 0 0 3 3"/></svg>',
 };
 
 // ---------- กลุ่มบนหน้าแรก ----------
@@ -62,6 +63,7 @@ export const CHAPTERS = [
   { id: 'urinary', nameTh: 'ระบบทางเดินปัสสาวะ', ref: 'บทที่ 12', icon: IC.kidney },
   { id: 'reprom', nameTh: 'ระบบสืบพันธุ์ชาย', ref: 'บทที่ 13', icon: IC.malerepro },
   { id: 'reprof', nameTh: 'ระบบสืบพันธุ์หญิง', ref: 'บทที่ 14', icon: IC.femrepro },
+  { id: 'hema', nameTh: 'ระบบเลือด (โลหิตวิทยา)', ref: 'บทที่ 15', icon: IC.blood },
   { id: 'pain', nameTh: 'อาการปวดเรื้อรัง', ref: 'บทที่ 17', icon: IC.pain },
   { id: 'mental', nameTh: 'สุขภาพจิตและพฤติกรรม', ref: 'บทที่ 18', icon: IC.mental },
   { id: 'tools', nameTh: 'เครื่องมือร่วม', ref: '', icon: IC.combine },
@@ -302,6 +304,68 @@ export const MODULES = [
     nameTh: 'ท่อนำไข่ / รังไข่',
     desc: 'objective test → ขั้น 0–3 × A–C + ประวัติปรับระดับ → WPI (ตาราง 14-3)',
     path: '/impairment/reprof-ovary/', icon: IC.femrepro, status: 'ready', requiresLogin: false,
+  },
+
+  // ---- ระบบเลือด · โลหิตวิทยา (บท 15) ----
+  {
+    id: 'impairment-hema-anemia', group: 'impairment', chapter: 'hema',
+    nameTh: 'ภาวะโลหิตจาง (Anemia)',
+    desc: 'กรอกประวัติ + Hb → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-4)',
+    path: '/impairment/hema-anemia/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-neutropenia', group: 'impairment', chapter: 'hema',
+    nameTh: 'เม็ดเลือดขาวนิวโตรฟิลต่ำ',
+    desc: 'จำนวน neutrophil + ประวัติ → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-5)',
+    path: '/impairment/hema-neutropenia/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-acuteleuk', group: 'impairment', chapter: 'hema',
+    nameTh: 'มะเร็งเม็ดเลือดขาวเฉียบพลัน',
+    desc: 'ประวัติการรักษา + ADL → ขั้น 0/3/4 + BOTC → WPI (ตาราง 15-6)',
+    path: '/impairment/hema-acuteleuk/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-chronicleuk', group: 'impairment', chapter: 'hema',
+    nameTh: 'มะเร็งเม็ดเลือดขาวเรื้อรัง',
+    desc: 'ประวัติการรักษา + ADL → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-7)',
+    path: '/impairment/hema-chronicleuk/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-hiv', group: 'impairment', chapter: 'hema',
+    nameTh: 'การติดเชื้อ HIV',
+    desc: 'CD4/viral load + ประวัติ + ADL → ขั้น 0–4 × A–E + BOTC → WPI (ตาราง 15-8)',
+    path: '/impairment/hema-hiv/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-platelet', group: 'impairment', chapter: 'hema',
+    nameTh: 'ความผิดปกติของเกล็ดเลือด',
+    desc: 'ประวัติ + จำนวนเกล็ดเลือด → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-9)',
+    path: '/impairment/hema-platelet/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-hemophilia', group: 'impairment', chapter: 'hema',
+    nameTh: 'โรคฮีโมฟีเลีย (Hemophilias)',
+    desc: 'ประวัติ + การรักษา + clotting factor → ขั้น 0–3 × A–C + BOTC → WPI (ตาราง 15-10)',
+    path: '/impairment/hema-hemophilia/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-bleeding', group: 'impairment', chapter: 'hema',
+    nameTh: 'ภาวะเลือดออก (Bleeding disorders)',
+    desc: 'ความถี่เลือดออก + การรักษา → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-11)',
+    path: '/impairment/hema-bleeding/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-thrombosis', group: 'impairment', chapter: 'hema',
+    nameTh: 'ลิ่มเลือดอุดตันในหลอดเลือด',
+    desc: 'จำนวนครั้ง + hypercoagulable state → ขั้น 0–3 × A–C + BOTC → WPI (ตาราง 15-12)',
+    path: '/impairment/hema-thrombosis/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
+    id: 'impairment-hema-lymphoma', group: 'impairment', chapter: 'hema',
+    nameTh: 'Lymphoma / มะเร็งแพร่กระจาย',
+    desc: 'ประวัติการรักษา + ADL → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-13)',
+    path: '/impairment/hema-lymphoma/', icon: IC.blood, status: 'ready', requiresLogin: false,
   },
 
   // ---- อาการปวดเรื้อรัง (บท 17) ----
