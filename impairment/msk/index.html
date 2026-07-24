@@ -389,10 +389,12 @@ function renderRom(){
  let ue,note;
  if(unit==='ue'){ue=sum;rows.push(['รวมของแขน (บวกตรง)',ue+'% แขน'])}
  else{const d=unit==='thumb'?'thumb':'index';
-   rows.push(['รวมของนิ้ว'+(unit==='thumb'?'หัวแม่มือ':''),sum+'%']);
-   ue=h2u(d2h(sum,d));rows.push(['→ แขน',ue+'% แขน']);
+   rows.push(['รวมของนิ้ว'+(unit==='thumb'?'หัวแม่มือ':''),sum+'% ของนิ้ว']);
+   const hand=d2h(sum,d);
+   rows.push(['→ มือ (2-11 ก ×'+DF[d].toFixed(2)+')',hand+'% มือ']);
+   ue=h2u(hand);rows.push(['→ แขน (2-11 ข ×0.90)',ue+'% แขน']);
    note=unit==='thumb'?'นิ้วหัวแม่มือ: บวกตรงทุกข้อ':'นิ้วมืออื่น: ต้องรวมข้ามข้อด้วยตารางค่ารวม ไม่ใช่บวกตรง — หน้านี้แสดงผลรวมของข้อเดียว';}
- const wp=u2w(ue);rows.push(['→ ทั้งร่างกาย',wp+'% ทั้งร่างกาย']);
+ const wp=u2w(ue);rows.push(['→ ทั้งร่างกาย (2-12 ×0.60)',wp+'% ทั้งร่างกาย']);
  $('#romVal').innerHTML=ue+'<small>% แขน</small>';
  $('#romCap').textContent=jn+(note?' · '+note:'');
  $('#romTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
