@@ -338,6 +338,12 @@ export const MODULES = [
 
   // ---- ระบบเลือด · โลหิตวิทยา (บท 15) ----
   {
+    id: 'impairment-hema-multi', group: 'impairment', chapter: 'hema',
+    nameTh: 'รวมหลายภาวะทางเลือด (Pancytopenia / MDS)',
+    desc: 'ผู้ป่วยมีหลายภาวะพร้อมกัน (โลหิตจาง + นิวโตรฟิลต่ำ + เกล็ดเลือดต่ำ ฯลฯ) → รวมด้วยตารางค่ารวม + BOTC → WPI',
+    path: '/impairment/hema-multi/', icon: IC.blood, status: 'ready', requiresLogin: false,
+  },
+  {
     id: 'impairment-hema-anemia', group: 'impairment', chapter: 'hema',
     nameTh: 'ภาวะโลหิตจาง (Anemia)',
     desc: 'กรอกประวัติ + Hb → ขั้น 0–4 × A–C + BOTC → WPI (ตาราง 15-4)',
