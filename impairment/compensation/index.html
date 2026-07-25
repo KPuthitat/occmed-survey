@@ -60,6 +60,11 @@
 <div class="wrap">
   <div class="card cp-sec">
     <h2>ข้อมูลผู้ประกันตน</h2>
+    <div class="cp-note" id="wpiBanner" style="display:none;background:#fff8ec;border:1px solid #ecd9a8;color:#5b5030"></div>
+    <div class="cp-field">
+      <label>ร้อยละการสูญเสียสมรรถภาพ (WPI)<div class="sub">รับจากระบบประเมินฯ หรือกรอกเอง (ใช้อ้างอิงกรณีสูญเสียสมรรถภาพ)</div></label>
+      <div class="cp-suffix"><input class="cp-input" id="wpi" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="เช่น 34"><span class="u">%</span></div>
+    </div>
     <div class="cp-field">
       <label>ค่าจ้าง (เงินเดือน) ปัจจุบัน<div class="sub">ค่าจ้างรายเดือนของผู้ประกันตน</div></label>
       <div class="cp-suffix"><input class="cp-input" id="wage" type="number" min="0" step="100" inputmode="numeric" placeholder="เช่น 15000"><span class="u">บาท/เดือน</span></div>
@@ -114,9 +119,22 @@ import { mountPageKit } from '/shared/pagekit.js';
 
 const $ = id => document.getElementById(id);
 const baht = n => new Intl.NumberFormat('th-TH').format(Math.round(n));
-const state = { wage: '', months: '', caseId: COMP_CASES[0].id, rate: 70, ceiling: WAGE_CEILING };
+const state = { wpi: '', wage: '', months: '', caseId: COMP_CASES[0].id, rate: 70, ceiling: WAGE_CEILING };
 
 $('ccase').innerHTML = COMP_CASES.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+
+// รับค่า % การสูญเสีย จากระบบประเมินฯ ผ่าน URL (?wpi=..) — เลือกกรณี "สูญเสียสมรรถภาพ" ให้อัตโนมัติ
+const params = new URLSearchParams(location.search);
+const wpiParam = params.get('wpi');
+if (wpiParam != null && wpiParam !== '' && isFinite(Number(wpiParam))) {
+  const v = Math.max(0, Math.min(100, Math.round(Number(wpiParam))));
+  state.wpi = String(v); $('wpi').value = v;
+  state.caseId = 'impairment';
+  const src = params.get('src');
+  const b = $('wpiBanner');
+  b.style.display = 'block';
+  b.innerHTML = `รับค่าจากระบบประเมินฯ: <b>การสูญเสีย ${v}%</b>${src ? ' (' + src.replace(/[<>]/g, '') + ')' : ''} — กรอกค่าจ้างรายเดือนเพื่อประมาณการค่าทดแทน`;
+}
 
 function curCase() { return COMP_CASES.find(c => c.id === state.caseId) || COMP_CASES[0]; }
 
@@ -135,12 +153,16 @@ function render() {
   if (!hasWage) { $('rBreak').innerHTML = '<span style="color:var(--muted)">กรอกค่าจ้างรายเดือนเพื่อดูผลประมาณการ</span>'; return; }
   const capLine = r.capped ? ` <span style="color:var(--gold-dk)">(ค่าจ้าง ${baht(r.wage)} เกินเพดาน ${baht(r.ceiling)} → คิดที่เพดาน)</span>` : '';
   const ratePct = Math.round(r.rate * 100);
-  let s = `ค่าทดแทนรายเดือน = <code>${ratePct}%</code> × <code>${baht(r.base)}</code> = <code>${baht(r.monthly)} ฿/เดือน</code>${capLine}`;
+  const wpiVal = Math.round(Number(state.wpi) || 0);
+  let s = '';
+  if (wpiVal > 0) s += `ร้อยละการสูญเสียสมรรถภาพ = <code>${wpiVal}%</code><br>`;
+  s += `ค่าทดแทนรายเดือน = <code>${ratePct}%</code> × <code>${baht(r.base)}</code> = <code>${baht(r.monthly)} ฿/เดือน</code>${capLine}`;
   if (r.months > 0) s += `<br>รวม = <code>${baht(r.monthly)}</code> × <code>${r.months} เดือน</code> = <code>${baht(r.total)} ฿</code>`;
   else s += '<br><span style="color:var(--muted)">ระบุจำนวนเดือนเพื่อดูยอดรวม</span>';
   $('rBreak').innerHTML = s;
 }
 
+$('wpi').addEventListener('input', e => { state.wpi = e.target.value; render(); });
 $('wage').addEventListener('input', e => { state.wage = e.target.value; render(); });
 $('months').addEventListener('input', e => { state.months = e.target.value; render(); });
 $('rate').addEventListener('input', e => { state.rate = e.target.value; render(); });
@@ -160,6 +182,7 @@ document.querySelector('.cp-copy').addEventListener('click', e => {
   const ratePct = Math.round(r.rate * 100);
   const out = [
     'ประมาณการค่าทดแทน — กองทุนเงินทดแทน (พ.ร.บ.เงินทดแทน ฉบับที่ 2 พ.ศ. 2561)',
+    ...(Number(state.wpi) > 0 ? [`ร้อยละการสูญเสียสมรรถภาพ (WPI): ${Math.round(Number(state.wpi))}%`] : []),
     `กรณี: ${c.label}`,
     `ค่าจ้างรายเดือน: ${baht(r.wage)} บาท` + (r.capped ? ` (เกินเพดาน ${baht(r.ceiling)} → คิดที่เพดาน)` : ''),
     `ค่าทดแทนรายเดือน = ${ratePct}% × ${baht(r.base)} = ${baht(r.monthly)} บาท/เดือน`,
@@ -169,6 +192,7 @@ document.querySelector('.cp-copy').addEventListener('click', e => {
   copyText(out, e.currentTarget);
 });
 
+$('ccase').value = state.caseId;
 applyCasePreset();
 render();
 mountPageKit({ combine: false });

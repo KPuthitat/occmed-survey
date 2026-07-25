@@ -123,11 +123,13 @@ const CSS = `
 .cl-refrow{display:flex;gap:12px;padding:11px 14px;border-top:1px solid var(--line)}
 .cl-refrow .cls{flex:0 0 42px;font-weight:800;color:var(--navy);font-size:15px;text-align:center}
 .cl-refrow .txt{font-size:12.5px;color:var(--ink);line-height:1.5}
+.cl-comp{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:10px 15px;border-radius:11px;background:var(--line2);color:var(--navy);font-weight:700;font-size:13.5px;text-decoration:none;border:1.5px solid var(--gold)}
+.cl-comp:hover{background:#fdf1dd}
 .cl-print-note{margin-top:12px;font-size:12px;color:var(--muted)}
 .cl-print-head{display:none}
 @media(max-width:560px){.cl-result{grid-template-columns:1fr}}
 @media print{@page{margin:14mm}body{background:#fff;font-size:12px}
-  .occ-topbar,.occ-back,.occ-home,.occ-reset,.cl-copy,.cl-print,.cl-warn,.cl-refs,.cl-clear{display:none!important}
+  .occ-topbar,.occ-back,.occ-home,.occ-reset,.cl-copy,.cl-print,.cl-warn,.cl-refs,.cl-clear,.cl-comp{display:none!important}
   .cl-opt:not(.on){display:none}.cl-gbtn:not(.on){display:none}
   .card,.cl-sec{box-shadow:none;border-color:#ccc;break-inside:avoid}.cl-rcard.gold{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .cl-print-head{display:block;padding:0 0 8px;border-bottom:2px solid var(--navy);margin-bottom:10px}
@@ -332,7 +334,8 @@ export function mountClassifier(opts) {
         <div class="cl-rcard"><b>${r ? lbl.replace('ขั้นที่ ', '') : bt + '%'}</b><span>${botc ? `ฐาน ${base}%${botcLine}` : (r && r.level === 0 ? 'ไม่มีการสูญเสีย' : 'ขั้น/ระดับที่ประเมินได้')}</span></div>
         <div class="cl-rcard gold"><b>${final}%</b><span>${esc(outLabel)}</span></div>
       </div>
-      <div class="cl-gnote" style="margin-top:12px">${esc(opts.titleTh)} — ${lbl}${botc ? ` · ฐาน ${base}%${botcLine}` : ''} → <b style="color:var(--navy)">${final}%</b> ${esc(outLabel)}${rangeLine}${isExtremity ? ' · ต้องแปลงเป็น % ทั้งร่างกายแล้วรวมด้วย Combined Values' : ''}</div>`;
+      <div class="cl-gnote" style="margin-top:12px">${esc(opts.titleTh)} — ${lbl}${botc ? ` · ฐาน ${base}%${botcLine}` : ''} → <b style="color:var(--navy)">${final}%</b> ${esc(outLabel)}${rangeLine}${isExtremity ? ' · ต้องแปลงเป็น % ทั้งร่างกายแล้วรวมด้วย Combined Values' : ''}</div>
+      ${(!isExtremity && final > 0) ? `<a class="cl-comp" href="/impairment/compensation/?wpi=${final}&src=${encodeURIComponent(opts.titleTh)}">คำนวณค่าทดแทนจากผลนี้ (${final}%) →</a>` : ''}`;
   }
   function rerender() { updateBotcGrade(); renderOpts(); renderGrades(); renderResult(); }
 
