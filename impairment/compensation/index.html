@@ -93,6 +93,8 @@
         </div>
       </div>
     </details>
+    <button class="btn pri" id="goCalc" type="button" style="width:100%;justify-content:center;margin-top:14px">ยังไม่ทราบ % ? ไปคำนวณร้อยละการสูญเสีย (WPI) →</button>
+    <div class="cp-note" id="goCalcNote">บันทึกค่าจ้าง/กรณีไว้ แล้วพาไปเลือกระบบ/อวัยวะเพื่อประเมิน % — ประเมินครบทุกระบบแล้วกด “กลับไปคิดค่าชดเชย” จะพาผลรวม % กลับมาที่นี่อัตโนมัติ</div>
   </div>
 
   <div class="card cp-sec">
@@ -123,17 +125,33 @@ const state = { wpi: '', wage: '', months: '', caseId: COMP_CASES[0].id, rate: 7
 
 $('ccase').innerHTML = COMP_CASES.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 
-// รับค่า % การสูญเสีย จากระบบประเมินฯ ผ่าน URL (?wpi=..) — เลือกกรณี "สูญเสียสมรรถภาพ" ให้อัตโนมัติ
+const CS = 'occmed_comp', CF = 'occmed_comp_flow';
+function saveState() { try { sessionStorage.setItem(CS, JSON.stringify({ wage: state.wage, months: state.months, caseId: state.caseId, rate: state.rate, ceiling: state.ceiling })); } catch (e) {} }
+function restoreState() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(CS) || '{}');
+    if (s.wage) { state.wage = s.wage; $('wage').value = s.wage; }
+    if (s.months) { state.months = s.months; $('months').value = s.months; }
+    if (s.caseId) state.caseId = s.caseId;
+    if (s.rate) { state.rate = s.rate; $('rate').value = s.rate; }
+    if (s.ceiling) { state.ceiling = s.ceiling; $('ceiling').value = s.ceiling; }
+  } catch (e) {}
+}
+
+// รับค่า % การสูญเสีย จากระบบประเมินฯ ผ่าน URL (?wpi=..) — กลับมาจากการคำนวณ: คืนค่าจ้าง/กรณีที่บันทึกไว้
 const params = new URLSearchParams(location.search);
 const wpiParam = params.get('wpi');
-if (wpiParam != null && wpiParam !== '' && isFinite(Number(wpiParam))) {
+const returning = wpiParam != null && wpiParam !== '' && isFinite(Number(wpiParam));
+if (returning) {
+  restoreState();
   const v = Math.max(0, Math.min(100, Math.round(Number(wpiParam))));
   state.wpi = String(v); $('wpi').value = v;
   state.caseId = 'impairment';
   const src = params.get('src');
   const b = $('wpiBanner');
   b.style.display = 'block';
-  b.innerHTML = `รับค่าจากระบบประเมินฯ: <b>การสูญเสีย ${v}%</b>${src ? ' (' + src.replace(/[<>]/g, '') + ')' : ''} — กรอกค่าจ้างรายเดือนเพื่อประมาณการค่าทดแทน`;
+  b.innerHTML = `รับค่าจากระบบประเมินฯ: <b>การสูญเสีย ${v}%</b>${src ? ' (' + src.replace(/[<>]/g, '') + ')' : ''} — กรอกค่าจ้างรายเดือน (ถ้ายังไม่ได้กรอก) เพื่อดูค่าทดแทน`;
+  try { sessionStorage.removeItem(CF); } catch (e) {}   // จบรอบการคำนวณ → ปิดโหมด (เข้าตรงครั้งต่อไปจะไม่มีปุ่ม)
 }
 
 function curCase() { return COMP_CASES.find(c => c.id === state.caseId) || COMP_CASES[0]; }
@@ -190,6 +208,12 @@ document.querySelector('.cp-copy').addEventListener('click', e => {
     '— ประมาณการคร่าว ๆ · ตัวเลขจริงยึดตามประกาศฯ และเจ้าหน้าที่กองทุนเงินทดแทน',
   ].join('\n');
   copyText(out, e.currentTarget);
+});
+
+$('goCalc').addEventListener('click', () => {
+  saveState();
+  try { sessionStorage.setItem(CF, '1'); } catch (e) {}
+  location.href = '/impairment/';
 });
 
 $('ccase').value = state.caseId;

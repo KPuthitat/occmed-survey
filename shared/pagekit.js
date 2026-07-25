@@ -5,6 +5,10 @@
 const HOME_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.6V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.6"/></svg>';
 const RESET_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>';
 
+// โหมด "คิดค่าชดเชย": ตั้งค่าเมื่อผู้ใช้เข้ามาจากหน้าค่าทดแทนแล้วกด "ไปคำนวณ %"
+// (sessionStorage — จำเฉพาะแท็บ) · หน้าประเมินที่เข้าตรงจะไม่เห็นปุ่มค่าชดเชย
+export function inCompFlow() { try { return sessionStorage.getItem('occmed_comp_flow') === '1'; } catch (e) { return false; } }
+
 // สูตรตารางค่ารวม: A + B(100−A)/100 เรียงมาก→น้อย เพดาน 100
 export function combineValues(vals) {
   const v = vals.map(Number).filter(x => x > 0).sort((a, b) => b - a);
@@ -58,10 +62,11 @@ function addCombine() {
   if (!wrap || wrap.querySelector('.cv-wrap')) return;
   const el = document.createElement('div');
   el.id = 'secCombine';
-  el.innerHTML = `<details class="ex-wrap cv-wrap">
+  const flow = inCompFlow();
+  el.innerHTML = `<details class="ex-wrap cv-wrap"${flow ? ' open' : ''}>
     <summary class="ex-sum">รวมค่าการสูญเสีย (Combined Values)<span class="ex-count">สูตร A + B(100−A)/100</span></summary>
     <div class="cv-body">
-      <div class="cv-hint">ใส่ค่าร้อยละการสูญเสียของแต่ละรายการ (เช่น จากหลายอวัยวะ/หลายระบบ) แล้วระบบรวมให้ตามตารางค่ารวม โดยไม่ต้องออกไปหน้าอื่น</div>
+      <div class="cv-hint">${flow ? 'ใส่ร้อยละการสูญเสียของทุกระบบ/อวัยวะที่ประเมิน แล้วกด “กลับไปคิดค่าชดเชย” เพื่อนำผลรวมไปคำนวณค่าทดแทน' : 'ใส่ค่าร้อยละการสูญเสียของแต่ละรายการ (เช่น จากหลายอวัยวะ/หลายระบบ) แล้วระบบรวมให้ตามตารางค่ารวม โดยไม่ต้องออกไปหน้าอื่น'}</div>
       <div class="cv-rows"></div>
       <button class="btn cv-add" type="button" style="margin-top:8px">+ เพิ่มค่า</button>
       <div class="cv-result" style="margin-top:12px"></div>
@@ -95,7 +100,10 @@ function addCombine() {
       + steps.map((s, i) => item(i + 1 === steps.length ? 'รวม' : `ขั้น ${i + 1}`,
         `A = ${nn(s.a)} · B = ${s.b}`,
         `${eq} ${nn(s.a)} + ${frac(`${s.b} × (100 − ${nn(s.a)})`, 100)} ${eq} ${res((i + 1 === steps.length ? Math.round(s.na) : nn(s.na)) + '%', i + 1 === steps.length)}`)).join('');
-    q('.cv-result').innerHTML = `<div class="result"><div class="rcard gold"><b>${rounded}%</b><span>ค่ารวม (Combined Values) ของทั้งร่างกาย</span></div></div><div class="fsheet" style="margin-top:12px">${sheet}</div>`;
+    const backBtn = (flow && rounded > 0)
+      ? `<a class="btn gold cv-back" href="/impairment/compensation/?wpi=${rounded}" style="margin-top:12px;width:100%;justify-content:center;display:inline-flex">← กลับไปคิดค่าชดเชย (ใช้ ${rounded}%)</a>`
+      : '';
+    q('.cv-result').innerHTML = `<div class="result"><div class="rcard gold"><b>${rounded}%</b><span>ค่ารวม (Combined Values) ของทั้งร่างกาย</span></div></div>${backBtn}<div class="fsheet" style="margin-top:12px">${sheet}</div>`;
   }
   el.addEventListener('input', e => { if (e.target.dataset.cvi != null) { values[Number(e.target.dataset.cvi)] = e.target.value; renderResult(); } });
   el.addEventListener('click', e => {

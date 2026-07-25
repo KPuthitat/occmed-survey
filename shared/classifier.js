@@ -13,6 +13,8 @@ export const GRADE_LETTERS = ['A', 'B', 'C', 'D', 'E'];
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const midIndex = grades => Math.floor(grades.length / 2);
+// โหมด "คิดค่าชดเชย" — แสดงปุ่มกลับไปคิดค่าชดเชยเฉพาะเมื่อเข้ามาจากหน้าค่าทดแทน (เข้าตรง = คำนวณอย่างเดียว)
+const compFlow = () => { try { return sessionStorage.getItem('occmed_comp_flow') === '1'; } catch (e) { return false; } };
 
 // ---------- ตรรกะบริสุทธิ์ (เทสต์ได้) ----------
 // picks = { factorKey: levelNumber } · คืน { level, gradeIndex, percent, grade, range, autoGrade }
@@ -335,7 +337,7 @@ export function mountClassifier(opts) {
         <div class="cl-rcard gold"><b>${final}%</b><span>${esc(outLabel)}</span></div>
       </div>
       <div class="cl-gnote" style="margin-top:12px">${esc(opts.titleTh)} — ${lbl}${botc ? ` · ฐาน ${base}%${botcLine}` : ''} → <b style="color:var(--navy)">${final}%</b> ${esc(outLabel)}${rangeLine}${isExtremity ? ' · ต้องแปลงเป็น % ทั้งร่างกายแล้วรวมด้วย Combined Values' : ''}</div>
-      ${(!isExtremity && final > 0) ? `<a class="cl-comp" href="/impairment/compensation/?wpi=${final}&src=${encodeURIComponent(opts.titleTh)}">คำนวณค่าทดแทนจากผลนี้ (${final}%) →</a>` : ''}`;
+      ${(!isExtremity && final > 0 && compFlow()) ? `<a class="cl-comp" href="/impairment/compensation/?wpi=${final}&src=${encodeURIComponent(opts.titleTh)}">← กลับไปคิดค่าชดเชย (ใช้ ${final}%)</a>` : ''}`;
   }
   function rerender() { updateBotcGrade(); renderOpts(); renderGrades(); renderResult(); }
 
