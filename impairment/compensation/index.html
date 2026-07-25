@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คำนวณค่าทดแทน (ประมาณการ) — กองทุนเงินทดแทน | OCCMED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/theme.css">
+<style>
+  .cp-lead{max-width:940px;margin:0 auto;padding:16px 16px 0}
+  .cp-lead .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+  .cp-lead h1{font-size:21px;margin:4px 0 6px}
+  .cp-lead p{color:var(--muted);margin:0;font-size:14px}
+  .cp-sec{margin-top:16px;padding:16px}
+  .cp-sec>h2{font-size:16px;color:var(--navy);margin-bottom:10px}
+  .cp-field{margin-top:12px}
+  .cp-field>label{display:block;font-size:13.5px;font-weight:600;color:#3a4557;margin-bottom:5px}
+  .cp-field .sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+  .cp-input,.cp-select{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:16px;background:#fff;color:var(--ink)}
+  .cp-input:focus,.cp-select:focus{outline:none;border-color:var(--navy)}
+  .cp-suffix{position:relative}
+  .cp-suffix .u{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+  .cp-note{background:#f4f7fb;border-radius:9px;padding:9px 12px;font-size:12.5px;color:var(--navy2);margin-top:8px;line-height:1.5}
+  .cp-adv{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .cp-adv summary{padding:11px 14px;background:var(--line2);font-weight:700;color:var(--navy);cursor:pointer;list-style:none;font-size:13.5px}
+  .cp-adv summary::-webkit-details-marker{display:none}
+  .cp-adv summary::after{content:'▾';float:right;color:var(--acc)}
+  .cp-adv[open] summary::after{content:'▴'}
+  .cp-adv .in{padding:6px 14px 14px}
+  .cp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .cp-result{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  .cp-card{background:var(--line2);border-radius:12px;padding:16px;text-align:center}
+  .cp-card b{display:block;font-size:26px;color:var(--navy);line-height:1.1;font-weight:800}
+  .cp-card span{color:var(--muted);font-size:12px;margin-top:6px;display:block;line-height:1.3}
+  .cp-card.gold{background:linear-gradient(135deg,var(--navy),var(--navy2))}
+  .cp-card.gold b{color:var(--gold-lt)}.cp-card.gold span{color:#c8d4e4}
+  .cp-break{margin-top:12px;font-size:13px;color:#3a4557;line-height:1.7}
+  .cp-break code{background:var(--line2);border-radius:6px;padding:1px 7px;color:var(--navy);font-weight:700}
+  .cp-warn{background:#fff8ec;border:1px solid #ecd9a8;border-radius:12px;padding:14px 16px;margin-top:16px}
+  .cp-warn b{color:var(--gold-dk)}
+  .cp-warn p{font-size:13px;color:#5b5030;margin:6px 0 0;line-height:1.55}
+  @media(max-width:520px){.cp-result,.cp-grid{grid-template-columns:1fr}}
+  @media print{.occ-topbar,.occ-home,.occ-reset,.cp-copy,.cp-adv{display:none!important}}
+</style>
+</head>
+<body>
+<div class="occ-topbar">
+  <div class="mark">OC</div>
+  <div><b>คำนวณค่าทดแทน (ประมาณการ)</b><small>กองทุนเงินทดแทน</small></div>
+  <div class="sp" style="flex:1"></div>
+  <a class="occ-back" href="/">← หน้าแรก</a>
+</div>
+<div class="cp-lead">
+  <div class="kick">กองทุนเงินทดแทน · พ.ร.บ.เงินทดแทน (ฉบับที่ 2) พ.ศ. 2561</div>
+  <h1>ประมาณการค่าทดแทนของผู้ประกันตน</h1>
+  <p>กรอกค่าจ้างรายเดือน แล้วระบบคำนวณค่าทดแทนคร่าว ๆ ตามหลัก “ร้อยละ 70 ของค่าจ้างรายเดือน” (มีเพดาน) × ระยะเวลาตามกรณี</p>
+</div>
+<div class="wrap">
+  <div class="card cp-sec">
+    <h2>ข้อมูลผู้ประกันตน</h2>
+    <div class="cp-field">
+      <label>ค่าจ้าง (เงินเดือน) ปัจจุบัน<div class="sub">ค่าจ้างรายเดือนของผู้ประกันตน</div></label>
+      <div class="cp-suffix"><input class="cp-input" id="wage" type="number" min="0" step="100" inputmode="numeric" placeholder="เช่น 15000"><span class="u">บาท/เดือน</span></div>
+    </div>
+    <div class="cp-field">
+      <label>กรณีการจ่ายค่าทดแทน</label>
+      <select class="cp-select" id="ccase"></select>
+      <div class="cp-note" id="caseNote"></div>
+    </div>
+    <div class="cp-field">
+      <label>ระยะเวลาที่จ่าย<div class="sub">จำนวนเดือนตามกรณี/ประกาศฯ (ปรับได้)</div></label>
+      <div class="cp-suffix"><input class="cp-input" id="months" type="number" min="0" step="1" inputmode="numeric" placeholder="จำนวนเดือน"><span class="u">เดือน</span></div>
+    </div>
+    <details class="cp-adv">
+      <summary>ค่านโยบาย (ปรับตามประกาศล่าสุด)</summary>
+      <div class="in">
+        <div class="cp-grid">
+          <div class="cp-field" style="margin-top:6px">
+            <label>ร้อยละของค่าจ้าง</label>
+            <div class="cp-suffix"><input class="cp-input" id="rate" type="number" min="0" max="100" step="1" inputmode="numeric" value="70"><span class="u">%</span></div>
+          </div>
+          <div class="cp-field" style="margin-top:6px">
+            <label>เพดานค่าจ้างที่ใช้คำนวณ</label>
+            <div class="cp-suffix"><input class="cp-input" id="ceiling" type="number" min="0" step="1000" inputmode="numeric" value="20000"><span class="u">บาท</span></div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card cp-sec">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <h2 style="margin:0">ผลประมาณการ</h2><div class="sp" style="flex:1"></div>
+      <button class="btn gold cp-copy" type="button">คัดลอกสรุป</button>
+    </div>
+    <div class="cp-result">
+      <div class="cp-card"><b id="rMonthly">—</b><span>ค่าทดแทนรายเดือน</span></div>
+      <div class="cp-card gold"><b id="rTotal">—</b><span>รวมทั้งหมด (ประมาณการ)</span></div>
+    </div>
+    <div class="cp-break" id="rBreak"></div>
+  </div>
+
+  <div class="cp-warn">
+    <b>⚠ เป็นการประมาณการคร่าว ๆ เท่านั้น</b>
+    <p>ตัวเลขนี้ช่วยสื่อสารกับผู้ประกันตนเบื้องต้น — จำนวนเงิน ระยะเวลา และสิทธิที่แท้จริง ยึดตาม<b>ประกาศกระทรวงแรงงานฉบับล่าสุด</b> และการวินิจฉัยของ<b>เจ้าหน้าที่สำนักงานกองทุนเงินทดแทน</b> · กรณีสูญเสียสมรรถภาพ จำนวนเดือนกำหนดตามร้อยละที่สูญเสียตามประกาศฯ · กรณีเสียชีวิตมีค่าทำศพและสิทธิอื่นเพิ่มเติมที่ไม่รวมในนี้</p>
+  </div>
+</div>
+
+<script type="module">
+import { COMP_CASES, compResult, RATE, WAGE_CEILING } from '/impairment/compensation/engine.js';
+import { mountPageKit } from '/shared/pagekit.js';
+
+const $ = id => document.getElementById(id);
+const baht = n => new Intl.NumberFormat('th-TH').format(Math.round(n));
+const state = { wage: '', months: '', caseId: COMP_CASES[0].id, rate: 70, ceiling: WAGE_CEILING };
+
+$('ccase').innerHTML = COMP_CASES.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+
+function curCase() { return COMP_CASES.find(c => c.id === state.caseId) || COMP_CASES[0]; }
+
+function applyCasePreset() {
+  const c = curCase();
+  $('caseNote').textContent = c.note;
+  // ถ้ากรณีมีจำนวนเดือนตายตัว (ทุพพลภาพ/เสียชีวิต) เติมให้ · กรณีอื่นเว้นให้กรอก
+  if (c.months > 0) { state.months = String(c.months); $('months').value = c.months; }
+}
+
+function render() {
+  const r = compResult(state.wage, state.months, { rate: (Number(state.rate) || 0) / 100, ceiling: Number(state.ceiling) || WAGE_CEILING });
+  const hasWage = r.wage > 0;
+  $('rMonthly').textContent = hasWage ? baht(r.monthly) + ' ฿' : '—';
+  $('rTotal').textContent = (hasWage && r.months > 0) ? baht(r.total) + ' ฿' : '—';
+  if (!hasWage) { $('rBreak').innerHTML = '<span style="color:var(--muted)">กรอกค่าจ้างรายเดือนเพื่อดูผลประมาณการ</span>'; return; }
+  const capLine = r.capped ? ` <span style="color:var(--gold-dk)">(ค่าจ้าง ${baht(r.wage)} เกินเพดาน ${baht(r.ceiling)} → คิดที่เพดาน)</span>` : '';
+  const ratePct = Math.round(r.rate * 100);
+  let s = `ค่าทดแทนรายเดือน = <code>${ratePct}%</code> × <code>${baht(r.base)}</code> = <code>${baht(r.monthly)} ฿/เดือน</code>${capLine}`;
+  if (r.months > 0) s += `<br>รวม = <code>${baht(r.monthly)}</code> × <code>${r.months} เดือน</code> = <code>${baht(r.total)} ฿</code>`;
+  else s += '<br><span style="color:var(--muted)">ระบุจำนวนเดือนเพื่อดูยอดรวม</span>';
+  $('rBreak').innerHTML = s;
+}
+
+$('wage').addEventListener('input', e => { state.wage = e.target.value; render(); });
+$('months').addEventListener('input', e => { state.months = e.target.value; render(); });
+$('rate').addEventListener('input', e => { state.rate = e.target.value; render(); });
+$('ceiling').addEventListener('input', e => { state.ceiling = e.target.value; render(); });
+$('ccase').addEventListener('change', e => { state.caseId = e.target.value; applyCasePreset(); render(); });
+
+async function copyText(txt, btn) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; }
+  catch (e) { try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); document.body.removeChild(ta); } catch (e2) {} }
+  const old = btn.textContent; btn.textContent = ok ? 'คัดลอกแล้ว' : 'ไม่สำเร็จ';
+  setTimeout(() => btn.textContent = old, 1600);
+}
+document.querySelector('.cp-copy').addEventListener('click', e => {
+  const r = compResult(state.wage, state.months, { rate: (Number(state.rate) || 0) / 100, ceiling: Number(state.ceiling) || WAGE_CEILING });
+  const c = curCase();
+  const ratePct = Math.round(r.rate * 100);
+  const out = [
+    'ประมาณการค่าทดแทน — กองทุนเงินทดแทน (พ.ร.บ.เงินทดแทน ฉบับที่ 2 พ.ศ. 2561)',
+    `กรณี: ${c.label}`,
+    `ค่าจ้างรายเดือน: ${baht(r.wage)} บาท` + (r.capped ? ` (เกินเพดาน ${baht(r.ceiling)} → คิดที่เพดาน)` : ''),
+    `ค่าทดแทนรายเดือน = ${ratePct}% × ${baht(r.base)} = ${baht(r.monthly)} บาท/เดือน`,
+    r.months > 0 ? `รวม = ${baht(r.monthly)} × ${r.months} เดือน = ${baht(r.total)} บาท` : 'ยังไม่ได้ระบุจำนวนเดือน',
+    '— ประมาณการคร่าว ๆ · ตัวเลขจริงยึดตามประกาศฯ และเจ้าหน้าที่กองทุนเงินทดแทน',
+  ].join('\n');
+  copyText(out, e.currentTarget);
+});
+
+applyCasePreset();
+render();
+mountPageKit({ combine: false });
+</script>
+</body>
+</html>
