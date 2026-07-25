@@ -200,6 +200,7 @@
   <div class="card"><h2><i>Σ</i>รวมค่าการสูญเสียสมรรถภาพ</h2>
     <div id="itemList"><p class="hint">ยังไม่มีรายการ</p></div>
     <table id="sumTable"></table>
+    <div id="sumBack" style="margin-top:12px"></div>
     <button class="btn ghost" id="btnCopyReport">📋 คัดลอกรายงานผลประเมิน</button>
     <button class="btn ghost" id="btnCopyJSON">📦 คัดลอก JSON ตารางทั้งหมด</button>
     <button class="btn ghost" id="btnCopySrc">🚀 คัดลอกซอร์สโค้ดทั้งไฟล์</button>
@@ -216,6 +217,7 @@
     <label>ลองคำนวณ (คั่นด้วยจุลภาค)</label>
     <input id="cvIn" value="40, 28" inputmode="numeric">
     <div class="res" style="margin-top:8px"><div class="big" id="cvOut">57<small>%</small></div><div class="cap" id="cvStep"></div></div>
+    <div id="cvBack" style="margin-top:10px"></div>
   </div>
 
   <p class="foot">คู่มือการประเมินการสูญเสียสมรรถภาพอย่างถาวรทางกายและจิต ฉบับจัดทำ 4 · บทที่ 2<br>
@@ -225,7 +227,9 @@
 <div class="toast" id="toast"></div>
 <script type="module">
 import { DF, round, d2h, h2u, u2w, pair, combine, sum, le2wp, capAt, buildCaps, aggregate, netAdjust } from './engine.js';
-import { mountPageKit } from '/shared/pagekit.js';
+import { mountPageKit, inCompFlow } from '/shared/pagekit.js';
+// ปุ่ม "กลับไปคิดค่าชดเชย" — แสดงเฉพาะเมื่อเข้ามาจากหน้าค่าทดแทน (โหมดคิดค่าชดเชย)
+const compBackBtn = pct => `<a class="btn gold" href="/impairment/compensation/?wpi=${Math.round(pct)}&src=${encodeURIComponent('แขน/มือ และ ขา/เท้า')}" style="width:100%;justify-content:center;display:inline-flex">← กลับไปคิดค่าชดเชย (ใช้ ${Math.round(pct)}%)</a>`;
 
 const PRISTINE='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
 const D = await (await fetch('./tables.runtime.json')).json();
@@ -451,7 +455,8 @@ function renderItems(){
  const mixSide=new Set(items.map(it=>it.side)).size>1;
  $('#sumTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')
   +(mixSide?`<tr><td colspan="2" style="color:var(--gold2);font-size:12.5px">⚠ มีทั้งซ้ายและขวาในรายการเดียวกัน — ตามคู่มือควรประเมินทีละข้าง แล้วจึงรวมที่ระดับทั้งร่างกาย (Combined Values)</td></tr>`:'')
-  +(A.caps.length?`<tr><td colspan="2" style="color:var(--gold2);font-size:12.5px">⚠ ตัดตามเพดานการตัดขาด (ตาราง 2-28 / ตัดขาดขา): ${A.caps.join(' · ')}</td></tr>`:'');}
+  +(A.caps.length?`<tr><td colspan="2" style="color:var(--gold2);font-size:12.5px">⚠ ตัดตามเพดานการตัดขาด (ตาราง 2-28 / ตัดขาดขา): ${A.caps.join(' · ')}</td></tr>`:'');
+ $('#sumBack').innerHTML=(inCompFlow()&&A.body>0)?compBackBtn(A.body):'';}
 function report(){const A=aggregate(items,CAPS);
  let s='รายงานการประเมินการสูญเสียสมรรถภาพอย่างถาวร — แขนและมือ / ขาและเท้า\n(คู่มือฯ ฉบับจัดทำ 4 · บทที่ 2–3)\n'+'-'.repeat(48)+'\n';
  items.forEach((it,i)=>{s+=`${i+1}. [${SIDE[it.side]||'?'}] ${it.title}\n   ${it.detail}\n`+(it.crit?`   เกณฑ์: ${it.crit}\n`:'')+`   ค่า: ${itVal(it)}% ${itUnit(it)} = ${it.wp}% ทั้งร่างกาย\n\n`});
@@ -758,12 +763,15 @@ function renderLRom(){
 $('#selLRomT').onchange=e=>{S.lromT=+e.target.value;renderLRom()};
 $('#btnAddLRom').onclick=()=>add(lastLRom);
 
-$('#cvIn').oninput=()=>{
+function renderCv(){
   const l=($('#cvIn').value.match(/\d+/g)||[]).map(Number).filter(x=>x>0&&x<=100);
-  $('#cvOut').innerHTML=combine(l)+'<small>%</small>';
+  const tot=combine(l);
+  $('#cvOut').innerHTML=tot+'<small>%</small>';
   $('#cvStep').textContent=l.length?('เรียง: '+l.slice().sort((a,b)=>b-a).join(' , ')):'ใส่ตัวเลข 1–100';
-};
-renderMode();renderDBI();renderAmp();renderRom();renderNrv();renderCase();renderLDbi();renderLAmp();renderLRom();renderLNrv();renderItems();
+  $('#cvBack').innerHTML=(inCompFlow()&&tot>0)?compBackBtn(tot):'';
+}
+$('#cvIn').oninput=renderCv;
+renderMode();renderDBI();renderAmp();renderRom();renderNrv();renderCase();renderLDbi();renderLAmp();renderLRom();renderLNrv();renderItems();renderCv();
 mountPageKit({combine:false});
 
 </script></body></html>
