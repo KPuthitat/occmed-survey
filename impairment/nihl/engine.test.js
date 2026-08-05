@@ -1,7 +1,8 @@
 // engine.test.js — ทดสอบตัวช่วยวินิจฉัย NIHL
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeEar, airBoneGap, diagnoseNIHL, NOISE_MIN } from './engine.js';
+import { analyzeEar, airBoneGap, diagnoseNIHL, NOISE_MIN,
+  ptaAvg, speechPTA, classifyHL, fitForWork, nioshShift, oshaShift, aaoBaseline, aaoPeriodic } from './engine.js';
 
 // ---- รอยบาก (notch) รายหู ----
 test('รอยบากคลาสสิกที่ 4 kHz + ดีขึ้นที่ 8 kHz → notch = true', () => {
@@ -73,3 +74,57 @@ test('ไม่สมมาตร (ข้างเดียวแย่กว่
 });
 
 test('NOISE_MIN = 85 dBA', () => { assert.equal(NOISE_MIN, 85); });
+
+// ---- ระดับการได้ยิน + Fit for Work (แนวทางฯ 2558) ----
+test('ค่าเฉลี่ยความถี่พูด 500–3000 + จัดระดับการได้ยิน', () => {
+  const ac = { 500: 20, 1000: 30, 2000: 40, 3000: 50 };
+  assert.equal(speechPTA(ac), 35);               // avg(20,30,40,50)
+  assert.equal(classifyHL(35).level, 'หูตึงน้อย'); // 26–40
+  assert.equal(classifyHL(20).level, 'ปกติ');
+  assert.equal(classifyHL(60).level, 'หูตึงมาก'); // 56–70
+  assert.equal(classifyHL(95).level, 'หูหนวก');
+});
+test('Fit for Work: เฉลี่ย 500–3000 เทียบเกณฑ์', () => {
+  assert.equal(fitForWork({ 500: 20, 1000: 20, 2000: 30, 3000: 30 }, 40).pass, true);  // avg 25 ≤ 40
+  assert.equal(fitForWork({ 500: 40, 1000: 45, 2000: 50, 3000: 55 }, 40).pass, false); // avg 47.5
+  assert.equal(fitForWork({ 500: 40, 1000: 45, 2000: 50, 3000: 55 }, 55).pass, true);
+});
+
+// ---- Threshold shift (NIOSH / OSHA) ----
+test('NIOSH significant TS: ลดลง ≥15 dB ที่ความถี่ใดๆ', () => {
+  const base = { 500: 10, 1000: 10, 2000: 15, 3000: 20, 4000: 25, 6000: 20 };
+  const cur = { 500: 10, 1000: 10, 2000: 15, 3000: 25, 4000: 40, 6000: 25 }; // 4k +15
+  const r = nioshShift(base, cur);
+  assert.equal(r.present, true);
+  assert.equal(r.flagged[0].f, 4000);
+  assert.equal(r.flagged[0].shift, 15);
+});
+test('OSHA standard TS: เฉลี่ย 2k,3k,4k ลดลง ≥10 dB', () => {
+  const base = { 2000: 15, 3000: 20, 4000: 25 };  // avg 20
+  const cur = { 2000: 20, 3000: 30, 4000: 40 };   // avg 30 → shift 10
+  const r = oshaShift(base, cur);
+  assert.equal(r.shift, 10);
+  assert.equal(r.present, true);
+});
+
+// ---- ส่งต่อ ENT (AAO-HNS 1983) ----
+test('AAO Section A: เฉลี่ย 500–3000 > 25 → ส่งต่อ', () => {
+  const bad = { 500: 30, 1000: 35, 2000: 40, 3000: 45 }; // avg 37.5 > 25
+  const ok = { 500: 5, 1000: 5, 2000: 10, 3000: 10 };
+  assert.equal(aaoBaseline(bad, ok).a1, true);
+  assert.equal(aaoBaseline(ok, ok).a1, false);
+});
+test('AAO Section A: ผลต่างสองข้างความถี่สูง > 30 → ส่งต่อ (A3)', () => {
+  const r = { 500: 10, 1000: 10, 2000: 10, 3000: 60, 4000: 70, 6000: 60 }; // high avg ~63
+  const l = { 500: 10, 1000: 10, 2000: 10, 3000: 15, 4000: 20, 6000: 15 }; // high avg ~17
+  const res = aaoBaseline(r, l);
+  assert.equal(res.a3, true);   // |63-17| > 30
+  assert.equal(res.refer, true);
+});
+test('AAO Section B (periodic): เฉลี่ย 3–6k แย่ลง > 20 → ส่งต่อ (B2)', () => {
+  const base = { 500: 10, 1000: 10, 2000: 10, 3000: 15, 4000: 20, 6000: 15 };  // high ~17
+  const cur = { 500: 10, 1000: 10, 2000: 10, 3000: 40, 4000: 50, 6000: 45 };   // high 45 → +28
+  const r = aaoPeriodic(base, cur);
+  assert.equal(r.b2, true);
+  assert.equal(r.refer, true);
+});
