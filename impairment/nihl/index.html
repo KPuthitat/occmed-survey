@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>วินิจฉัยประสาทหูเสื่อมจากเสียงดัง (NIHL) | OCCMED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared/theme.css">
+<style>
+  .nh-lead{max-width:940px;margin:0 auto;padding:16px 16px 0}
+  .nh-lead .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+  .nh-lead h1{font-size:21px;margin:4px 0 6px}
+  .nh-lead p{color:var(--muted);margin:0;font-size:14px}
+  .nh-sec{margin-top:16px;padding:16px}
+  .nh-sec>h2{font-size:16px;color:var(--navy);margin-bottom:4px}
+  .nh-sec .hint{color:var(--muted);font-size:12.5px;margin-bottom:10px;line-height:1.5}
+  table.aud{width:100%;border-collapse:collapse;font-size:13px}
+  table.aud th,table.aud td{padding:5px 4px;text-align:center;border-bottom:1px solid var(--line)}
+  table.aud thead th{font-size:11.5px;color:var(--navy);font-weight:700;background:var(--line2)}
+  table.aud thead th.r{color:#a12}table.aud thead th.l{color:#248}
+  table.aud td.f{font-weight:700;color:var(--navy);text-align:right;white-space:nowrap;font-size:12px}
+  table.aud input{width:46px;padding:7px 3px;border:1px solid var(--line);border-radius:8px;font-size:14px;text-align:center;background:#fff}
+  table.aud input:focus{outline:none;border-color:var(--navy)}
+  .aud-scroll{overflow-x:auto}
+  .nh-field{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .nh-field .fl{flex:1 1 150px;min-width:0}
+  .nh-field label{display:block;font-size:13px;font-weight:600;color:#3a4557;margin-bottom:4px}
+  .nh-field input{width:100%;padding:10px 11px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;background:#fff}
+  .nh-chk{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .nh-chk label{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#3a4557;border:1px solid var(--line);border-radius:20px;padding:6px 12px;cursor:pointer}
+  .nh-chk input{margin:0}
+  .nh-verdict{border-radius:12px;padding:16px;margin-bottom:12px}
+  .nh-verdict b{font-size:18px;display:block}
+  .nh-verdict.consistent{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff}
+  .nh-verdict.consistent b{color:var(--gold-lt)}
+  .nh-verdict.possible{background:#fff8ec;border:1px solid #ecd9a8;color:#5b5030}
+  .nh-verdict.atypical{background:var(--line2);color:var(--navy)}
+  .nh-crit{list-style:none;margin:0;padding:0}
+  .nh-crit li{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px;align-items:flex-start}
+  .nh-crit .ic{flex:0 0 22px;font-weight:800;text-align:center}
+  .nh-crit .ic.ok{color:var(--ok,#1a7f4b)}.nh-crit .ic.no{color:#c0392b}.nh-crit .ic.un{color:var(--muted)}
+  .nh-crit .tx b{color:var(--navy)}
+  .nh-crit .tx span{color:var(--muted);display:block;font-size:12px;margin-top:1px}
+  .nh-ears{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+  .nh-ear{background:var(--line2);border-radius:10px;padding:12px;font-size:12.5px;line-height:1.6}
+  .nh-ear b{color:var(--navy);display:block;margin-bottom:4px}
+  .nh-warn{background:#fff8ec;border:1px solid #ecd9a8;border-radius:12px;padding:14px 16px;margin-top:16px}
+  .nh-warn b{color:var(--gold-dk)}.nh-warn p{font-size:13px;color:#5b5030;margin:6px 0 0;line-height:1.55}
+  @media(max-width:520px){.nh-ears{grid-template-columns:1fr}}
+  @media print{.occ-topbar,.occ-home,.occ-reset,.nh-copy{display:none!important}}
+</style>
+</head>
+<body>
+<div class="occ-topbar">
+  <div class="mark">OC</div>
+  <div><b>วินิจฉัยประสาทหูเสื่อมจากเสียงดัง</b><small>NIHL · อาชีวเวชศาสตร์</small></div>
+  <div class="sp" style="flex:1"></div>
+  <a class="occ-back" href="/">← หน้าแรก</a>
+</div>
+<div class="nh-lead">
+  <div class="kick">Noise-Induced Hearing Loss · ACOEM · Coles 2000 · OSHA</div>
+  <h1>ตัวช่วยวินิจฉัยประสาทหูเสื่อมจากเสียงดัง</h1>
+  <p>กรอกผลออดิโอแกรม (dB HL) + ประวัติสัมผัสเสียง แล้วระบบตรวจลักษณะเข้าได้กับ NIHL (รอยบาก 3–6 kHz · ประสาทรับเสียง · สองข้าง/สมมาตร · ประวัติเสียงดัง)</p>
+</div>
+<div class="wrap">
+  <div class="card nh-sec">
+    <h2>ผลตรวจการได้ยิน (Audiogram)</h2>
+    <div class="hint">กรอกระดับการได้ยิน (dB HL) · AC = การนำเสียงทางอากาศ (จำเป็น) · BC = การนำเสียงทางกระดูก (ถ้ามี — ใช้แยกประสาทรับเสียงจากการนำเสียง)</div>
+    <div class="aud-scroll">
+      <table class="aud">
+        <thead><tr><th>ความถี่ (Hz)</th><th class="r">ขวา AC</th><th class="r">ขวา BC</th><th class="l">ซ้าย AC</th><th class="l">ซ้าย BC</th></tr></thead>
+        <tbody id="audBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card nh-sec">
+    <h2>ประวัติสัมผัสเสียง + ปัจจัยอื่น</h2>
+    <div class="nh-field">
+      <div class="fl"><label>ระดับเสียงเฉลี่ย 8 ชม. (dBA)</label><input id="noiseLevel" type="number" min="0" step="1" inputmode="numeric" placeholder="เช่น 90"></div>
+      <div class="fl"><label>ระยะเวลาสัมผัส (ปี)</label><input id="noiseYears" type="number" min="0" step="1" inputmode="numeric" placeholder="เช่น 15"></div>
+    </div>
+    <div class="hint" style="margin-top:12px;margin-bottom:2px">สาเหตุอื่นที่ควรตัดออก (ติ๊กถ้ามี — เป็นตัวเตือนพิจารณา ไม่รวมในการให้คะแนน):</div>
+    <div class="nh-chk" id="exclusions"></div>
+  </div>
+
+  <div class="card nh-sec">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <h2 style="margin:0">ผลการประเมิน</h2><div class="sp" style="flex:1"></div>
+      <button class="btn gold nh-copy" type="button">คัดลอกสรุป</button>
+    </div>
+    <div id="nhResult"></div>
+  </div>
+
+  <div class="nh-warn">
+    <b>⚠ เป็นเครื่องมือสนับสนุนการวินิจฉัยเท่านั้น</b>
+    <p>การวินิจฉัยขั้นสุดท้ายเป็นดุลยพินิจของแพทย์ · ต้องพิจารณาร่วมกับประวัติ การตรวจร่างกาย และตัดสาเหตุอื่น (อายุ/presbycusis · ยา ototoxic · กรรมพันธุ์ · การติดเชื้อ · การบาดเจ็บศีรษะ/หู) · NIHL มักไม่ทำให้หูหนวกสนิท และไม่ลุกลามต่อหลังหยุดสัมผัสเสียง</p>
+  </div>
+</div>
+
+<script type="module">
+import { NIHL_FREQS, diagnoseNIHL } from '/impairment/nihl/engine.js';
+import { mountPageKit } from '/shared/pagekit.js';
+
+const $ = id => document.getElementById(id);
+const state = { right: { ac: {}, bc: {} }, left: { ac: {}, bc: {} }, noise: { level: '', years: '' } };
+const EXCL = ['อายุมาก (presbycusis)', 'ยา ototoxic', 'กรรมพันธุ์', 'การติดเชื้อ/เยื่อหุ้มสมองอักเสบ', 'การบาดเจ็บศีรษะ/หู', 'โรคเมเนีย/หูชั้นในอื่น'];
+
+// สร้างตารางออดิโอแกรม
+$('audBody').innerHTML = NIHL_FREQS.map(f => `<tr>
+  <td class="f">${f >= 1000 ? (f / 1000) + ' k' : f}</td>
+  <td><input type="number" step="5" inputmode="numeric" data-ear="right" data-cond="ac" data-f="${f}"></td>
+  <td><input type="number" step="5" inputmode="numeric" data-ear="right" data-cond="bc" data-f="${f}"></td>
+  <td><input type="number" step="5" inputmode="numeric" data-ear="left" data-cond="ac" data-f="${f}"></td>
+  <td><input type="number" step="5" inputmode="numeric" data-ear="left" data-cond="bc" data-f="${f}"></td>
+</tr>`).join('');
+
+$('exclusions').innerHTML = EXCL.map((e, i) => `<label><input type="checkbox" data-ex="${i}">${e}</label>`).join('');
+
+document.addEventListener('input', e => {
+  const d = e.target.dataset;
+  if (d.ear && d.cond && d.f) {
+    const v = e.target.value;
+    if (v === '') delete state[d.ear][d.cond][d.f]; else state[d.ear][d.cond][d.f] = Number(v);
+    render();
+  } else if (e.target.id === 'noiseLevel') { state.noise.level = e.target.value; render(); }
+  else if (e.target.id === 'noiseYears') { state.noise.years = e.target.value; render(); }
+});
+document.addEventListener('change', e => { if (e.target.dataset.ex != null) render(); });
+
+const CRIT_LABEL = {
+  sensorineural: ['เป็นประสาทรับเสียง (sensorineural)', 'ช่องว่าง air–bone แคบ (≤15 dB) · ต้องมี BC จึงยืนยันได้'],
+  notch: ['มีรอยบากที่ 3–6 kHz และดีขึ้นที่ 8 kHz', 'ลักษณะเด่นของ NIHL (มักเด่นที่ 4 kHz)'],
+  bilateral: ['เป็นทั้งสองข้าง', 'ค่าเฉลี่ยความถี่สูงผิดปกติทั้งสองหู'],
+  symmetric: ['สองข้างสมมาตร', 'ผลต่างค่าเฉลี่ยความถี่สูง ≤15 dB · ถ้าไม่สมมาตรควรหาสาเหตุอื่น (เช่น เนื้องอกเส้นประสาท)'],
+  noise: ['มีประวัติสัมผัสเสียงดังเพียงพอ', 'เสียงเฉลี่ย ≥85 dBA'],
+};
+const excludedList = () => EXCL.filter((_, i) => { const el = document.querySelector(`[data-ex="${i}"]`); return el && el.checked; });
+
+function icon(v) { return v === true ? '<span class="ic ok">✓</span>' : v === false ? '<span class="ic no">✕</span>' : '<span class="ic un">?</span>'; }
+function earHtml(name, e) {
+  if (e.peak == null && e.pta == null) return `<div class="nh-ear"><b>หู${name}</b><span style="color:var(--muted)">ยังไม่ได้กรอก</span></div>`;
+  return `<div class="nh-ear"><b>หู${name}</b>
+    รอยบาก: ${e.notch === true ? 'มี' : e.notch === false ? 'ไม่ชัด' : '—'}${e.peakFreq ? ' (เด่นที่ ' + (e.peakFreq / 1000) + ' kHz)' : ''}<br>
+    ความลึกจากฐาน: ${e.depth == null ? '—' : e.depth + ' dB'} · ดีขึ้นที่ 8k: ${e.recovery == null ? '—' : e.recovery + ' dB'}<br>
+    เฉลี่ยความถี่พูด (0.5–2k): ${e.pta == null ? '—' : e.pta + ' dB'} · ความถี่สูง (3–6k): ${e.highPTA == null ? '—' : e.highPTA + ' dB'}</div>`;
+}
+
+function render() {
+  const d = diagnoseNIHL(state);
+  const hasData = d.right.pta != null || d.left.pta != null;
+  if (!hasData) { $('nhResult').innerHTML = '<div class="hint">กรอกผลออดิโอแกรมอย่างน้อยหนึ่งหูเพื่อดูผลการประเมิน</div>'; return; }
+  const critHtml = Object.keys(CRIT_LABEL).map(k => {
+    const [t, s] = CRIT_LABEL[k];
+    return `<li>${icon(d.criteria[k])}<div class="tx"><b>${t}</b><span>${s}</span></div></li>`;
+  }).join('');
+  const ex = excludedList();
+  const exNote = ex.length ? `<div class="hint" style="margin-top:10px;color:var(--gold-dk)">⚠ มีปัจจัยอื่นที่อาจเป็นสาเหตุ: ${ex.join(' · ')} — ต้องพิจารณาแยกโรค</div>` : '';
+  $('nhResult').innerHTML = `
+    <div class="nh-verdict ${d.level}"><b>${d.verdict}</b><span style="font-size:12.5px;opacity:.9">เข้าเกณฑ์หลัก ${d.met}/5 ข้อ${d.failed ? ' · ขัดแย้ง ' + d.failed + ' ข้อ' : ''}${d.bilateralNotch ? ' · รอยบากสองข้าง' : ''}</span></div>
+    <ul class="nh-crit">${critHtml}</ul>
+    <div class="nh-ears">${earHtml('ขวา', d.right)}${earHtml('ซ้าย', d.left)}</div>
+    ${exNote}`;
+}
+
+async function copyText(txt, btn) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; }
+  catch (e) { try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); document.body.removeChild(ta); } catch (e2) {} }
+  const old = btn.textContent; btn.textContent = ok ? 'คัดลอกแล้ว' : 'ไม่สำเร็จ';
+  setTimeout(() => btn.textContent = old, 1600);
+}
+document.querySelector('.nh-copy').addEventListener('click', e => {
+  const d = diagnoseNIHL(state);
+  const yn = v => v === true ? 'ใช่' : v === false ? 'ไม่ใช่' : 'ไม่ทราบ';
+  const ex = excludedList();
+  const out = [
+    'สรุปการประเมินประสาทหูเสื่อมจากเสียงดัง (NIHL) — เครื่องมือสนับสนุน',
+    `ผลประเมิน: ${d.verdict} (เข้าเกณฑ์หลัก ${d.met}/5)`,
+    `- ประสาทรับเสียง (sensorineural): ${yn(d.criteria.sensorineural)}`,
+    `- รอยบาก 3–6 kHz ดีขึ้นที่ 8 kHz: ${yn(d.criteria.notch)}${d.bilateralNotch ? ' (สองข้าง)' : ''}`,
+    `- เป็นสองข้าง: ${yn(d.criteria.bilateral)} · สมมาตร: ${yn(d.criteria.symmetric)}`,
+    `- ประวัติเสียงดัง ≥85 dBA: ${yn(d.criteria.noise)}${d.noiseLevel != null ? ' (' + d.noiseLevel + ' dBA' + (d.noiseYears != null ? ', ' + d.noiseYears + ' ปี' : '') + ')' : ''}`,
+    ex.length ? `- ปัจจัยอื่นที่ต้องแยกโรค: ${ex.join('; ')}` : '',
+    'หมายเหตุ: เป็นเครื่องมือสนับสนุน แพทย์เป็นผู้วินิจฉัยขั้นสุดท้าย',
+  ].filter(Boolean).join('\n');
+  copyText(out, e.currentTarget);
+});
+
+render();
+mountPageKit({ combine: false });
+</script>
+</body>
+</html>
