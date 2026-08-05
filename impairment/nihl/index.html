@@ -24,6 +24,10 @@
   table.aud input{width:44px;padding:7px 3px;border:1px solid var(--line);border-radius:8px;font-size:14px;text-align:center;background:#fff}
   table.aud input:focus{outline:none;border-color:var(--navy)}
   .aud-scroll{overflow-x:auto}
+  .aud-chart{margin-top:14px}
+  .aud-chart svg{width:100%;height:auto;display:block}
+  .aud-legend{margin-top:6px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .aud-legend .r{color:#c0392b;font-weight:700}.aud-legend .l{color:#2456a8;font-weight:700}
   .nh-adv{margin-top:6px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .nh-adv>summary{padding:11px 14px;background:var(--line2);font-weight:700;color:var(--navy);cursor:pointer;list-style:none;font-size:14px}
   .nh-adv>summary::-webkit-details-marker{display:none}
@@ -84,6 +88,8 @@
       <thead><tr><th>ความถี่ (Hz)</th><th class="r">ขวา AC</th><th class="r">ขวา BC</th><th class="l">ซ้าย AC</th><th class="l">ซ้าย BC</th></tr></thead>
       <tbody id="curBody"></tbody>
     </table></div>
+    <div id="audChart" class="aud-chart"></div>
+    <div id="audLegend" class="aud-legend"></div>
     <details class="nh-adv" style="margin-top:12px">
       <summary>ออดิโอแกรมพื้นฐาน (baseline) — กรอกถ้าต้องเทียบ threshold shift</summary>
       <div class="in">
@@ -174,7 +180,36 @@ function earCard(name, ac, notchEar) {
     รอยบาก 3–6k: ${notchEar.notch === true ? 'มี' : notchEar.notch === false ? 'ไม่ชัด' : '—'}${notchEar.peakFreq ? ' (' + fLabel(notchEar.peakFreq) + ')' : ''}</div>`;
 }
 
+// ---- กราฟออดิโอแกรม (SVG · สัญลักษณ์มาตรฐาน: ○ แดง=หูขวา · ✕ น้ำเงิน=หูซ้าย · เส้นประ=baseline) ----
+const RED = '#c0392b', BLUE = '#2456a8';
+function drawChart() {
+  const W = 660, H = 356, x0 = 46, x1 = W - 16, y0 = 16, y1 = H - 34;
+  const F = NIHL_FREQS, dMin = -10, dMax = 120;
+  const X = i => x0 + (i / (F.length - 1)) * (x1 - x0);
+  const Y = db => y0 + ((db - dMin) / (dMax - dMin)) * (y1 - y0);
+  let g = `<rect x="${x0}" y="${Y(0)}" width="${x1 - x0}" height="${Y(25) - Y(0)}" fill="#eaf6ef"/>`; // แถบปกติ 0–25
+  for (let db = 0; db <= 120; db += 20) { const y = Y(db); g += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#e3e8ef"/><text x="${x0 - 6}" y="${y + 4}" text-anchor="end" font-size="11" fill="#7a869a">${db}</text>`; }
+  F.forEach((f, i) => { const x = X(i); g += `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y1}" stroke="#eef1f6"/><text x="${x}" y="${y1 + 16}" text-anchor="middle" font-size="10.5" fill="#7a869a">${f >= 1000 ? f / 1000 + 'k' : f}</text>`; });
+  g += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="none" stroke="#c7d0dc"/>`;
+  g += `<text x="13" y="${(y0 + y1) / 2}" transform="rotate(-90 13 ${(y0 + y1) / 2})" text-anchor="middle" font-size="11" fill="#0B2545" font-weight="700">dB HL</text>`;
+  const series = (ac, color, kind, dashed) => {
+    if (!ac) return '';
+    const pts = F.map((f, i) => { const v = ac[f]; return (v != null && v !== '' && isFinite(Number(v))) ? { x: X(i), y: Y(Number(v)) } : null; });
+    let s = '', seg = [];
+    const flush = () => { if (seg.length > 1) s += `<polyline points="${seg.map(p => p.x + ',' + p.y).join(' ')}" fill="none" stroke="${color}" stroke-width="${dashed ? 1.4 : 2}"${dashed ? ' stroke-dasharray="4 3"' : ''} opacity="${dashed ? .5 : 1}"/>`; seg = []; };
+    pts.forEach(p => { if (p) seg.push(p); else flush(); }); flush();
+    pts.forEach(p => { if (!p) return; const o = dashed ? .55 : 1; if (kind === 'o') s += `<circle cx="${p.x}" cy="${p.y}" r="${dashed ? 3.5 : 5}" fill="none" stroke="${color}" stroke-width="2" opacity="${o}"/>`; else { const r = dashed ? 4 : 5.5; s += `<line x1="${p.x - r}" y1="${p.y - r}" x2="${p.x + r}" y2="${p.y + r}" stroke="${color}" stroke-width="2" opacity="${o}"/><line x1="${p.x - r}" y1="${p.y + r}" x2="${p.x + r}" y2="${p.y - r}" stroke="${color}" stroke-width="2" opacity="${o}"/>`; } });
+    return s;
+  };
+  const data = series(state.base.right.ac, RED, 'o', true) + series(state.base.left.ac, BLUE, 'x', true)
+    + series(state.cur.right.ac, RED, 'o', false) + series(state.cur.left.ac, BLUE, 'x', false);
+  $('audChart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟออดิโอแกรม">${g}${data}</svg>`;
+  const hasBase = Object.keys(state.base.right.ac).length || Object.keys(state.base.left.ac).length;
+  $('audLegend').innerHTML = `<span><span class="r">○ ─</span> หูขวา</span><span><span class="l">✕ ─</span> หูซ้าย</span>${hasBase ? '<span>เส้นประ = baseline</span>' : ''}<span>แถบเขียว = ช่วงปกติ 0–25 dB</span>`;
+}
+
 function render() {
+  drawChart();
   const d = diagnoseNIHL({ right: state.cur.right, left: state.cur.left, noise: state.noise });
   const hasCur = speechPTA(state.cur.right.ac) != null || speechPTA(state.cur.left.ac) != null;
   if (!hasCur) { $('nhResult').innerHTML = '<div class="hint">กรอกออดิโอแกรมปัจจุบันอย่างน้อยหนึ่งหูเพื่อดูผล</div>'; return; }
